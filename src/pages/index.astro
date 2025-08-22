@@ -78,6 +78,22 @@ import Layout from '../layouts/Layout.astro';
 				</div>
 			</div>
 		</div>
+		
+		<!-- Footer with companies -->
+		<div class="footer" id="footer">
+			<div class="footer-content">
+				<div class="footer-text">Built with <span class="heart">❤</span> & <span>☕ </span> in Madrid by:</div>
+				<div class="companies">
+					<a href="https://samplia.com/" target="_blank" rel="noopener noreferrer">Samplia</a>
+					<span class="separator">•</span>
+					<a href="https://aulean.com/" target="_blank" rel="noopener noreferrer">Aulean</a>
+					<span class="separator">•</span>
+					<a href="https://incubator.com.ar/" target="_blank" rel="noopener noreferrer">Incubator</a>
+					<span class="separator">•</span>
+					<a href="https://startupembassy.com/" target="_blank" rel="noopener noreferrer">StartupEmbassy</a>
+				</div>
+			</div>
+		</div>
 	</div>
 </Layout>
 
@@ -290,6 +306,76 @@ import Layout from '../layouts/Layout.astro';
 		100% { opacity: 1; }
 	}
 
+	/* Footer styles */
+	.footer {
+		position: absolute;
+		bottom: 15px;
+		left: 20px;
+		z-index: 1000;
+		opacity: 0.8;
+		transition: opacity 0.3s ease;
+	}
+
+	.footer:hover {
+		opacity: 1;
+	}
+
+	.footer-content {
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		font-size: 12px;
+		color: #00aa00;
+		font-family: inherit;
+	}
+
+	.footer-text {
+		display: flex;
+		align-items: center;
+		gap: 3px;
+		color: #008800;
+		text-shadow: 0 0 3px #008800;
+	}
+
+	.heart {
+		color: #ff4444;
+		text-shadow: 0 0 5px #ff4444;
+		animation: heartbeat 2s ease-in-out infinite;
+	}
+
+	.companies {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+	.companies a {
+		color: #00ff00;
+		text-decoration: none;
+		text-shadow: 0 0 3px #00ff00;
+		transition: all 0.3s ease;
+		padding: 2px 4px;
+		border-radius: 3px;
+	}
+
+	.companies a:hover {
+		color: #ffff00;
+		text-shadow: 0 0 8px #ffff00;
+		background-color: rgba(255, 255, 0, 0.1);
+		transform: scale(1.05);
+	}
+
+	.separator {
+		color: #006600;
+		font-weight: bold;
+	}
+
+	@keyframes heartbeat {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.1); }
+	}
+
 	@media (max-width: 768px) {
 		.terminal {
 			margin: 5px;
@@ -312,6 +398,19 @@ import Layout from '../layouts/Layout.astro';
 		
 		#email-input {
 			width: 100%;
+		}
+		
+		.footer {
+			bottom: 10px;
+			left: 15px;
+		}
+		
+		.footer-content {
+			font-size: 9px;
+		}
+		
+		.companies {
+			gap: 6px;
 		}
 	}
 </style>
