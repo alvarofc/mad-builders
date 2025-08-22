@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.mad.builders/sitemap-index.xml
+Host: https://www.mad.builders

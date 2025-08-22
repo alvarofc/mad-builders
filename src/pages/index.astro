@@ -1,8 +1,35 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { absoluteUrl, DEFAULT_DESCRIPTION, SITE_NAME, SAME_AS } from '../config/seo'
+
+const title = 'MAD BUILDERS — Hacker Terminal'
+const description = 'Join MAD BUILDERS, a Madrid-based community of builders, hackers, and dreamers. Access our terminal interface to connect with fellow creators.'
+
+// Structured data for SEO
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    'name': SITE_NAME,
+    'url': absoluteUrl('/'),
+    'description': DEFAULT_DESCRIPTION,
+    'areaServed': {
+      '@type': 'Place',
+      'name': 'Madrid, Spain'
+    },
+    'sameAs': SAME_AS
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'url': absoluteUrl('/'),
+    'name': SITE_NAME,
+    'inLanguage': 'en'
+  }
+]
 ---
 
-<Layout title="MAD BUILDERS - HACKER TERMINAL">
+<Layout title={title} description={description} structuredData={structuredData}>
 	<div class="terminal" id="terminal">
 		<div class="terminal-header" id="header" style="opacity: 0;">
 			<div class="buttons">

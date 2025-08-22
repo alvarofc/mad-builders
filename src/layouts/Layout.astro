@@ -1,9 +1,14 @@
 ---
+import SEO from '../components/SEO.astro'
+
 export interface Props {
 	title?: string;
+	description?: string;
+	noindex?: boolean;
+	structuredData?: Record<string, any> | Array<Record<string, any>>;
 }
 
-const { title = 'MAD BUILDERS' } = Astro.props;
+const { title, description, noindex, structuredData } = Astro.props;
 ---
 
 <!doctype html>
@@ -11,11 +16,11 @@ const { title = 'MAD BUILDERS' } = Astro.props;
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
+		<SEO title={title} description={description} noindex={noindex} structuredData={structuredData} />
 	</head>
 	<body>
+		<h1 class="visually-hidden">MAD BUILDERS</h1>
 		<slot />
 	</body>
 </html>
@@ -27,5 +32,17 @@ const { title = 'MAD BUILDERS' } = Astro.props;
 		width: 100%;
 		height: 100%;
 		background: #000;
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 </style>

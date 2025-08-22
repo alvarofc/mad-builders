@@ -1,0 +1,85 @@
+---
+import { 
+  DEFAULT_TITLE,
+  DEFAULT_DESCRIPTION,
+  OG_IMAGE,
+  LOCALE,
+  SITE_NAME,
+  THEME_COLOR,
+  absoluteUrl
+} from '../config/seo'
+
+export interface Props {
+  title?: string
+  description?: string
+  image?: string
+  canonical?: string
+  noindex?: boolean
+  structuredData?: Record<string, any> | Array<Record<string, any>>
+}
+
+const {
+  title,
+  description,
+  image,
+  canonical,
+  noindex = false,
+  structuredData
+} = Astro.props
+
+const finalTitle = title || DEFAULT_TITLE
+const finalDescription = description || DEFAULT_DESCRIPTION
+const finalImage = absoluteUrl(image || OG_IMAGE)
+const finalCanonical = canonical ? absoluteUrl(canonical) : absoluteUrl(Astro.url?.pathname || '/')
+const robotsContent = noindex ? 'noindex, nofollow' : 'index, follow'
+
+// Search console verification (only in production)
+const isProduction = import.meta.env.PROD
+const gscToken = import.meta.env.PUBLIC_GSC_TOKEN
+const bingToken = import.meta.env.PUBLIC_BING_TOKEN
+---
+
+<!-- Core meta tags -->
+<title>{finalTitle}</title>
+<meta name="description" content={finalDescription} />
+<link rel="canonical" href={finalCanonical} />
+<meta name="robots" content={robotsContent} />
+<meta name="theme-color" content={THEME_COLOR} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content={finalCanonical} />
+<meta property="og:title" content={finalTitle} />
+<meta property="og:description" content={finalDescription} />
+<meta property="og:image" content={finalImage} />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:locale" content={LOCALE} />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content={finalCanonical} />
+<meta property="twitter:title" content={finalTitle} />
+<meta property="twitter:description" content={finalDescription} />
+<meta property="twitter:image" content={finalImage} />
+
+<!-- Icons and manifest -->
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<!-- Additional meta -->
+<meta name="format-detection" content="telephone=no" />
+
+<!-- Search Console verification (production only) -->
+{isProduction && gscToken && (
+  <meta name="google-site-verification" content={gscToken} />
+)}
+{isProduction && bingToken && (
+  <meta name="msvalidate.01" content={bingToken} />
+)}
+
+<!-- Structured Data -->
+{structuredData && (
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+)}
