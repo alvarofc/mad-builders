@@ -1,11 +1,688 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="MAD BUILDERS - HACKER TERMINAL">
+	<div class="terminal" id="terminal">
+		<div class="terminal-header" id="header" style="opacity: 0;">
+			<div class="buttons">
+				<span class="btn red"></span>
+				<span class="btn yellow"></span>
+				<span class="btn green"></span>
+			</div>
+			<div class="title">root@madbuilders:~$ </div>
+		</div>
+		
+		<div class="terminal-body" id="terminal-body">
+			<div class="boot-sequence" id="boot-sequence">
+				<div class="boot-line">[  0.000000] BIOS initialized...</div>
+				<div class="boot-line">[  0.152341] Loading MAD BUILDERS OS...</div>
+				<div class="boot-line">[  0.298765] Checking system integrity... OK</div>
+				<div class="boot-line">[  0.445123] Mounting file systems...</div>
+				<div class="boot-line">[  0.567891] Loading network drivers... OK</div>
+				<div class="boot-line">[  0.692847] Starting hacker services...</div>
+				<div class="boot-line">[  0.823456] Initializing ASCII art renderer...</div>
+				<div class="boot-line">[  1.021345] System boot complete</div>
+				<div class="boot-line">&nbsp;</div>
+			</div>
+			
+			<div class="ascii-art" id="ascii-art" style="opacity: 0;">
+				<pre># __| |_______________________________________________________________________| |__
+# __   _______________________________________________________________________   __
+#   | |                                                                       | |  
+#   | |                                                                       | |  
+#   | |         ______  ____                                                  | |  
+#   | | /'\_/`\/\  _  \/\  _`\                                                | |  
+#   | |/\      \ \ \L\ \ \ \/\ \                                              | |  
+#   | |\ \ \__\ \ \  __ \ \ \ \ \                                             | |  
+#   | | \ \ \_/\ \ \ \/\ \ \ \_\ \                                            | |  
+#   | |  \ \_\\ \_\ \_\ \_\ \____/                                            | |  
+#   | |   \/_/ \/_/\/_/\/_/\/___/                                             | |  
+#   | |                                                                       | |  
+#   | |                                                                       | |  
+#   | | ____     __  __  ______   __       ____    ____    ____    ____       | |  
+#   | |/\  _`\  /\ \/\ \/\__  _\ /\ \     /\  _`\ /\  _`\ /\  _`\ /\  _`\     | |  
+#   | |\ \ \L\ \\ \ \ \ \/_/\ \/ \ \ \    \ \ \/\ \ \ \L\_\ \ \L\ \ \,\L\_\   | |  
+#   | | \ \  _ <'\ \ \ \ \ \ \ \  \ \ \  __\ \ \ \ \ \  _\L\ \ ,  /\/_\__ \   | |  
+#   | |  \ \ \L\ \\ \ \_\ \ \_\ \__\ \ \L\ \\ \ \_\ \ \ \L\ \ \ \\ \ /\ \L\ \ | |  
+#   | |   \ \____/ \ \_____\/\_____\\ \____/ \ \____/\ \____/\ \_\ \_\ `\____\| |  
+#   | |    \/___/   \/_____/\/_____/ \/___/   \/___/  \/___/  \/_/\/ /\/_____/| |  
+#   | |                                                                       | |  
+# __| |_______________________________________________________________________| |__
+# __   _______________________________________________________________________   __
+#   | |                                                                       | |  </pre>
+			</div>
+			
+			<div class="terminal-content" id="terminal-content" style="opacity: 0;">
+				<div class="welcome-text">
+					<div class="init-line" id="init-1">>>> INITIALIZING MAD BUILDERS TERMINAL...</div>
+					<div class="init-line" id="init-2">>>> LOADING MAINFRAME ACCESS PROTOCOLS...</div>
+					<div class="init-line" id="init-3">>>> SYSTEM READY</div>
+					<div class="init-line" id="init-4">>>> ENTER EMAIL TO ACCESS MAINFRAME</div>
+				</div>
+				
+				<div class="input-section" id="input-section">
+					<div class="prompt-line" id="email-prompt">
+						<span class="prompt">root@madbuilders:~$</span>
+						<input type="email" id="email-input" placeholder="Enter email address..." autocomplete="email" disabled />
+					</div>
+					<div class="prompt-line" id="name-prompt" style="display: none; margin-top: 20px;">
+						<span class="prompt">root@madbuilders:~$</span>
+						<input type="text" id="name-input" placeholder="Enter full name..." autocomplete="name" disabled />
+					</div>
+					<div class="cursor">_</div>
+				</div>
+				
+				<div class="status-line" id="status-line">
+					<span id="status-text">BOOTING...</span>
+				</div>
+			</div>
+		</div>
+	</div>
 </Layout>
+
+<style>
+	body {
+		background: #000;
+		color: #00ff00;
+		font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.terminal {
+		height: calc(100vh - 20px);
+		max-height: calc(100vh - 20px);
+		background: #000;
+		border: 2px solid #00ff00;
+		border-radius: 10px;
+		margin: 10px;
+		display: flex;
+		flex-direction: column;
+		box-shadow: 0 0 30px #00ff00;
+	}
+
+	.terminal-header {
+		background: linear-gradient(90deg, #001100 0%, #002200 100%);
+		height: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 15px;
+		border-bottom: 1px solid #00ff00;
+		border-radius: 8px 8px 0 0;
+	}
+
+	.buttons {
+		display: flex;
+		gap: 8px;
+	}
+
+	.btn {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		display: block;
+	}
+
+	.btn.red {
+		background: #ff5f56;
+	}
+
+	.btn.yellow {
+		background: #ffbd2e;
+	}
+
+	.btn.green {
+		background: #27ca3f;
+	}
+
+	.title {
+		color: #00ff00;
+		font-size: 12px;
+		font-weight: bold;
+	}
+
+	.terminal-body {
+		flex: 1;
+		padding: 20px;
+		overflow-y: auto;
+		background: #000;
+	}
+
+	.ascii-art {
+		text-align: center;
+		margin-bottom: 30px;
+	}
+
+	.ascii-art pre {
+		color: #00ff00;
+		font-size: 8px;
+		line-height: 1;
+		margin: 0;
+		text-shadow: 0 0 5px #00ff00;
+	}
+
+	.terminal-content {
+		max-width: 800px;
+		margin: 0 auto;
+	}
+
+	.welcome-text {
+		margin-bottom: 30px;
+	}
+
+	.welcome-text p {
+		margin: 5px 0;
+		color: #00ff00;
+		font-size: 14px;
+		text-shadow: 0 0 5px #00ff00;
+		animation: flicker 2s infinite alternate;
+	}
+
+	.input-section {
+		position: relative;
+		margin: 30px 0;
+	}
+
+	.prompt-line {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.prompt {
+		color: #00ff00;
+		font-weight: bold;
+		text-shadow: 0 0 5px #00ff00;
+	}
+
+	#email-input, #name-input {
+		background: transparent;
+		border: none;
+		color: #00ff00;
+		font-family: inherit;
+		font-size: 16px;
+		outline: none;
+		flex: 1;
+		padding: 5px 0;
+		text-shadow: 0 0 5px #00ff00;
+	}
+
+	#email-input::placeholder, #name-input::placeholder {
+		color: #008800;
+		opacity: 0.7;
+	}
+
+	#email-input:focus, #name-input:focus {
+		box-shadow: 0 1px 0 #00ff00;
+	}
+
+	.cursor {
+		color: #00ff00;
+		font-weight: bold;
+		animation: blink 1s infinite;
+		position: absolute;
+		right: 0;
+		top: 5px;
+	}
+
+	.status-line {
+		margin-top: 20px;
+		color: #008800;
+		font-size: 12px;
+		text-align: center;
+	}
+
+	/* Boot sequence styles */
+	.boot-sequence {
+		margin: 20px 0;
+		padding: 0 20px;
+	}
+
+	.boot-line {
+		color: #00ff00;
+		font-size: 12px;
+		margin: 3px 0;
+		opacity: 0;
+		animation: typewriter 0.5s forwards;
+		text-shadow: 0 0 5px #00ff00;
+	}
+
+	.init-line {
+		color: #00ff00;
+		font-size: 14px;
+		margin: 8px 0;
+		opacity: 0;
+		text-shadow: 0 0 5px #00ff00;
+		animation: fadeIn 0.8s forwards;
+	}
+
+	@keyframes blink {
+		0%, 50% { opacity: 1; }
+		51%, 100% { opacity: 0; }
+	}
+
+	@keyframes flicker {
+		0% { text-shadow: 0 0 5px #00ff00; }
+		100% { text-shadow: 0 0 10px #00ff00, 0 0 15px #00ff00; }
+	}
+
+	@keyframes typewriter {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
+
+	@keyframes fadeIn {
+		from { opacity: 0; transform: translateY(10px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	@keyframes slideDown {
+		from { opacity: 0; transform: translateY(-20px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	@keyframes error-flash {
+		0% { opacity: 1; }
+		50% { opacity: 0.3; }
+		100% { opacity: 1; }
+	}
+
+	@media (max-width: 768px) {
+		.terminal {
+			margin: 5px;
+			height: calc(100vh - 10px);
+		}
+		
+		.ascii-art pre {
+			font-size: 6px;
+		}
+		
+		.terminal-body {
+			padding: 10px;
+		}
+		
+		.prompt-line {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 5px;
+		}
+		
+		#email-input {
+			width: 100%;
+		}
+	}
+</style>
+
+<script>
+	// Terminal initialization sequence (faster)
+	function initializeTerminal() {
+		const header = document.getElementById('header');
+		const bootSequence = document.getElementById('boot-sequence');
+		const asciiArt = document.getElementById('ascii-art');
+		const terminalContent = document.getElementById('terminal-content');
+		const bootLines = document.querySelectorAll('.boot-line');
+		const initLines = document.querySelectorAll('.init-line');
+		const emailInput = document.getElementById('email-input');
+		const statusText = document.getElementById('status-text');
+
+		// Step 1: Show terminal header (0.2s delay)
+		setTimeout(() => {
+			header.style.animation = 'slideDown 0.5s forwards';
+		}, 200);
+
+		// Step 2: Show boot sequence lines one by one (starting at 0.5s, faster)
+		bootLines.forEach((line, index) => {
+			setTimeout(() => {
+				line.style.animationDelay = '0s';
+				line.style.opacity = '1';
+			}, 500 + index * 150); // Reduced from 300ms to 150ms
+		});
+
+		// Step 3: Hide boot sequence and show ASCII art (faster transition)
+		setTimeout(() => {
+			bootSequence.style.opacity = '0';
+			bootSequence.style.transition = 'opacity 0.3s';
+			
+			setTimeout(() => {
+				bootSequence.style.display = 'none';
+				asciiArt.style.animation = 'fadeIn 1s forwards'; // Reduced from 2s to 1s
+			}, 300);
+		}, 500 + bootLines.length * 150 + 200);
+
+		// Step 4: Show terminal content (faster)
+		setTimeout(() => {
+			terminalContent.style.animation = 'fadeIn 0.8s forwards';
+			
+			// Show init lines one by one (faster)
+			initLines.forEach((line, index) => {
+				setTimeout(() => {
+					line.style.animationDelay = '0s';
+					line.style.opacity = '1';
+				}, index * 300); // Reduced from 600ms to 300ms
+			});
+		}, 500 + bootLines.length * 150 + 1200);
+
+		// Step 5: Enable input and focus (faster)
+		setTimeout(() => {
+			emailInput.disabled = false;
+			emailInput.focus();
+			statusText.textContent = 'AWAITING INPUT...';
+		}, 500 + bootLines.length * 150 + 1200 + initLines.length * 300 + 300);
+	}
+
+	// Email validation function
+	function validateEmail(email) {
+		const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+		return emailRegex.test(email);
+	}
+
+	// Get validation message based on input
+	function getValidationMessage(email) {
+		if (!email) {
+			return 'INPUT ACTIVE - ACCESSING MAINFRAME...';
+		}
+		
+		if (email.length < 3) {
+			return 'SCANNING... INSUFFICIENT DATA';
+		}
+		
+		if (!email.includes('@')) {
+			return 'ERROR: MISSING @ PROTOCOL IDENTIFIER';
+		}
+		
+		const parts = email.split('@');
+		if (parts.length !== 2) {
+			return 'ERROR: MALFORMED @ PROTOCOL';
+		}
+		
+		const [username, domain] = parts;
+		
+		if (username.length === 0) {
+			return 'ERROR: NO USERNAME DETECTED';
+		}
+		
+		if (domain.length === 0) {
+			return 'ERROR: NO DOMAIN DETECTED';
+		}
+		
+		if (!domain.includes('.')) {
+			return 'ERROR: INVALID DOMAIN FORMAT';
+		}
+		
+		const domainParts = domain.split('.');
+		if (domainParts.some(part => part.length === 0)) {
+			return 'ERROR: CORRUPTED DOMAIN STRUCTURE';
+		}
+		
+		if (domainParts[domainParts.length - 1].length < 2) {
+			return 'ERROR: INVALID TLD FORMAT';
+		}
+		
+		if (validateEmail(email)) {
+			return 'VALIDATION COMPLETE - READY FOR TRANSMISSION';
+		} else {
+			return 'ERROR: SECURITY PROTOCOLS FAILED';
+		}
+	}
+
+	// Global state tracking
+	let userEmail = '';
+	let currentStep = 'email'; // 'email' or 'name'
+
+	// Name validation function
+	function validateName(name) {
+		return name.trim().length >= 2 && name.trim().includes(' ');
+	}
+
+	// Get name validation message
+	function getNameValidationMessage(name) {
+		if (!name) {
+			return 'INPUT ACTIVE - IDENTITY VERIFICATION...';
+		}
+		
+		if (name.length < 2) {
+			return 'SCANNING... INSUFFICIENT IDENTITY DATA';
+		}
+		
+		if (!name.includes(' ')) {
+			return 'ERROR: FULL NAME REQUIRED (FIRST AND LAST)';
+		}
+		
+		if (validateName(name)) {
+			return 'IDENTITY VERIFIED - READY FOR ACCESS';
+		} else {
+			return 'ERROR: IDENTITY VERIFICATION FAILED';
+		}
+	}
+
+	// Process email step
+	function processEmailStep(email) {
+		const statusText = document.getElementById('status-text');
+		const emailInput = document.getElementById('email-input');
+		const namePrompt = document.getElementById('name-prompt');
+		const nameInput = document.getElementById('name-input');
+		
+		if (!validateEmail(email)) {
+			// Show error sequence
+			statusText.textContent = '>>> ACCESS DENIED - INVALID EMAIL CREDENTIALS';
+			statusText.style.color = '#ff4444';
+			statusText.style.textShadow = '0 0 10px #ff4444';
+			statusText.style.animation = 'error-flash 0.5s ease-in-out 3';
+			
+			setTimeout(() => {
+				statusText.textContent = 'SECURITY BREACH DETECTED - RETRY EMAIL';
+			}, 1500);
+			
+			setTimeout(() => {
+				statusText.style.color = '#008800';
+				statusText.style.textShadow = 'none';
+				statusText.style.animation = 'none';
+				statusText.textContent = getValidationMessage(email);
+			}, 3000);
+			return;
+		}
+		
+		// Email validation passed - move to name step
+		userEmail = email;
+		currentStep = 'name';
+		
+		statusText.textContent = 'EMAIL VERIFIED - INITIALIZING IDENTITY SCAN...';
+		statusText.style.color = '#ffaa00';
+		statusText.style.textShadow = '0 0 10px #ffaa00';
+		
+		// Disable email input and show name input
+		setTimeout(() => {
+			emailInput.disabled = true;
+			emailInput.style.opacity = '0.6';
+			namePrompt.style.display = 'flex';
+			namePrompt.style.animation = 'fadeIn 1s forwards';
+			nameInput.disabled = false;
+			statusText.textContent = 'IDENTITY VERIFICATION REQUIRED - ENTER FULL NAME';
+			statusText.style.color = '#00aa00';
+			statusText.style.textShadow = '0 0 5px #00aa00';
+			nameInput.focus();
+		}, 1500);
+	}
+
+	// Process name step
+	function processNameStep(name) {
+		const statusText = document.getElementById('status-text');
+		const nameInput = document.getElementById('name-input');
+		
+		if (!validateName(name)) {
+			// Show error sequence
+			statusText.textContent = '>>> IDENTITY VERIFICATION FAILED';
+			statusText.style.color = '#ff4444';
+			statusText.style.textShadow = '0 0 10px #ff4444';
+			statusText.style.animation = 'error-flash 0.5s ease-in-out 3';
+			
+			setTimeout(() => {
+				statusText.textContent = 'SECURITY PROTOCOL BREACH - RETRY FULL NAME';
+			}, 1500);
+			
+			setTimeout(() => {
+				statusText.style.color = '#008800';
+				statusText.style.textShadow = 'none';
+				statusText.style.animation = 'none';
+				statusText.textContent = getNameValidationMessage(name);
+			}, 3000);
+			return;
+		}
+		
+		// Final authentication success
+		statusText.textContent = 'AUTHENTICATING USER PROFILE...';
+		statusText.style.color = '#ffaa00';
+		statusText.style.textShadow = '0 0 10px #ffaa00';
+		
+		setTimeout(() => {
+			statusText.textContent = `ACCESS GRANTED - WELCOME ${name.toUpperCase()}`;
+			statusText.style.color = '#00ff00';
+			statusText.style.textShadow = '0 0 15px #00ff00';
+		}, 1000);
+		
+		setTimeout(() => {
+			statusText.textContent = `MAD BUILDERS MAINFRAME - USER: ${name} (${userEmail})`;
+			statusText.style.textShadow = '0 0 20px #00ff00';
+			nameInput.disabled = true;
+			nameInput.style.opacity = '0.6';
+		}, 2500);
+	}
+
+	// Email input setup
+	function setupEmailInput() {
+		const emailInput = document.getElementById('email-input');
+		const statusText = document.getElementById('status-text');
+
+		if (emailInput && statusText) {
+			emailInput.addEventListener('focus', () => {
+				if (!emailInput.disabled && currentStep === 'email') {
+					statusText.textContent = 'INPUT ACTIVE - ACCESSING MAINFRAME...';
+					statusText.style.color = '#008800';
+					statusText.style.textShadow = 'none';
+				}
+			});
+
+			emailInput.addEventListener('blur', () => {
+				if (!emailInput.disabled && currentStep === 'email') {
+					const email = emailInput.value.trim();
+					if (email) {
+						statusText.textContent = getValidationMessage(email);
+						if (validateEmail(email)) {
+							statusText.style.color = '#00aa00';
+						} else {
+							statusText.style.color = '#ff6666';
+						}
+					} else {
+						statusText.textContent = 'AWAITING INPUT...';
+						statusText.style.color = '#008800';
+					}
+					statusText.style.textShadow = 'none';
+				}
+			});
+
+			emailInput.addEventListener('input', () => {
+				if (!emailInput.disabled && currentStep === 'email') {
+					const value = emailInput.value;
+					const message = getValidationMessage(value);
+					statusText.textContent = message;
+					
+					if (value.length === 0) {
+						statusText.style.color = '#008800';
+					} else if (validateEmail(value)) {
+						statusText.style.color = '#00aa00';
+						statusText.style.textShadow = '0 0 5px #00aa00';
+					} else {
+						statusText.style.color = '#ff6666';
+						statusText.style.textShadow = 'none';
+					}
+				}
+			});
+
+			emailInput.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter' && !emailInput.disabled && currentStep === 'email') {
+					const email = emailInput.value.trim();
+					if (email) {
+						processEmailStep(email);
+					} else {
+						statusText.textContent = 'ERROR: NO EMAIL DETECTED';
+						statusText.style.color = '#ff4444';
+					}
+				}
+			});
+		}
+	}
+
+	// Name input setup
+	function setupNameInput() {
+		const nameInput = document.getElementById('name-input');
+		const statusText = document.getElementById('status-text');
+
+		if (nameInput && statusText) {
+			nameInput.addEventListener('focus', () => {
+				if (!nameInput.disabled && currentStep === 'name') {
+					statusText.textContent = 'INPUT ACTIVE - IDENTITY VERIFICATION...';
+					statusText.style.color = '#008800';
+					statusText.style.textShadow = 'none';
+				}
+			});
+
+			nameInput.addEventListener('blur', () => {
+				if (!nameInput.disabled && currentStep === 'name') {
+					const name = nameInput.value.trim();
+					if (name) {
+						statusText.textContent = getNameValidationMessage(name);
+						if (validateName(name)) {
+							statusText.style.color = '#00aa00';
+						} else {
+							statusText.style.color = '#ff6666';
+						}
+					} else {
+						statusText.textContent = 'AWAITING IDENTITY INPUT...';
+						statusText.style.color = '#008800';
+					}
+					statusText.style.textShadow = 'none';
+				}
+			});
+
+			nameInput.addEventListener('input', () => {
+				if (!nameInput.disabled && currentStep === 'name') {
+					const value = nameInput.value;
+					const message = getNameValidationMessage(value);
+					statusText.textContent = message;
+					
+					if (value.length === 0) {
+						statusText.style.color = '#008800';
+					} else if (validateName(value)) {
+						statusText.style.color = '#00aa00';
+						statusText.style.textShadow = '0 0 5px #00aa00';
+					} else {
+						statusText.style.color = '#ff6666';
+						statusText.style.textShadow = 'none';
+					}
+				}
+			});
+
+			nameInput.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter' && !nameInput.disabled && currentStep === 'name') {
+					const name = nameInput.value.trim();
+					if (name) {
+						processNameStep(name);
+					} else {
+						statusText.textContent = 'ERROR: NO NAME DETECTED';
+						statusText.style.color = '#ff4444';
+					}
+				}
+			});
+		}
+	}
+
+	// Start initialization when page loads
+	document.addEventListener('DOMContentLoaded', () => {
+		setupEmailInput();
+		setupNameInput();
+		initializeTerminal();
+	});
+</script>
