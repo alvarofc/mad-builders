@@ -1,11 +1,11 @@
 export const SITE = 'https://www.mad.builders'
 
-export const DEFAULT_TITLE = 'MAD BUILDERS — Builders, hackers, and dreamers in Madrid'
-export const DEFAULT_DESCRIPTION = 'A Madrid-based community for builders, hackers, and dreamers. Ship fast, collaborate, and build things that matter.'
+export const DEFAULT_TITLE = 'MAD BUILDERS — Where founders build.'
+export const DEFAULT_DESCRIPTION = 'A free workspace, a curated community, and a launchpad for founders building real companies. Curated. Selective. Based in Madrid.'
 export const OG_IMAGE = '/og.svg'
 export const LOCALE = 'en_US'
 export const SITE_NAME = 'MAD BUILDERS'
-export const THEME_COLOR = '#000000'
+export const THEME_COLOR = '#FFFFFF'
 
 // Fill in when available
 export const SAME_AS: string[] = [

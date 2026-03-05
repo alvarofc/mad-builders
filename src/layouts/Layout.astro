@@ -15,9 +15,10 @@ const { title, description, noindex, structuredData } = Astro.props;
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="generator" content={Astro.generator} />
 		<SEO title={title} description={description} noindex={noindex} structuredData={structuredData} />
+		<slot name="head" />
 	</head>
 	<body>
 		<h1 class="visually-hidden">MAD BUILDERS</h1>
@@ -25,13 +26,25 @@ const { title, description, noindex, structuredData } = Astro.props;
 	</body>
 </html>
 
-<style>
+<style is:global>
+	*, *::before, *::after {
+		box-sizing: border-box;
+	}
+
+	html {
+		scroll-behavior: smooth;
+	}
+
 	html,
 	body {
 		margin: 0;
+		padding: 0;
 		width: 100%;
-		height: 100%;
-		background: #000;
+		background: #F7F5F0;
+	}
+
+	body {
+		overflow-x: hidden;
 	}
 
 	.visually-hidden {
