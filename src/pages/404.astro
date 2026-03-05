@@ -2,83 +2,269 @@
 import Layout from '../layouts/Layout.astro'
 
 const title = 'Page Not Found — MAD BUILDERS'
-const description = '404 error - The requested page could not be found on MAD BUILDERS.'
+const description = '404 — The page you\'re looking for doesn\'t exist.'
 ---
 
 <Layout title={title} description={description} noindex={true}>
-	<Fragment slot="head">
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
-	</Fragment>
-	<div class="error-page">
-		<div class="error-content">
-			<span class="error-code">404</span>
-			<h2 class="error-headline">Page not found.</h2>
-			<p class="error-text">The page you're looking for doesn't exist or has been moved.</p>
-			<a href="/" class="error-link">Back to home</a>
-		</div>
-	</div>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </Fragment>
+
+  <div class="e-page">
+
+    <!-- NAV -->
+    <nav class="e-nav">
+      <div class="e-nav-inner">
+        <a href="/" class="logo-badge" aria-label="Mad Builders home">mad <span class="logo-builders">builders</span></a>
+      </div>
+    </nav>
+
+    <!-- ERROR BODY -->
+    <main class="e-main">
+      <div class="e-content">
+        <p class="e-label">404 &mdash; Page not found</p>
+        <h2 class="e-headline">Wrong<br/><em>turn.</em></h2>
+        <p class="e-sub">This page doesn&rsquo;t exist&thinsp;&mdash;&thinsp;or it used to, and it moved on.</p>
+        <a href="/" class="e-btn">Back to home <span class="e-arrow">&rarr;</span></a>
+      </div>
+
+      <!-- decorative ruled lines -->
+      <div class="e-rules" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="e-footer">
+      <div class="e-footer-inner">
+        <span class="e-footer-tagline">Where founders build.</span>
+      </div>
+    </footer>
+
+  </div>
 </Layout>
 
 <style>
-	.error-page {
-		min-height: 100vh;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 2rem;
-		background: #FFFFFF;
-		font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
-	}
+  /* =============================================
+     DESIGN TOKENS  (mirror index.astro)
+  ============================================= */
+  :root {
+    --forest: #1A332B;
+    --cream:  #F7F5F0;
+    --mid:    #4A6B5A;
+    --ink:    #1C1C1A;
 
-	.error-content {
-		text-align: center;
-		max-width: 480px;
-	}
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body:    'Syne', system-ui, sans-serif;
+    --font-logo:    'Bricolage Grotesque', sans-serif;
 
-	.error-code {
-		font-family: 'Geist Mono', monospace;
-		font-size: clamp(6rem, 15vw, 12rem);
-		font-weight: 500;
-		color: #EAEAEA;
-		line-height: 1;
-		display: block;
-		margin-bottom: 1rem;
-		letter-spacing: -0.05em;
-	}
+    --pad-x: clamp(1.25rem, 4vw, 3.5rem);
+  }
 
-	.error-headline {
-		font-family: 'Geist', -apple-system, sans-serif;
-		font-size: 1.75rem;
-		font-weight: 500;
-		color: #0A0A0A;
-		margin: 0 0 1rem;
-		letter-spacing: -0.02em;
-	}
+  /* =============================================
+     SHELL
+  ============================================= */
+  .e-page {
+    min-height: 100svh;
+    background: var(--forest);
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
 
-	.error-text {
-		color: #555555;
-		font-size: 1rem;
-		line-height: 1.6;
-		margin: 0 0 2rem;
-	}
+  /* grain overlay — same as index */
+  .e-page::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
 
-	.error-link {
-		display: inline-block;
-		font-family: 'Geist', sans-serif;
-		font-size: 0.9rem;
-		font-weight: 500;
-		color: #FFFFFF;
-		background: #0A0A0A;
-		text-decoration: none;
-		padding: 0.75rem 2rem;
-		border-radius: 99px;
-		transition: background 0.2s ease, transform 0.2s ease;
-	}
+  /* =============================================
+     LOGO BADGE  (matches index)
+  ============================================= */
+  .logo-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.22em;
+    background: var(--cream);
+    color: var(--forest);
+    padding: 0.55rem 1.05rem 0.6rem;
+    text-decoration: none;
+    font-family: var(--font-logo);
+    font-weight: 700;
+    font-size: 1.65rem;
+    letter-spacing: 0.025em;
+    line-height: 1;
+    transition: opacity 0.2s;
+  }
+  .logo-badge:hover { opacity: 0.85; }
 
-	.error-link:hover {
-		background: #333333;
-		transform: translateY(-2px);
-	}
+  .logo-builders {
+    font-weight: 500;
+    font-size: 0.76em;
+    letter-spacing: 0.06em;
+    opacity: 0.72;
+  }
+
+  /* =============================================
+     NAV
+  ============================================= */
+  .e-nav {
+    border-bottom: 2px solid rgba(247, 245, 240, 0.1);
+  }
+
+  .e-nav-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0.75rem var(--pad-x);
+    display: flex;
+    align-items: center;
+  }
+
+  /* =============================================
+     MAIN
+  ============================================= */
+  .e-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+    padding: clamp(4rem, 10vw, 8rem) var(--pad-x);
+  }
+
+  /* =============================================
+     CONTENT
+  ============================================= */
+  .e-content {
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+  }
+
+  .e-label {
+    font-family: var(--font-logo);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mid);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0 0 1.75rem;
+  }
+
+  .e-headline {
+    font-family: var(--font-logo);
+    font-weight: 500;
+    font-style: normal;
+    font-size: clamp(5rem, 14vw, 12rem);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--cream);
+    margin: 0 0 clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .e-headline em {
+    font-style: normal;
+    color: rgba(247, 245, 240, 0.5);
+  }
+
+  .e-sub {
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
+    color: rgba(247, 245, 240, 0.55);
+    line-height: 1.7;
+    margin: 0 0 clamp(2rem, 3vw, 3rem);
+    max-width: 380px;
+  }
+
+  .e-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    background: var(--cream);
+    color: var(--forest);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    padding: 0.85rem 2.2rem;
+    letter-spacing: 0.02em;
+    border: 2px solid var(--cream);
+    transition: background 0.2s, color 0.2s;
+  }
+  .e-btn:hover {
+    background: transparent;
+    color: var(--cream);
+  }
+
+  .e-arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+  .e-btn:hover .e-arrow { transform: translateX(4px); }
+
+  /* =============================================
+     DECORATIVE RULED LINES
+  ============================================= */
+  .e-rules {
+    position: absolute;
+    right: var(--pad-x);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 2.5vw, 2rem);
+    pointer-events: none;
+  }
+
+  .e-rules span {
+    display: block;
+    width: clamp(60px, 12vw, 140px);
+    height: 1px;
+    background: rgba(247, 245, 240, 0.12);
+  }
+
+  .e-rules span:nth-child(2) { width: 60%; }
+  .e-rules span:nth-child(3) { width: 80%; }
+  .e-rules span:nth-child(4) { width: 40%; }
+
+  /* =============================================
+     FOOTER
+  ============================================= */
+  .e-footer {
+    border-top: 2px solid rgba(247, 245, 240, 0.1);
+  }
+
+  .e-footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 1.25rem var(--pad-x);
+  }
+
+  .e-footer-tagline {
+    font-family: var(--font-logo);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mid);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* =============================================
+     RESPONSIVE
+  ============================================= */
+  @media (max-width: 640px) {
+    .e-rules { display: none; }
+  }
 </style>
