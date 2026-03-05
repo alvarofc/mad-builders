@@ -295,12 +295,11 @@ const faqs = [
         </div>
         <div class="press-row reveal">
           <span class="press-label">As seen in</span>
-          <span class="press-logo">TechCrunch</span>
-          <span class="press-logo">National Geographic</span>
-          <span class="press-logo">Forbes</span>
-          <span class="press-logo">El Pa&iacute;s</span>
-          <span class="press-logo">CNET</span>
-          <span class="press-logo">Entrepreneur</span>
+          <a class="press-logo" href="https://www.nationalgeographic.com/magazine/2019/02/silicon-valley-evolving-focusing-employees/#/silicon-valley-startup-embassy-poster.jpg" target="_blank" rel="noopener noreferrer">National Geographic</a>
+          <a class="press-logo" href="http://www.forbes.com.mx/el-sueno-de-silicon-valley/" target="_blank" rel="noopener noreferrer">Forbes</a>
+          <a class="press-logo" href="http://tecnologia.elpais.com/tecnologia/2012/10/01/actualidad/1349112802_776849.html" target="_blank" rel="noopener noreferrer">El Pa&iacute;s</a>
+          <a class="press-logo" href="https://www.cnet.com/news/hacker-hostels-let-tech-hopefuls-snooze-and-schmooze-video/" target="_blank" rel="noopener noreferrer">CNET</a>
+          <a class="press-logo" href="https://www.entrepreneur.com/article/271403" target="_blank" rel="noopener noreferrer">Entrepreneur</a>
         </div>
       </div>
     </section>
@@ -313,6 +312,9 @@ const faqs = [
           <p class="madrid-desc reveal">Best quality of life in Europe. A startup ecosystem that&rsquo;s accelerating. A city full of energy, talent, and ambition.</p>
           <p class="madrid-invite reveal">We&rsquo;re based here.<br/>If you&rsquo;re a founder building something real, come find your people.</p>
         </div>
+      </div>
+      <div class="madrid-skyline" aria-hidden="true">
+        <img src="/madrid-skyline.png" alt="" loading="lazy" width="2816" height="1536" />
       </div>
     </section>
 
@@ -336,7 +338,7 @@ const faqs = [
       <div class="cta-inner">
         <h2 class="cta-headline reveal">Your people<br/><em>are here.</em></h2>
         <div class="cta-action reveal">
-          <a href="https://tally.so/r/mad-builders" target="_blank" rel="noopener noreferrer" class="btn-apply">Apply now</a>
+          <a href="https://tally.so/r/w4e8yo" target="_blank" rel="noopener noreferrer" class="btn-apply">Apply now</a>
         </div>
         <p class="cta-note reveal">Founders only &middot; Limited spots &middot; No fees, ever.</p>
       </div>
@@ -1200,7 +1202,7 @@ const faqs = [
     flex-shrink: 0;
   }
 
-  .press-logo {
+   .press-logo {
     font-family: var(--font-display);
     font-style: normal;
     font-weight: 500;
@@ -1208,7 +1210,8 @@ const faqs = [
     color: #BBBBBB;
     letter-spacing: -0.01em;
     transition: color 0.25s;
-    cursor: default;
+    text-decoration: none;
+    cursor: pointer;
   }
   .press-logo:hover { color: var(--ink); }
 
@@ -1219,6 +1222,7 @@ const faqs = [
     background: var(--forest);
     border-bottom: 2px solid var(--border);
     overflow: hidden;
+    position: relative;
   }
 
   .madrid-inner {
@@ -1229,6 +1233,8 @@ const faqs = [
     grid-template-columns: 1fr 1fr;
     align-items: center;
     gap: clamp(2rem, 5vw, 6rem);
+    position: relative;
+    z-index: 1;
   }
 
   .madrid-word {
@@ -1259,6 +1265,25 @@ const faqs = [
     letter-spacing: -0.02em;
     line-height: 1.25;
     margin: 0;
+  }
+
+  .madrid-skyline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    line-height: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .madrid-skyline img {
+    width: 100%;
+    height: auto;
+    display: block;
+    opacity: 0.12;
+    filter: invert(1) brightness(2);
+    mix-blend-mode: screen;
   }
 
   /* =============================================
