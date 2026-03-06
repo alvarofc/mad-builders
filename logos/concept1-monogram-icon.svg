@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="c1-title c1-desc">
+  <title id="c1-title">Mad Builders Logo</title>
+  <desc id="c1-desc">A geometric MB monogram formed by interlocking angular letterforms inside a square block</desc>
+  <defs>
+    <style>
+      .bg { fill: #1A332B; }
+      .mark { fill: #F7F5F0; }
+    </style>
+  </defs>
+  <!-- Square cornerstone block -->
+  <rect class="bg" x="4" y="4" width="120" height="120"/>
+  <!-- M letterform: two vertical strokes with a shared center V -->
+  <path class="mark" d="
+    M24,100 L24,36 L44,64 L64,36 L64,100 L56,100 L56,54 L44,70 L32,54 L32,100 Z
+  "/>
+  <!-- B letterform: geometric, built from rectangles and a notch -->
+  <path class="mark" d="
+    M72,36 L104,36 L104,64 L88,64 L88,44 L80,44 L80,60 L96,60 L96,68
+    L104,68 L104,100 L72,100 L72,92 L96,92 L96,72 L72,72 Z
+  "/>
+</svg>

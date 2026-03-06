@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mad Builders — Logo Concepts (Round 2)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #F7F5F0; color: #1A332B; padding: 3rem 2rem; }
+  h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .subtitle { color: #666; margin-bottom: 3rem; font-size: 1.1rem; }
+  .concepts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; max-width: 1200px; margin: 0 auto; }
+  .concept { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white; }
+  .concept-header { padding: 1.5rem; border-bottom: 1px solid #eee; }
+  .concept-header h2 { font-size: 1.2rem; margin-bottom: 0.25rem; }
+  .concept-header p { font-size: 0.85rem; color: #888; line-height: 1.5; }
+  .preview { padding: 2rem; display: flex; align-items: center; justify-content: center; }
+  .preview svg { width: 128px; height: 128px; }
+  .preview-dark { background: #1A332B; }
+  .preview-dark svg .bg { fill: #F7F5F0; }
+  .preview-dark svg .mark { fill: #1A332B; }
+  .preview-dark svg .stone { fill: #F7F5F0; }
+  .preview-dark svg .cutout { fill: #1A332B; }
+  .preview-dark svg .line { stroke: #1A332B; }
+  .preview-dark svg .glyph { fill: #F7F5F0; }
+  
+  /* Shared SVG Classes */
+  .fill-primary { fill: #1A332B; }
+  .fill-bg { fill: #F7F5F0; }
+  .preview-dark .fill-primary { fill: #F7F5F0; }
+  .preview-dark .fill-bg { fill: #1A332B; }
+  
+  .preview-sm { padding: 1.5rem; display: flex; gap: 1rem; align-items: center; justify-content: center; border-top: 1px solid #eee; }
+  .preview-sm svg { width: 32px; height: 32px; }
+  .preview-sm span { font-size: 0.75rem; color: #999; }
+</style>
+</head>
+<body>
+  <h1>Mad Builders — Brandmark Concepts (Round 2)</h1>
+  <p class="subtitle">Focusing on high-end, minimal, and architectural directions.</p>
+
+  <div class="concepts">
+    <!-- Concept 4 -->
+    <div class="concept">
+      <div class="concept-header">
+        <h2>4. The Arch / Doorway</h2>
+        <p>A minimalist solid block with a perfect archway cut out. A nod to Madrid (Puerta de Alcalá) and the idea of "The Builder's House." Very high-end, gallery aesthetic.</p>
+      </div>
+      <div class="preview">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <!-- Main block -->
+          <rect class="fill-primary" x="24" y="24" width="80" height="92" rx="2" />
+          <!-- Arch Cutout -->
+          <path class="fill-bg" d="M48,116 V76 A16,16 0 0,1 80,76 V116 Z" />
+        </svg>
+      </div>
+      <div class="preview preview-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <rect class="fill-primary" x="24" y="24" width="80" height="92" rx="2" />
+          <path class="fill-bg" d="M48,116 V76 A16,16 0 0,1 80,76 V116 Z" />
+        </svg>
+      </div>
+      <div class="preview-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <rect class="fill-primary" x="24" y="24" width="80" height="92" rx="2" />
+          <path class="fill-bg" d="M48,116 V76 A16,16 0 0,1 80,76 V116 Z" />
+        </svg>
+        <span>32px (favicon)</span>
+      </div>
+    </div>
+
+    <!-- Concept 5 -->
+    <div class="concept">
+      <div class="concept-header">
+        <h2>5. The Structural M</h2>
+        <p>A brutalist, purely geometric "M" built from four heavy structural pillars. It feels like a skyline or a foundation. No curves, only structure.</p>
+      </div>
+      <div class="preview">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <path class="fill-primary" d="
+            M16,112 V32 h22 l26,38 l26,-38 h22 v80 h-20 V60 L64,88 L36,60 v52 z
+          "/>
+        </svg>
+      </div>
+      <div class="preview preview-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <path class="fill-primary" d="
+            M16,112 V32 h22 l26,38 l26,-38 h22 v80 h-20 V60 L64,88 L36,60 v52 z
+          "/>
+        </svg>
+      </div>
+      <div class="preview-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <path class="fill-primary" d="
+            M16,112 V32 h22 l26,38 l26,-38 h22 v80 h-20 V60 L64,88 L36,60 v52 z
+          "/>
+        </svg>
+        <span>32px (favicon)</span>
+      </div>
+    </div>
+
+    <!-- Concept 6 -->
+    <div class="concept">
+      <div class="concept-header">
+        <h2>6. The Editorial Mark</h2>
+        <p>A builder's asterisk. Cross-beams forming a spark or reference mark. This leans heavily into "The Founder's Broadsheet" editorial vibe.</p>
+      </div>
+      <div class="preview">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <g class="fill-primary">
+            <!-- Vertical heavy -->
+            <rect x="52" y="16" width="24" height="96" rx="2" />
+            <!-- Horizontal heavy -->
+            <rect x="16" y="52" width="96" height="24" rx="2" />
+            <!-- Diagonal 1 -->
+            <rect x="24" y="56" width="80" height="16" rx="2" transform="rotate(45 64 64)" />
+            <!-- Diagonal 2 -->
+            <rect x="24" y="56" width="80" height="16" rx="2" transform="rotate(-45 64 64)" />
+          </g>
+        </svg>
+      </div>
+      <div class="preview preview-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <g class="fill-primary">
+            <rect x="52" y="16" width="24" height="96" rx="2" />
+            <rect x="16" y="52" width="96" height="24" rx="2" />
+            <rect x="24" y="56" width="80" height="16" rx="2" transform="rotate(45 64 64)" />
+            <rect x="24" y="56" width="80" height="16" rx="2" transform="rotate(-45 64 64)" />
+          </g>
+        </svg>
+      </div>
+      <div class="preview-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+          <g class="fill-primary">
+            <rect x="52" y="16" width="24" height="96" rx="2" />
+            <rect x="16" y="52" width="96" height="24" rx="2" />
+            <rect x="24" y="56" width="80" height="16" rx="2" transform="rotate(45 64 64)" />
+            <rect x="24" y="56" width="80" height="16" rx="2" transform="rotate(-45 64 64)" />
+          </g>
+        </svg>
+        <span>32px (favicon)</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

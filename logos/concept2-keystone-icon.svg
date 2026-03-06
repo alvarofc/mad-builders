@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="c2-title c2-desc">
+  <title id="c2-title">Mad Builders Logo</title>
+  <desc id="c2-desc">A keystone shape — the wedge-shaped stone at the crown of an arch — symbolizing the critical piece that holds everything together</desc>
+  <defs>
+    <style>
+      .stone { fill: #1A332B; }
+      .line { stroke: #F7F5F0; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+  <!-- Keystone / trapezoid shape -->
+  <path class="stone" d="M34,8 L94,8 L108,120 L20,120 Z"/>
+  <!-- Horizontal mortar lines suggesting stacked bricks/craft -->
+  <line class="line" x1="28" y1="40" x2="100" y2="40"/>
+  <line class="line" x1="24" y1="64" x2="104" y2="64"/>
+  <line class="line" x1="22" y1="88" x2="106" y2="88"/>
+  <!-- Vertical split suggesting the M peak / building action -->
+  <line class="line" x1="64" y1="8" x2="64" y2="40"/>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="c3-title c3-desc">
+  <title id="c3-title">Mad Builders Logo</title>
+  <desc id="c3-desc">A mason's mark — an angular geometric glyph suggesting both the letter M and an upward-pointing construction, like a pitched roof or chisel tip</desc>
+  <defs>
+    <style>
+      .glyph { fill: #1A332B; }
+    </style>
+  </defs>
+  <!-- Abstract M-shaped mason's mark: two uprights connected by a peak -->
+  <!-- Clean, angular, no curves — like a stonemason would carve -->
+  <path class="glyph" d="
+    M16,112 L16,32 L28,32 L28,80 L58,40 L64,40
+    L64,16 L64,40 L70,40 L100,80 L100,32 L112,32
+    L112,112 L96,112 L64,64 L32,112 Z
+  "/>
+</svg>
