@@ -1,100 +1,85 @@
-```
-███╗   ███╗ █████╗ ██████╗     ██████╗ ██╗   ██╗██╗██╗     ██████╗ ███████╗██████╗ ███████╗
-████╗ ████║██╔══██╗██╔══██╗    ██╔══██╗██║   ██║██║██║     ██╔══██╗██╔════╝██╔══██╗██╔════╝
-██╔████╔██║███████║██║  ██║    ██████╔╝██║   ██║██║██║     ██║  ██║█████╗  ██████╔╝███████╗
-██║╚██╔╝██║██╔══██║██║  ██║    ██╔══██╗██║   ██║██║██║     ██║  ██║██╔══╝  ██╔══██╗╚════██║
-██║ ╚═╝ ██║██║  ██║██████╔╝    ██████╔╝╚██████╔╝██║███████╗██████╔╝███████╗██║  ██║███████║
-╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝     ╚═════╝  ╚═════╝ ╚═╝╚══════╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════╝
-```
+# Mad Builders
 
-> *Where ideas become reality, one commit at a time* 🏗️
+**Where founders build.**
 
-## 🚀 What's this about?
-
-We're a community of **builders, hackers, and dreamers** in Madrid who believe in:
-- 🔥 **Shipping fast** and breaking things (responsibly)
-- 🍕 **Late-night coding sessions** fueled by terrible coffee
-- 🤝 **Open collaboration** - your crazy idea might just work
-- 🎯 **Building stuff that matters** (or at least makes us smile)
-
-### The Vibe Check ✨
-```bash
-if (you.love("building cool stuff") && you.in("Madrid")) {
-  welcome_to_mad_builders();
-} else if (you.remote && you.heart === "builder") {
-  also_welcome(); // We're inclusive like that
-}
-```
-
-## 🛠️ Current Project Stack
-
-This website runs on:
-- **Astro** ⚡ - Because we like our sites fast and our builds faster
-- **Bun** 🥖 - The JS runtime that doesn't make us wait
-- **Love** ❤️ - The most important dependency
-
-## ⚡ Quick Start (Let's Go!)
-
-```bash
-# Clone the magic
-git clone https://github.com/alvarofc/mad-builders.git
-cd mad-builders
-
-# Install the goods
-bun install
-
-# Fire it up! 🔥
-bun dev
-
-# Now open localhost:4321 and start building!
-```
-
-## 🎯 What We're Building
-
-- [ ] **Community Hub** - Where builders connect and share
-- [ ] **Project Showcase** - Show off your latest hack
-- [ ] **Event Calendar** - Meetups, hackathons, and coffee chats
-- [ ] **Resource Library** - Tools, tutorials, and insider tips
-- [ ] **Job Board** - Because we all gotta eat 🥘
-
-## 🤙 Join the Movement
-
-Ready to build something awesome? Here's how to get involved:
-
-1. **Join our Discord** - [Link coming soon] 💬
-2. **Attend a meetup** - Check our events page
-3. **Contribute code** - See something you can improve? PR it!
-4. **Share your project** - We love seeing what you're working on
-5. **Bring snacks** - Seriously, we appreciate good snacks 🍪
-
-## 🏗️ Contributing
-
-Found a bug? Have a wild idea? Want to add that feature you've been thinking about?
-
-```bash
-# Fork it, fix it, ship it
-git checkout -b feature/my-awesome-idea
-# Make your changes
-git commit -m "✨ Add some magic"
-git push origin feature/my-awesome-idea
-# Open a PR and let's make it happen!
-```
-
-## 📍 Find Us IRL
-
-**Madrid, Spain** 🇪🇸  
-Usually hanging out in:
-- Coworking spaces around Malasaña
-- Random cafés with decent WiFi
-- That one bar with the good jamón
-- Your DMs (seriously, hit us up!)
-
-## 🎨 Built by Builders, for Builders
+A free workspace, a curated community, and a launchpad for founders building real companies. Based in Madrid. Selective by design.
 
 ---
 
-**Built with ❤️ in Madrid by:**
-- [Samplia](https://samplia.com/) 
-- [Aulean](https://aulean.com/)
-- [Incubator](https://incubator.com.ar/)
-- [StartupEmbassy](https://startupembassy.com/)
+## About
+
+Mad Builders is an in-person founder community in Madrid — not a coworking space, not a networking event. It's a curated group of founders who ship, and a place to work alongside them.
+
+Built on the same model as [Startup Embassy](https://www.startupembassy.com/) — the Palo Alto founder house that hosted 2,000+ entrepreneurs from 90+ countries, who went on to raise $700M+ and reach a combined valuation of $2B+. Mad Builders brings that model home to Madrid.
+
+**It's free. No membership fees. No equity. No catch.**
+
+---
+
+## Community
+
+Current members include founders of:
+
+- [Samplia](https://samplia.com/) — AI-driven product sampling logistics
+- [Startup Embassy](https://startupembassy.com/) — Global founder community since 2012
+- [Ironhack](https://www.ironhack.com/) — Largest tech bootcamp in Europe & LatAm
+- [Acumbamail](https://acumbamail.com/) — Bootstrapped email marketing platform
+- [Nomorepass](https://nomorepass.com/) — Password manager that never stores passwords
+- [Aulean](https://aulean.com/) — Enterprise AI solutions
+
+---
+
+## What you get
+
+1. **Workspace** — A permanent workspace with fast Wi-Fi and a builder-first setup
+2. **Founder circles** — Weekly sessions focused on problem-solving, not networking
+3. **Demo days** — Present in front of investors who write real checks
+4. **Mentorship** — 1:1 sessions with founders who've done it before
+5. **Partner perks** — Tools, credits, and discounts from relevant companies
+6. **Community** — People who show up for each other
+
+---
+
+## How to apply
+
+1. **Apply** — Tell us what you're building and why it matters → [tally.so/r/w4e8yo](https://tally.so/r/w4e8yo)
+2. **Meet** — A conversation. Show your work, not your deck
+3. **Build** — Get your spot and start shipping from day one
+
+Rolling admissions. Limited spots. Decisions in one week. In-person only.
+
+---
+
+## Tech stack
+
+This site is built with:
+
+- [Astro](https://astro.build/) — Static site framework
+- [Bun](https://bun.sh/) — JavaScript runtime and package manager
+
+```bash
+# Install
+bun install
+
+# Develop
+bun dev
+
+# Build
+bun run build
+```
+
+---
+
+## Contributing
+
+Open a PR. If you see something to improve, fix it.
+
+```bash
+git checkout -b fix/my-change
+git commit -m "fix: description of change"
+git push origin fix/my-change
+```
+
+---
+
+**Madrid, Spain — Est. 2024**
