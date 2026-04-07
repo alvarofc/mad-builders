@@ -92,10 +92,7 @@ const faqs = [
               style={`--card-color: ${b.color}; transition-delay: ${0.08 + i * 0.06}s`}
             >
               <div class="face-photo" style={`background-color: ${b.color}`}>
-                <svg class="face-silhouette" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="40" cy="32" r="19" fill="rgba(247,245,240,0.2)"/>
-                  <path d="M4 100 Q4 68 40 68 Q76 68 76 100" fill="rgba(247,245,240,0.2)"/>
-                </svg>
+                <div class="face-monogram">{b.name.split(' ').map(n => n[0]).join('')}</div>
                 <div class="face-firstname">{b.name.split(' ')[0]}</div>
               </div>
               <div class="face-caption">
@@ -166,10 +163,7 @@ const faqs = [
           {builders.map((b) => (
             <a href={b.url} target="_blank" rel="noopener noreferrer" class="builder-card reveal">
               <div class="builder-photo" style={`background-color: ${b.color}`}>
-                <svg class="builder-silhouette" viewBox="0 0 80 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="40" cy="34" r="21" fill="rgba(247,245,240,0.18)"/>
-                  <path d="M2 110 Q2 72 40 72 Q78 72 78 110" fill="rgba(247,245,240,0.18)"/>
-                </svg>
+                <div class="builder-monogram">{b.name.split(' ').map(n => n[0]).join('')}</div>
                 <div class="builder-photo-tag">{b.company} →</div>
               </div>
               <div class="builder-info">
@@ -313,9 +307,7 @@ const faqs = [
           <p class="madrid-invite reveal">We&rsquo;re based here.<br/>If you&rsquo;re a founder building something real, come find your people.</p>
         </div>
       </div>
-      <div class="madrid-skyline" aria-hidden="true">
-        <img src="/madrid-skyline.png" alt="" loading="lazy" width="2816" height="1536" />
-      </div>
+      <div class="madrid-skyline" aria-hidden="true"></div>
     </section>
 
     <!-- ============ FAQ ============ -->
@@ -679,12 +671,18 @@ const faqs = [
     align-items: flex-end;
   }
 
-  .face-silhouette {
+  .face-monogram {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    color: rgba(247, 245, 240, 0.12);
+    letter-spacing: 0.05em;
+    user-select: none;
   }
 
   .face-firstname {
@@ -908,11 +906,18 @@ const faqs = [
     justify-content: flex-start;
   }
 
-  .builder-silhouette {
+  .builder-monogram {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    color: rgba(247, 245, 240, 0.1);
+    letter-spacing: 0.05em;
+    user-select: none;
   }
 
   .builder-photo-tag {
@@ -1284,18 +1289,10 @@ const faqs = [
     bottom: 0;
     left: 0;
     width: 100%;
-    line-height: 0;
+    height: 180px;
     pointer-events: none;
     z-index: 0;
-  }
-
-  .madrid-skyline img {
-    width: 100%;
-    height: auto;
-    display: block;
-    opacity: 0.12;
-    filter: invert(1) brightness(2);
-    mix-blend-mode: screen;
+    background: linear-gradient(to top, rgba(247, 245, 240, 0.04) 0%, transparent 100%);
   }
 
   /* =============================================
