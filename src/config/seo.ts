@@ -2,7 +2,7 @@ export const SITE = 'https://www.mad.builders'
 
 export const DEFAULT_TITLE = 'MAD BUILDERS — Where founders build.'
 export const DEFAULT_DESCRIPTION = 'A free workspace, a curated community, and a launchpad for founders building real companies. Curated. Selective. Based in Madrid.'
-export const OG_IMAGE = '/og.svg'
+export const OG_IMAGE = '/og.png'
 export const LOCALE = 'en_US'
 export const SITE_NAME = 'MAD BUILDERS'
 export const THEME_COLOR = '#FFFFFF'
