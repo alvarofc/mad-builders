@@ -1,5 +1,6 @@
 ---
 import SEO from '../components/SEO.astro'
+import Analytics from '@vercel/analytics/astro'
 
 export interface Props {
 	title?: string;
@@ -23,6 +24,7 @@ const { title, description, noindex, structuredData } = Astro.props;
 	<body>
 		<h1 class="visually-hidden">MAD BUILDERS</h1>
 		<slot />
+		<Analytics />
 	</body>
 </html>
 
