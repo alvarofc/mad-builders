@@ -35,15 +35,6 @@ const structuredData = [
   }
 ]
 
-const builders = [
-  { name: 'Carlos Reines',    role: 'Co-founder', company: 'Samplia',          building: 'Reinventing product sampling with AI-driven logistics',    url: 'https://samplia.com/',              color: '#2C4238' },
-  { name: 'Jordi Hales',      role: 'Co-founder', company: 'Startup Embassy',  building: 'Building global founder communities since 2012',           url: 'https://startupembassy.com/',       color: '#3A2E52' },
-  { name: 'Gonzalo Manrique', role: 'Co-founder', company: 'Ironhack',         building: 'Largest tech bootcamp in Europe & LatAm',                  url: 'https://www.ironhack.com/',         color: '#4A2E1C' },
-  { name: 'Ignacio Arriaga',  role: 'Founder',    company: 'Acumbamail',       building: 'Email marketing platform, bootstrapped to profitability',  url: 'https://acumbamail.com/',           color: '#1E3248' },
-  { name: 'Diego Ballesteros',role: 'Co-founder', company: 'Nomorepass',       building: 'Password manager that never stores passwords',             url: 'https://nomorepass.com/',           color: '#3E2430' },
-  { name: 'Pablo Villalba',   role: 'Founder',    company: 'Aulean',           building: 'Enterprise AI solutions for smarter operations',           url: 'https://aulean.com/',               color: '#1E3C38' },
-]
-
 const faqs = [
   { q: 'Is it really free?',        a: 'Yes. No membership fees, no equity, no hidden costs. We believe the best communities are generous by default.' },
   { q: 'Do I need to be a founder?',a: 'Yes. This community is built for founders — people with skin in the game, building companies they believe in.' },
@@ -67,7 +58,7 @@ const faqs = [
     <nav class="nav" id="nav">
       <div class="nav-inner">
         <a href="/" class="logo-badge" aria-label="Mad Builders home">mad <span class="logo-builders">builders</span></a>
-        <a href="#apply" class="nav-cta">Apply now <span class="nav-arrow">→</span></a>
+        <a href="https://tally.so/r/w4e8yo" target="_blank" rel="noopener noreferrer" class="nav-cta">Apply now <span class="nav-arrow">→</span></a>
       </div>
     </nav>
 
@@ -84,26 +75,6 @@ const faqs = [
             <a href="#apply" class="btn-hero">Apply now</a>
             <span class="hero-note">Rolling admissions · Limited spots</span>
           </div>
-        </div>
-        <div class="hero-faces" aria-label="Community members">
-          {builders.map((b, i) => (
-            <div
-              class="face-card reveal"
-              style={`--card-color: ${b.color}; transition-delay: ${0.08 + i * 0.06}s`}
-            >
-              <div class="face-photo" style={`background-color: ${b.color}`}>
-                <svg class="face-silhouette" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="40" cy="32" r="19" fill="rgba(247,245,240,0.2)"/>
-                  <path d="M4 100 Q4 68 40 68 Q76 68 76 100" fill="rgba(247,245,240,0.2)"/>
-                </svg>
-                <div class="face-firstname">{b.name.split(' ')[0]}</div>
-              </div>
-              <div class="face-caption">
-                <span class="face-fullname">{b.name}</span>
-                <span class="face-company">{b.company}</span>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
       <div class="hero-scroll" id="scroll-hint">
@@ -152,34 +123,6 @@ const faqs = [
           </div>
         </div>
         <p class="who-note reveal">If you need permission to build, this isn&rsquo;t your place.</p>
-      </div>
-    </section>
-
-    <!-- ============ COMMUNITY ============ -->
-    <section class="section section-community" id="community">
-      <div class="container">
-        <div class="community-header">
-          <h2 class="section-title section-title-inv reveal">The <em>builders.</em></h2>
-          <p class="community-sub reveal">Shipping products, raising rounds, and building the companies the world will remember.</p>
-        </div>
-        <div class="builders-grid">
-          {builders.map((b) => (
-            <a href={b.url} target="_blank" rel="noopener noreferrer" class="builder-card reveal">
-              <div class="builder-photo" style={`background-color: ${b.color}`}>
-                <svg class="builder-silhouette" viewBox="0 0 80 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="40" cy="34" r="21" fill="rgba(247,245,240,0.18)"/>
-                  <path d="M2 110 Q2 72 40 72 Q78 72 78 110" fill="rgba(247,245,240,0.18)"/>
-                </svg>
-                <div class="builder-photo-tag">{b.company} →</div>
-              </div>
-              <div class="builder-info">
-                <h3 class="builder-name">{b.name}</h3>
-                <p class="builder-role">{b.role}</p>
-                <p class="builder-building">{b.building}</p>
-              </div>
-            </a>
-          ))}
-        </div>
       </div>
     </section>
 
@@ -313,9 +256,7 @@ const faqs = [
           <p class="madrid-invite reveal">We&rsquo;re based here.<br/>If you&rsquo;re a founder building something real, come find your people.</p>
         </div>
       </div>
-      <div class="madrid-skyline" aria-hidden="true">
-        <img src="/madrid-skyline.png" alt="" loading="lazy" width="2816" height="1536" />
-      </div>
+      <div class="madrid-skyline" aria-hidden="true"></div>
     </section>
 
     <!-- ============ FAQ ============ -->
@@ -579,10 +520,9 @@ const faqs = [
     max-width: var(--max-w);
     margin: 0 auto;
     padding: clamp(3rem, 6vw, 5rem) var(--pad-x);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(2rem, 4vw, 5rem);
+    display: flex;
     align-items: center;
+    justify-content: center;
     width: 100%;
   }
 
@@ -612,11 +552,16 @@ const faqs = [
     color: rgba(247, 245, 240, 0.65);
   }
 
+  .hero-copy {
+    text-align: center;
+    max-width: 720px;
+  }
+
   .hero-sub {
     font-size: clamp(1rem, 1.5vw, 1.2rem);
     color: rgba(247, 245, 240, 0.65);
-    max-width: 480px;
-    margin: 0 0 clamp(2rem, 3vw, 3rem);
+    max-width: 540px;
+    margin: 0 auto clamp(2rem, 3vw, 3rem);
     line-height: 1.7;
     font-weight: 400;
   }
@@ -624,6 +569,7 @@ const faqs = [
   .hero-actions {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 1.5rem;
     flex-wrap: wrap;
   }
@@ -651,83 +597,6 @@ const faqs = [
     font-size: 0.78rem;
     color: var(--mid);
     letter-spacing: 0.05em;
-  }
-
-  /* FACES GRID — 2 columns x 3 rows */
-  .hero-faces {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0;
-    border: 2px solid rgba(247, 245, 240, 0.15);
-  }
-
-  .face-card {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid rgba(247, 245, 240, 0.12);
-    border-bottom: 1px solid rgba(247, 245, 240, 0.12);
-    overflow: hidden;
-  }
-  .face-card:nth-child(2n)  { border-right: none; }
-  .face-card:nth-last-child(-n+2) { border-bottom: none; }
-
-  .face-photo {
-    position: relative;
-    aspect-ratio: 4 / 5;
-    overflow: hidden;
-    display: flex;
-    align-items: flex-end;
-  }
-
-  .face-silhouette {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .face-firstname {
-    position: absolute;
-    bottom: 0.75rem;
-    left: 0.75rem;
-    font-family: var(--font-display);
-    font-weight: 300;
-    font-style: italic;
-    font-size: clamp(1.1rem, 2vw, 1.5rem);
-    color: rgba(247, 245, 240, 0.9);
-    letter-spacing: -0.01em;
-    line-height: 1;
-    text-shadow: 0 1px 8px rgba(0,0,0,0.4);
-  }
-
-  .face-caption {
-    padding: 0.55rem 0.75rem;
-    background: rgba(247, 245, 240, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.5rem;
-  }
-
-  .face-fullname {
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 0.7rem;
-    color: var(--cream);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    letter-spacing: 0.01em;
-  }
-
-  .face-company {
-    font-family: var(--font-logo);
-    font-size: 0.62rem;
-    color: var(--mid);
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-    flex-shrink: 0;
   }
 
   .hero-scroll {
@@ -848,131 +717,6 @@ const faqs = [
     max-width: 600px;
     margin: 0;
     font-style: italic;
-  }
-
-  /* =============================================
-     COMMUNITY  (forest green)
-  ============================================= */
-  .section-community {
-    background: var(--forest);
-    border-bottom: 2px solid var(--border);
-    padding-bottom: clamp(4rem, 8vw, 9rem);
-  }
-
-  .community-header {
-    margin-bottom: clamp(2.5rem, 5vw, 5rem);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 2rem;
-    flex-wrap: wrap;
-  }
-
-  .community-header .section-title { margin-bottom: 0; }
-
-  .community-sub {
-    font-size: 1rem;
-    color: var(--mid);
-    max-width: 380px;
-    margin: 0;
-    line-height: 1.65;
-    text-align: right;
-  }
-
-  .builders-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    border: 1px solid rgba(247, 245, 240, 0.12);
-  }
-
-  .builder-card {
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    border-right: 1px solid rgba(247, 245, 240, 0.12);
-    border-bottom: 1px solid rgba(247, 245, 240, 0.12);
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-    overflow: hidden;
-  }
-  .builder-card:nth-child(3n) { border-right: none; }
-  .builder-card:nth-last-child(-n+3) { border-bottom: none; }
-  .builder-card:hover { transform: translateY(-4px); }
-
-  .builder-photo {
-    position: relative;
-    aspect-ratio: 3 / 4;
-    overflow: hidden;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-start;
-  }
-
-  .builder-silhouette {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  .builder-photo-tag {
-    position: absolute;
-    top: 0.8rem;
-    right: 0.8rem;
-    font-family: var(--font-logo);
-    font-size: 0.62rem;
-    font-weight: 600;
-    color: rgba(247, 245, 240, 0.9);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: rgba(26, 51, 43, 0.6);
-    padding: 0.2rem 0.5rem;
-    backdrop-filter: blur(4px);
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity 0.25s, transform 0.25s;
-  }
-
-  .builder-card:hover .builder-photo-tag {
-    opacity: 1;
-    transform: none;
-  }
-
-  .builder-info {
-    padding: 1.1rem 1.25rem 1.35rem;
-    background: rgba(247, 245, 240, 0.04);
-    flex: 1;
-    transition: background 0.25s;
-  }
-  .builder-card:hover .builder-info {
-    background: rgba(247, 245, 240, 0.08);
-  }
-
-  .builder-name {
-    font-family: var(--font-body);
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--cream);
-    margin: 0 0 0.2rem;
-    letter-spacing: -0.01em;
-    line-height: 1.2;
-  }
-
-  .builder-role {
-    font-family: var(--font-logo);
-    font-size: 0.68rem;
-    color: var(--mid);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin: 0 0 0.8rem;
-  }
-
-  .builder-building {
-    font-size: 0.88rem;
-    color: rgba(247, 245, 240, 0.5);
-    margin: 0;
-    line-height: 1.55;
-    font-weight: 400;
   }
 
   /* =============================================
@@ -1284,18 +1028,10 @@ const faqs = [
     bottom: 0;
     left: 0;
     width: 100%;
-    line-height: 0;
+    height: 180px;
     pointer-events: none;
     z-index: 0;
-  }
-
-  .madrid-skyline img {
-    width: 100%;
-    height: auto;
-    display: block;
-    opacity: 0.12;
-    filter: invert(1) brightness(2);
-    mix-blend-mode: screen;
+    background: linear-gradient(to top, rgba(247, 245, 240, 0.04) 0%, transparent 100%);
   }
 
   /* =============================================
@@ -1513,25 +1249,6 @@ const faqs = [
      RESPONSIVE — TABLET
   ============================================= */
   @media (max-width: 1024px) {
-    .hero-inner {
-      grid-template-columns: 1fr;
-    }
-    .hero-faces {
-      grid-template-columns: repeat(3, 1fr);
-    }
-    .face-card:nth-child(2n) { border-right: 1px solid rgba(247,245,240,0.12); }
-    .face-card:nth-child(3n) { border-right: none; }
-    .face-card:nth-last-child(-n+2) { border-bottom: 1px solid rgba(247,245,240,0.12); }
-    .face-card:nth-last-child(-n+3) { border-bottom: none; }
-
-    .builders-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .builder-card:nth-child(3n) { border-right: 1px solid rgba(247,245,240,0.12); }
-    .builder-card:nth-last-child(-n+3) { border-bottom: 1px solid rgba(247,245,240,0.12); }
-    .builder-card:nth-child(2n) { border-right: none; }
-    .builder-card:nth-last-child(-n+2) { border-bottom: none; }
-
     .origin-layout {
       grid-template-columns: 1fr;
     }
@@ -1559,21 +1276,8 @@ const faqs = [
      RESPONSIVE — MOBILE
   ============================================= */
   @media (max-width: 768px) {
-    .hero-faces {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .face-card:nth-child(3n) { border-right: 1px solid rgba(247,245,240,0.12); }
-    .face-card:nth-last-child(-n+3) { border-bottom: 1px solid rgba(247,245,240,0.12); }
-    .face-card:nth-child(2n) { border-right: none; }
-    .face-card:nth-last-child(-n+2) { border-bottom: none; }
-
     .problem-layout { grid-template-columns: 1fr; }
     .problem-pull { position: static; }
-
-    .builders-grid { grid-template-columns: 1fr; }
-    .builder-card:nth-child(2n) { border-right: none; }
-    .builder-card:nth-last-child(-n+2) { border-bottom: 1px solid rgba(247,245,240,0.12); }
-    .builder-card:last-child { border-bottom: none; }
 
     .benefits-grid { grid-template-columns: 1fr; }
     .benefit-item:nth-child(2n) { border-right: none; }
@@ -1593,9 +1297,6 @@ const faqs = [
     .faq-grid { grid-template-columns: 1fr; }
     .faq-item:nth-child(2n) { border-right: none; }
     .faq-item:last-child { border-bottom: none; }
-
-    .community-header { flex-direction: column; align-items: flex-start; }
-    .community-sub { text-align: left; max-width: 100%; }
 
     .footer-inner { flex-direction: column; align-items: flex-start; }
     .footer-right { align-items: flex-start; }
@@ -1624,7 +1325,7 @@ const faqs = [
     .stat:last-child { border-bottom: none; }
 
     .press-row { gap: 1rem; }
-    .hero-actions { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .hero-actions { flex-direction: column; align-items: center; gap: 1rem; }
   }
 </style>
 
