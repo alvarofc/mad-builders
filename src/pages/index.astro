@@ -12,7 +12,7 @@ const structuredData = [
     'name': SITE_NAME,
     'url': absoluteUrl('/'),
     'description': DEFAULT_DESCRIPTION,
-    'foundingDate': '2024',
+    'foundingDate': '2025',
     'areaServed': {
       '@type': 'Place',
       'name': 'Madrid, Spain'
@@ -58,7 +58,10 @@ const faqs = [
     <nav class="nav" id="nav">
       <div class="nav-inner">
         <a href="/" class="logo-badge" aria-label="Mad Builders home">mad <span class="logo-builders">builders</span></a>
-        <a href="https://tally.so/r/w4e8yo" target="_blank" rel="noopener noreferrer" class="nav-cta">Apply now <span class="nav-arrow">→</span></a>
+        <div class="nav-links">
+          <a href="/events" class="nav-link">Events</a>
+          <a href="https://tally.so/r/w4e8yo" target="_blank" rel="noopener noreferrer" class="nav-cta">Apply now <span class="nav-arrow">→</span></a>
+        </div>
       </div>
     </nav>
 
@@ -66,7 +69,7 @@ const faqs = [
     <section class="hero" id="hero">
       <div class="hero-inner">
         <div class="hero-copy">
-          <p class="hero-eyebrow reveal">Madrid, Spain &mdash; Est. 2024</p>
+          <p class="hero-eyebrow reveal">Madrid, Spain &mdash; Est. 2025</p>
           <h2 class="hero-headline reveal">
             The<br/><em>builders'</em><br/>house.
           </h2>
@@ -444,6 +447,24 @@ const faqs = [
     align-items: center;
     justify-content: space-between;
   }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .nav-link {
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  .nav-link:hover { opacity: 1; }
 
   .nav-cta {
     font-family: var(--font-body);
@@ -1317,6 +1338,13 @@ const faqs = [
   /* =============================================
      RESPONSIVE — SMALL MOBILE
   ============================================= */
+  @media (max-width: 640px) {
+    .nav-links {
+      flex-wrap: wrap;
+    }
+    .nav-link { display: none; }
+  }
+
   @media (max-width: 480px) {
     .origin-stats { grid-template-columns: 1fr; }
     .stat:nth-child(2n) { border-right: none; }
