@@ -1338,6 +1338,13 @@ const faqs = [
   /* =============================================
      RESPONSIVE — SMALL MOBILE
   ============================================= */
+  @media (max-width: 640px) {
+    .nav-links {
+      flex-wrap: wrap;
+    }
+    .nav-link { display: none; }
+  }
+
   @media (max-width: 480px) {
     .origin-stats { grid-template-columns: 1fr; }
     .stat:nth-child(2n) { border-right: none; }

@@ -149,7 +149,14 @@ const description = 'Upcoming events, talks, and gatherings at Mad Builders. A c
     inset: 0 0 auto;
     z-index: 200;
     background: var(--cream);
-    border-bottom: 2px solid var(--border);
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.35s, background 0.35s;
+  }
+  .nav.scrolled {
+    border-bottom-color: var(--border);
+    background: rgba(247, 245, 240, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 
   .nav-inner {
