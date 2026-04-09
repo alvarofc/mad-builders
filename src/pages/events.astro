@@ -1,0 +1,305 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const title = 'Events — MAD BUILDERS'
+const description = 'Upcoming events, talks, and gatherings at Mad Builders. A curated community for founders building real companies in Madrid.'
+---
+
+<Layout title={title} description={description}>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </Fragment>
+
+  <div class="page">
+
+    <!-- ============ NAV ============ -->
+    <nav class="nav" id="nav">
+      <div class="nav-inner">
+        <a href="/" class="logo-badge" aria-label="Mad Builders home">mad <span class="logo-builders">builders</span></a>
+        <div class="nav-links">
+          <a href="/events" class="nav-link nav-link-active">Events</a>
+          <a href="https://tally.so/r/w4e8yo" target="_blank" rel="noopener noreferrer" class="nav-cta">Apply now <span class="nav-arrow">→</span></a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ============ HEADER ============ -->
+    <header class="page-header">
+      <div class="page-header-inner">
+        <p class="eyebrow">Madrid, Spain</p>
+        <h1 class="page-title">Events</h1>
+        <p class="page-sub">Talks, dinners, and builder gatherings. No networking theater — just the good stuff.</p>
+      </div>
+    </header>
+
+    <!-- ============ CALENDAR ============ -->
+    <section class="calendar-section">
+      <div class="calendar-wrap">
+        <iframe
+          src="https://luma.com/embed/calendar/cal-aUwt8HgNZiWt9Xa/events"
+          frameborder="0"
+          allowfullscreen
+          aria-hidden="false"
+          tabindex="0"
+          title="Mad Builders events calendar"
+        ></iframe>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <a href="/" class="logo-badge logo-badge-sm" aria-label="Mad Builders home">mad <span class="logo-builders">builders</span></a>
+        <div class="footer-right">
+          <span class="footer-tagline">Where founders build.</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</Layout>
+
+
+<style>
+  :root {
+    --forest:  #1A332B;
+    --cream:   #F7F5F0;
+    --sand:    #EDE9E1;
+    --ink:     #1C1C1A;
+    --copper:  #B85C38;
+    --mid:     #4A6B5A;
+    --border:  #1C1C1A;
+    --border-light: rgba(28, 28, 26, 0.14);
+
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body:    'Syne', system-ui, sans-serif;
+    --font-logo:    'Bricolage Grotesque', sans-serif;
+
+    --max-w:   1280px;
+    --pad-x:   clamp(1.25rem, 4vw, 3.5rem);
+  }
+
+  .page *,
+  .page *::before,
+  .page *::after {
+    box-sizing: border-box;
+  }
+
+  .page {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: var(--cream);
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Grain overlay */
+  .page::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  /* ============ LOGO ============ */
+  .logo-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.22em;
+    background: var(--forest);
+    color: var(--cream);
+    padding: 0.55rem 1.05rem 0.6rem;
+    text-decoration: none;
+    font-family: var(--font-logo);
+    font-weight: 700;
+    font-size: 1.65rem;
+    letter-spacing: 0.025em;
+    line-height: 1;
+    transition: opacity 0.2s;
+  }
+  .logo-badge:hover { opacity: 0.85; }
+
+  .logo-builders {
+    font-weight: 500;
+    font-size: 0.76em;
+    letter-spacing: 0.06em;
+    opacity: 0.82;
+  }
+
+  .logo-badge-sm {
+    font-size: 1.2rem;
+    padding: 0.45rem 0.85rem 0.5rem;
+  }
+
+  /* ============ NAV ============ */
+  .nav {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 200;
+    background: var(--cream);
+    border-bottom: 2px solid var(--border);
+  }
+
+  .nav-inner {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 0.75rem var(--pad-x);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .nav-link {
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  .nav-link:hover,
+  .nav-link-active { opacity: 1; }
+
+  .nav-cta {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--forest);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    border: 2px solid var(--forest);
+    padding: 0.5rem 1.25rem;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nav-cta:hover {
+    background: var(--forest);
+    color: var(--cream);
+  }
+  .nav-arrow { display: inline-block; transition: transform 0.2s; }
+  .nav-cta:hover .nav-arrow { transform: translateX(3px); }
+
+  /* ============ PAGE HEADER ============ */
+  .page-header {
+    margin-top: 5rem;
+    padding: clamp(3rem, 6vw, 6rem) var(--pad-x) clamp(2rem, 4vw, 4rem);
+    border-bottom: 2px solid var(--border);
+    background: var(--forest);
+  }
+
+  .page-header-inner {
+    max-width: var(--max-w);
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    font-family: var(--font-logo);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: rgba(247, 245, 240, 0.5);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0 0 1rem;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(3rem, 7vw, 6rem);
+    letter-spacing: -0.04em;
+    color: var(--cream);
+    margin: 0 0 1rem;
+    line-height: 1;
+  }
+
+  .page-sub {
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    color: rgba(247, 245, 240, 0.6);
+    margin: 0;
+    max-width: 520px;
+  }
+
+  /* ============ CALENDAR ============ */
+  .calendar-section {
+    flex: 1;
+    padding: clamp(2.5rem, 5vw, 5rem) var(--pad-x);
+  }
+
+  .calendar-wrap {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    border: 2px solid var(--border);
+    overflow: hidden;
+  }
+
+  .calendar-wrap iframe {
+    display: block;
+    width: 100%;
+    height: 700px;
+    border: none;
+  }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    background: var(--cream);
+    border-top: 2px solid var(--border);
+    padding: 2.5rem var(--pad-x);
+  }
+
+  .footer-inner {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.85rem;
+    color: #888882;
+    font-family: var(--font-logo);
+  }
+
+  @media (max-width: 600px) {
+    .calendar-wrap iframe { height: 500px; }
+    .nav-link { display: none; }
+  }
+</style>
+
+<script>
+  // Scroll-aware nav (matches main page behavior)
+  const nav = document.getElementById('nav');
+  if (nav) {
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+  }
+</script>
