@@ -35,6 +35,13 @@ const structuredData = [
   }
 ]
 
+const COMMUNITY_PHOTO_COUNT = 30
+const communityPhotos = Array.from({ length: COMMUNITY_PHOTO_COUNT }, (_, i) =>
+  `/community/mb-${String(i + 1).padStart(3, '0')}.avif`
+)
+// Duplicate for seamless marquee loop
+const marqueePhotos = [...communityPhotos, ...communityPhotos]
+
 const faqs = [
   { q: 'Is it really free?',        a: 'Yes. No membership fees, no equity, no hidden costs. We believe the best communities are generous by default.' },
   { q: 'Do I need to be a founder?',a: 'Yes. This community is built for founders — people with skin in the game, building companies they believe in.' },
@@ -76,12 +83,15 @@ const faqs = [
           <p class="hero-sub reveal">A free workspace, a curated community, and a launchpad for founders building real companies. No coworking fluff. No networking theater. Just building.</p>
           <div class="hero-actions reveal">
             <a href="#apply" class="btn-hero">Apply now</a>
-            <span class="hero-note">Rolling admissions · Limited spots</span>
+            <span class="hero-note"><span class="live-dot" aria-hidden="true"></span>Rolling admissions · Limited spots</span>
           </div>
         </div>
       </div>
       <div class="hero-scroll" id="scroll-hint">
         <div class="scroll-bar"></div>
+      </div>
+      <div class="hero-skyline" aria-hidden="true">
+        <img src="/madrid-skyline.png" alt="" width="2816" height="1536" />
       </div>
     </section>
 
@@ -250,6 +260,23 @@ const faqs = [
       </div>
     </section>
 
+    <!-- ============ COMMUNITY ============ -->
+    <section class="section-community" id="community" aria-label="The community">
+      <div class="community-head">
+        <p class="community-eyebrow reveal">The community</p>
+        <h2 class="community-title reveal">Real founders.<br/><em>Real work.</em></h2>
+      </div>
+      <div class="marquee" id="community-marquee" aria-hidden="true">
+        <div class="marquee-track">
+          {marqueePhotos.map((src) => (
+            <figure class="marquee-item">
+              <img src={src} alt="" loading="eager" decoding="async" width="600" height="400" />
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+
     <!-- ============ MADRID ============ -->
     <section class="section-madrid" id="madrid">
       <div class="madrid-inner">
@@ -259,7 +286,9 @@ const faqs = [
           <p class="madrid-invite reveal">We&rsquo;re based here.<br/>If you&rsquo;re a founder building something real, come find your people.</p>
         </div>
       </div>
-      <div class="madrid-skyline" aria-hidden="true"></div>
+      <div class="madrid-skyline" aria-hidden="true">
+        <img src="/madrid-skyline.png" alt="" loading="lazy" width="2816" height="1536" />
+      </div>
     </section>
 
     <!-- ============ FAQ ============ -->
@@ -618,6 +647,58 @@ const faqs = [
     font-size: 0.78rem;
     color: var(--mid);
     letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--copper);
+    position: relative;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 0 rgba(184, 92, 56, 0.55);
+    animation: live-pulse 2.2s ease-out infinite;
+  }
+
+  @keyframes live-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(184, 92, 56, 0.55); }
+    70%  { box-shadow: 0 0 0 10px rgba(184, 92, 56, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(184, 92, 56, 0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot { animation: none; }
+  }
+
+  .hero {
+    position: relative;
+  }
+
+  .hero-skyline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    line-height: 0;
+    pointer-events: none;
+  }
+
+  .hero-skyline img {
+    width: 100%;
+    height: auto;
+    display: block;
+    opacity: 0.4;
+    filter: invert(1);
+    mix-blend-mode: screen;
+  }
+
+  .hero-inner,
+  .hero-scroll {
+    position: relative;
+    z-index: 1;
   }
 
   .hero-scroll {
@@ -993,6 +1074,109 @@ const faqs = [
   .press-logo:hover { color: var(--ink); }
 
   /* =============================================
+     COMMUNITY  (sand) — horizontal marquee
+  ============================================= */
+  .section-community {
+    background: var(--sand);
+    border-bottom: 2px solid var(--border);
+    padding: clamp(4rem, 8vw, 9rem) 0 clamp(3rem, 6vw, 6rem);
+    overflow: hidden;
+  }
+
+  .community-head {
+    max-width: var(--max-w);
+    margin: 0 auto clamp(2.5rem, 5vw, 4.5rem);
+    padding: 0 var(--pad-x);
+  }
+
+  .community-eyebrow {
+    font-family: var(--font-logo);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--copper);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0 0 1.25rem;
+  }
+
+  .community-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-style: normal;
+    font-size: clamp(2.8rem, 5.5vw, 5rem);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .community-title em {
+    font-style: normal;
+    color: var(--mid);
+  }
+
+  .marquee {
+    width: 100%;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  .marquee-track {
+    display: flex;
+    gap: 1rem;
+    width: max-content;
+    animation: marquee-scroll 100s linear infinite;
+    animation-play-state: paused;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .marquee.is-ready .marquee-track {
+    animation-play-state: running;
+    opacity: 1;
+  }
+
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+    }
+    .marquee {
+      overflow-x: auto;
+    }
+  }
+
+  .marquee-item {
+    margin: 0;
+    flex-shrink: 0;
+    height: clamp(280px, 36vw, 400px);
+    width: clamp(420px, 54vw, 600px);
+    background: rgba(28, 28, 26, 0.04);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .marquee-item img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .marquee-item:hover img {
+    transform: scale(1.04);
+  }
+
+  @keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* =============================================
      MADRID  (forest green)
   ============================================= */
   .section-madrid {
@@ -1049,10 +1233,16 @@ const faqs = [
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 180px;
+    line-height: 0;
     pointer-events: none;
-    z-index: 0;
-    background: linear-gradient(to top, rgba(247, 245, 240, 0.04) 0%, transparent 100%);
+  }
+
+  .madrid-skyline img {
+    width: 100%;
+    height: auto;
+    display: block;
+    opacity: 0.22;
+    filter: brightness(0) invert(1);
   }
 
   /* =============================================
@@ -1410,10 +1600,29 @@ const faqs = [
     })
   }
 
+  // Hold marquee animation until all photos load (no empty slots)
+  function initMarquee() {
+    const marquee = document.getElementById('community-marquee')
+    if (!marquee) return
+    const imgs = Array.from(marquee.querySelectorAll('img'))
+    if (imgs.length === 0) return
+    Promise.all(
+      imgs.map(img =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise(res => {
+              img.addEventListener('load', res, { once: true })
+              img.addEventListener('error', res, { once: true })
+            })
+      )
+    ).then(() => marquee.classList.add('is-ready'))
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initReveal()
     initNav()
     initScroll()
     initScrollHint()
+    initMarquee()
   })
 </script>
