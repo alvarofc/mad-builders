@@ -5,6 +5,15 @@ import { absoluteUrl, DEFAULT_DESCRIPTION, SITE_NAME, SAME_AS } from '../config/
 const title = 'MAD BUILDERS — Where founders build.'
 const description = 'A free workspace, a curated community, and a launchpad for founders building real companies. Curated. Selective. Based in Madrid.'
 
+// ── Applications status ──────────────────────────────────────────────
+// We're over capacity for now, so applications are paused. Flip this to
+// `true` to reopen the Tally form. While closed, CTAs invite people to
+// the WhatsApp community instead.
+const APPLICATIONS_OPEN = false
+const APPLY_URL = 'https://tally.so/r/w4e8yo'
+// TODO: replace with the real WhatsApp group invite link once available.
+const WHATSAPP_URL = '#'
+
 const structuredData = [
   {
     '@context': 'https://schema.org',
@@ -67,7 +76,9 @@ const faqs = [
         <a href="/" class="logo-badge" aria-label="Mad Builders home">mad <span class="logo-builders">builders</span></a>
         <div class="nav-links">
           <a href="/events" class="nav-link">Events</a>
-          <a href="https://tally.so/r/w4e8yo" target="_blank" rel="noopener noreferrer" class="nav-cta">Apply now <span class="nav-arrow">→</span></a>
+          {APPLICATIONS_OPEN
+            ? <a href={APPLY_URL} target="_blank" rel="noopener noreferrer" class="nav-cta">Apply now <span class="nav-arrow">→</span></a>
+            : <a href="#apply" class="nav-cta">Join WhatsApp <span class="nav-arrow">→</span></a>}
         </div>
       </div>
     </nav>
@@ -82,8 +93,8 @@ const faqs = [
           </h2>
           <p class="hero-sub reveal">A free workspace, a curated community, and a launchpad for founders building real companies. No coworking fluff. No networking theater. Just building.</p>
           <div class="hero-actions reveal">
-            <a href="#apply" class="btn-hero">Apply now</a>
-            <span class="hero-note"><span class="live-dot" aria-hidden="true"></span>Rolling admissions · Limited spots</span>
+            <a href="#apply" class="btn-hero">{APPLICATIONS_OPEN ? 'Apply now' : 'Join the community'}</a>
+            <span class="hero-note"><span class="live-dot" aria-hidden="true"></span>{APPLICATIONS_OPEN ? 'Rolling admissions · Limited spots' : 'Applications paused · Over capacity'}</span>
           </div>
         </div>
       </div>
@@ -319,15 +330,30 @@ const faqs = [
     </section>
 
     <!-- ============ CTA ============ -->
-    <section class="section-cta" id="apply">
-      <div class="cta-inner">
-        <h2 class="cta-headline reveal">Your people<br/><em>are here.</em></h2>
-        <div class="cta-action reveal">
-          <a href="https://tally.so/r/w4e8yo" target="_blank" rel="noopener noreferrer" class="btn-apply">Apply now</a>
+    {APPLICATIONS_OPEN ? (
+      <section class="section-cta" id="apply">
+        <div class="cta-inner">
+          <h2 class="cta-headline reveal">Your people<br/><em>are here.</em></h2>
+          <div class="cta-action reveal">
+            <a href={APPLY_URL} target="_blank" rel="noopener noreferrer" class="btn-apply">Apply now</a>
+          </div>
+          <p class="cta-note reveal">Founders only &middot; Limited spots &middot; No fees, ever.</p>
         </div>
-        <p class="cta-note reveal">Founders only &middot; Limited spots &middot; No fees, ever.</p>
-      </div>
-    </section>
+      </section>
+    ) : (
+      <section class="section-cta" id="apply">
+        <div class="cta-inner">
+          <p class="cta-status reveal"><span class="cta-status-dot" aria-hidden="true"></span>Applications paused</p>
+          <h2 class="cta-headline reveal">We&rsquo;re full<br/><em>&mdash; for now.</em></h2>
+          <p class="cta-lede reveal">The house has filled up faster than we expected. Rather than dilute what makes this work, we&rsquo;ve paused new applications while we settle the current cohort in.</p>
+          <p class="cta-lede reveal">But the building doesn&rsquo;t stop. Join our WhatsApp community to stay close &mdash; you&rsquo;ll be first to know when spots open, and you&rsquo;ll meet the founders in the meantime.</p>
+          <div class="cta-action reveal">
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" class="btn-apply">Join the WhatsApp group</a>
+          </div>
+          <p class="cta-note reveal">No fees, ever &middot; We&rsquo;ll reopen applications soon</p>
+        </div>
+      </section>
+    )}
 
     <!-- ============ FOOTER ============ -->
     <footer class="footer">
@@ -1316,6 +1342,9 @@ const faqs = [
     font-style: normal;
     color: rgba(247, 245, 240, 0.55);
   }
+  .cta-headline:has(+ .cta-lede) {
+    margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+  }
 
   .cta-action { margin-bottom: 1.75rem; }
 
@@ -1343,6 +1372,41 @@ const faqs = [
     color: var(--mid);
     letter-spacing: 0.06em;
     margin: 0;
+  }
+
+  /* Applications-paused state */
+  .cta-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-logo);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgba(247, 245, 240, 0.7);
+    margin: 0 0 1.75rem;
+  }
+  .cta-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--copper);
+    box-shadow: 0 0 0 0 rgba(184, 92, 56, 0.55);
+    animation: live-pulse 2.2s ease-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cta-status-dot { animation: none; }
+  }
+  .cta-lede {
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 1.6vw, 1.18rem);
+    line-height: 1.6;
+    color: rgba(247, 245, 240, 0.78);
+    max-width: 540px;
+    margin: 0 auto 1.5rem;
+  }
+  .cta-lede:last-of-type {
+    margin-bottom: clamp(2rem, 4vw, 3rem);
   }
 
   /* =============================================
