@@ -1,40 +1,51 @@
-# Mad Builders
+# mad builders — website
 
-**Where founders build.**
+**The builders' house in Madrid** — where builders, founders and VCs meet, around AI,
+hardware & robotics, biotech & longevity, and digital assets. Born from the people behind
+[Startup Embassy](https://www.startupembassy.com/). The WhatsApp community is the front door.
 
-A free workspace, a curated community, and a launchpad for founders building real companies. Based in Madrid. Selective by design.
+Static site for [mad.builders](https://mad.builders), built with [Astro](https://astro.build).
 
----
+```bash
+npm install     # once
+npm run dev     # local dev at localhost:4321
+npm run build   # static output in dist/
+npm run preview # test the production build locally
+```
 
-## About
+Deploy anywhere that serves static files (Vercel, Netlify, Cloudflare Pages) — point it at this
+repo, build command `astro build`, output `dist/`.
 
-Mad Builders is an in-person founder community in Madrid — not a coworking space, not a networking event. It's a curated group of founders who ship, and a place to work alongside them.
+## Updating content
 
-Born from the people behind [Startup Embassy](https://www.startupembassy.com/) — the Palo Alto founder house that hosted 2,000+ entrepreneurs from 90+ countries, who went on to raise $700M+ and reach a combined valuation of $2B+.
+Everything editable lives in `src/data/`:
 
-**It's free. No membership fees. No equity. No catch.**
+| File | What it controls |
+| --- | --- |
+| `site.ts` | WhatsApp link, Luma calendar, social links, focus areas. **Empty links are hidden automatically** — fill them in as you get them. |
+| `events.ts` | Event list + co-host names. |
+| `people.ts` | Current residents. |
+| `projects.ts` | Highlighted resident projects. |
+| `friends.ts` | Sister communities. |
+| `madrid.ts` | Madrid stats, local communities, and the map pins (`spots`). |
 
----
+### Adding a new event
 
-## What you get
+1. Create `src/assets/events/<slug>/` with a `cover.jpeg` and photos named `1.jpeg`, `2.jpeg`, …
+2. Add an entry to `src/data/events.ts` with the same `slug`.
 
-1. **Workspace** — A permanent workspace with fast Wi-Fi and a builder-first setup
-2. **Founder circles** — Weekly sessions focused on problem-solving, not networking
-3. **Demo days** — Present in front of investors who write real checks
-4. **Mentorship** — 1:1 sessions with founders who've done it before
-5. **Partner perks** — Tools, credits, and discounts from relevant companies
-6. **Community** — People who show up for each other
+That's it — the home grid and the `/events/<slug>` gallery page are generated from those two
+things.
 
----
+### Adding a resident
 
-## How to apply
+1. Drop the profile card at `src/assets/profiles/<slug>.png`.
+2. Add the person to `src/data/people.ts`.
 
-1. **Apply** — Tell us what you're building and why it matters → [tally.so/r/w4e8yo](https://tally.so/r/w4e8yo)
-2. **Meet** — A conversation. Show your work, not your deck
-3. **Build** — Get your spot and start shipping from day one
+## Structure
 
-Rolling admissions. Limited spots. Decisions in one week. In-person only.
-
----
-
-**Madrid, Spain — Est. 2024**
+- `src/pages/index.astro` — home (hero, events, residents, projects, friends, madrid teaser)
+- `src/pages/madrid.astro` — builder's guide to Madrid (stats, communities, calendar, Leaflet map)
+- `src/pages/events/[slug].astro` — photo gallery per event, with lightbox
+- `src/layouts/Layout.astro` — shared nav/footer + SEO (`src/components/SEO.astro`, `src/config/seo.ts`)
+- `src/assets/` — source images used by the site (processed at build time)

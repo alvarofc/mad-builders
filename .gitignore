@@ -22,3 +22,9 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# local Claude Code config
+.claude/
+
+# OG image generation scratch
+.ogtmp/

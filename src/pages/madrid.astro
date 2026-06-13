@@ -1,0 +1,214 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { site } from '../data/site';
+import { madridCommunities, spots, stats, statsSource } from '../data/madrid';
+
+const kinds = [
+  { key: 'cafe', label: 'cafés & coworks', color: '#f6f5f0' },
+  { key: 'vc', label: 'vc offices', color: '#e8b84b' },
+  { key: 'hub', label: 'hubs & spaces', color: '#7fb89a' },
+];
+---
+
+<Layout title="madrid for builders — mad builders">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="kicker">the city</p>
+      <h1 class="section-title">the builder's guide to madrid</h1>
+      <p class="lede">
+        Founders are moving here, companies are opening offices here, and the weather doesn't
+        hurt. A working map of the ecosystem, kept by people who live in it.
+      </p>
+      <div class="stat-row">
+        {stats.map((s) => (
+          <div class="stat">
+            <span class="stat-value">{s.value}</span>
+            <span class="stat-label">{s.label}</span>
+          </div>
+        ))}
+      </div>
+      <p class="stat-source mono">
+        Source: <a href={statsSource.url} target="_blank" rel="noopener">{statsSource.label}</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">communities</p>
+      <h2 class="section-title">who's organizing</h2>
+      <div class="community-grid">
+        {madridCommunities.map((c) => (
+          <div class="community">
+            <h3>{c.name}</h3>
+            <p>{c.what}</p>
+            {c.url && <a class="mono" href={c.url} target="_blank" rel="noopener">visit →</a>}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">calendar</p>
+      <h2 class="section-title">what's on this week</h2>
+      {site.lumaEmbed ? (
+        <iframe
+          src={site.lumaEmbed}
+          class="luma-embed"
+          title="events calendar"
+          loading="lazy"
+        />
+      ) : (
+        <p class="lede">
+          The best single view of builder events in the city is the Luma Madrid calendar — ours
+          land there too.
+        </p>
+      )}
+      <a class="btn cal-btn" href={site.lumaCalendar} target="_blank" rel="noopener">open the calendar →</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">the map</p>
+      <h2 class="section-title">where things happen</h2>
+      <p class="lede">
+        Cafés you can actually work from, VC offices, and the hubs in between. Locations are
+        approximate — ping us if we missed your spot.
+      </p>
+      <div class="legend mono">
+        {kinds.map((k) => (
+          <span class="legend-item"><i style={`background:${k.color}`}></i>{k.label}</span>
+        ))}
+      </div>
+      <div id="map"></div>
+    </div>
+  </section>
+</Layout>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script is:inline define:vars={{ spots, kinds }}>
+  const map = L.map('map', { scrollWheelZoom: false }).setView([40.4254, -3.6986], 13.5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    maxZoom: 18,
+  }).addTo(map);
+
+  const colorFor = Object.fromEntries(kinds.map((k) => [k.key, k.color]));
+  spots.forEach((s) => {
+    L.circleMarker([s.lat, s.lng], {
+      radius: 8,
+      color: colorFor[s.kind],
+      fillColor: colorFor[s.kind],
+      fillOpacity: 0.85,
+      weight: 1,
+    })
+      .addTo(map)
+      .bindPopup(`<strong>${s.name}</strong><br>${s.note}`);
+  });
+</script>
+
+<style>
+  .page-head {
+    padding: 90px 0 80px;
+  }
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 32px;
+    margin-top: 56px;
+  }
+  .stat-value {
+    display: block;
+    font-size: clamp(40px, 6vw, 64px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .stat-label {
+    display: block;
+    color: var(--cream-dim);
+    margin-top: 12px;
+    max-width: 280px;
+  }
+  .stat-source {
+    margin-top: 28px;
+    font-size: 11px;
+    color: var(--cream-faint);
+    letter-spacing: 0.04em;
+  }
+  .stat-source a {
+    color: var(--cream-dim);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .stat-source a:hover {
+    color: var(--cream);
+  }
+
+  .community-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 26px;
+    margin-top: 48px;
+  }
+  .community {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 26px;
+    background: var(--green-deep);
+  }
+  .community h3 {
+    font-size: 20px;
+    text-transform: lowercase;
+    margin-bottom: 10px;
+  }
+  .community p {
+    color: var(--cream-dim);
+    margin: 0 0 14px;
+    font-size: 15px;
+  }
+  .community a {
+    color: var(--cream);
+    font-size: 13px;
+  }
+
+  .luma-embed {
+    width: 100%;
+    height: 560px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-top: 40px;
+  }
+  .cal-btn {
+    margin-top: 32px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 26px;
+    flex-wrap: wrap;
+    margin: 36px 0 18px;
+    font-size: 12px;
+    color: var(--cream-dim);
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .legend-item i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  #map {
+    height: 520px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+</style>
