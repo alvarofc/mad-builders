@@ -12,6 +12,7 @@
     "@astrojs/sitemap": "^3.5.1",
     "@vercel/analytics": "^2.0.1",
     "astro": "^5.13.3",
-    "mad-builders": "."
+    "mad-builders": ".",
+    "sharp": "^0.34.1"
   }
 }
