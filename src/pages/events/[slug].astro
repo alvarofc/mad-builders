@@ -19,8 +19,11 @@ const photos = Object.entries(allPhotos)
   })
   .map(([, m]) => m.default);
 
-const fmt = new Date(event.date)
-  .toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+// Parse the date-only string as UTC so the rendered day doesn't shift with the
+// build machine's timezone.
+const [dy, dm, dd] = event.date.split('T')[0].split('-').map(Number);
+const fmt = new Date(Date.UTC(dy, dm - 1, dd))
+  .toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' })
   .toLowerCase();
 ---
 

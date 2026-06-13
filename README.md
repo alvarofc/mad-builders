@@ -10,6 +10,7 @@ Static site for [mad.builders](https://mad.builders), built with [Astro](https:/
 npm install     # once
 npm run dev     # local dev at localhost:4321
 npm run build   # static output in dist/
+npm run preview # test the production build locally
 ```
 
 Deploy anywhere that serves static files (Vercel, Netlify, Cloudflare Pages) — point it at this
@@ -47,4 +48,4 @@ things.
 - `src/pages/madrid.astro` — builder's guide to Madrid (stats, communities, calendar, Leaflet map)
 - `src/pages/events/[slug].astro` — photo gallery per event, with lightbox
 - `src/layouts/Layout.astro` — shared nav/footer + SEO (`src/components/SEO.astro`, `src/config/seo.ts`)
-- `assets/` — original/source images (not used by the site directly; `src/assets/` is)
+- `src/assets/` — source images used by the site (processed at build time)

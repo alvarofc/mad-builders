@@ -44,8 +44,14 @@ const isRaster = (file?: string) => !!file && /\.(jpg|jpeg)$/.test(file);
 const portraits = import.meta.glob<{ default: ImageMetadata }>('../assets/profiles/*.png', { eager: true });
 const portraitFor = (slug: string) => portraits[`../assets/profiles/${slug}.png`]?.default;
 
-const fmt = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toLowerCase();
+// Parse the date-only string as UTC so the rendered day doesn't shift with the
+// build machine's timezone.
+const fmt = (iso: string) => {
+  const [y, m, d] = iso.split('T')[0].split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d))
+    .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    .toLowerCase();
+};
 
 // Repeat the focus words enough times that one "reel" overflows even ultra-wide
 // screens; two identical reels animated by exactly -50% give a seamless loop.
@@ -78,7 +84,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     <!-- photos / marquee / photos band -->
     <div class="strip">
       {stripTop.map((img) => (
-        <Image src={img} alt="inside the mad builders house" width={420} class="strip-img" loading="eager" />
+        <Image src={img} alt="inside the mad builders house" width={420} class="strip-img" loading="lazy" />
       ))}
     </div>
     <div class="ticker mono" aria-hidden="true">
