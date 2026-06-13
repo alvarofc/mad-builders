@@ -18,6 +18,5 @@ export const people: Person[] = [
   { slug: 'barto', name: 'Barto Molina', linkedin: 'https://www.linkedin.com/in/bartomolina/', x: 'https://x.com/bartomolina' },
   { slug: 'rohit', name: 'Rohit Gupta', linkedin: 'https://www.linkedin.com/in/rohit7gupta/', x: 'https://x.com/rohit7gupta' },
   { slug: 'diego', name: 'Diego Mazo', linkedin: 'https://www.linkedin.com/in/diego-mazo/', x: 'https://x.com/diegomazoro' },
-  { slug: 'jorge', name: 'Jorge Martín', linkedin: 'https://www.linkedin.com/in/jorge-martin-ll/', x: 'https://x.com/JorgeMartn96461' },
   { slug: 'javi', name: 'Javier Jiménez', linkedin: 'https://www.linkedin.com/in/javierjrueda/', x: 'https://x.com/javierjrueda' },
 ];
