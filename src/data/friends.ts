@@ -15,14 +15,14 @@ export interface Sister {
 }
 
 export const sisters: Sister[] = [
-  { name: 'Startup Embassy', logo: 'startup_embassy.png', flag: '🇺🇸', ink: true },
-  { name: 'Frontier Tower', logo: 'frontier_tower.svg', flag: '🇺🇸' },
-  { name: 'The Mu', logo: 'the-mu.svg', flag: '🇨🇳', ink: true },
-  { name: 'Crecimiento', logo: 'crecimiento.svg', flag: '🇦🇷' },
-  { name: 'Andén', logo: 'anden.svg', flag: '🇦🇷' },
-  { name: 'Exponential', logo: 'exponential.svg', flag: '🇪🇸', ink: true },
-  { name: '706 Youth Space', logo: '706_youth_space.jpg', flag: '🇨🇳' },
-  { name: 'Nonce', logo: 'nonce.png', flag: '🇰🇷', ink: true },
-  { name: 'Xiji Incubator', logo: 'xiji_incubator.jpg', flag: '🇨🇳' },
+  { name: 'Startup Embassy', logo: 'startup_embassy.png', url: 'https://www.startupembassy.com/', flag: '🇺🇸', ink: true },
+  { name: 'Frontier Tower', logo: 'frontier_tower.svg', url: 'https://frontiertower.io/', flag: '🇺🇸' },
+  { name: 'The Mu', logo: 'the-mu.svg', url: 'https://mushanghai.xyz/', flag: '🇨🇳', ink: true },
+  { name: 'Crecimiento', logo: 'crecimiento.svg', url: 'https://www.crecimiento.build/', flag: '🇦🇷' },
+  { name: 'Andén', logo: 'anden.svg', url: 'https://www.anden.tech/', flag: '🇦🇷' },
+  { name: 'Exponential', logo: 'exponential.svg', url: 'https://www.goexponential.org/', flag: '🇪🇸', ink: true },
+  { name: '706 Youth Space', logo: '706_youth_space.jpg', url: 'https://x.com/Labs706', flag: '🇨🇳' },
+  { name: 'Nonce', logo: 'nonce.png', url: 'https://nonce.community/', flag: '🇰🇷', ink: true },
+  { name: 'Xiji Incubator', logo: 'xiji_incubator.jpg', url: 'https://www.xijiincubator.com/', flag: '🇨🇳' },
   { name: 'Urbe', logo: 'urbe.svg', url: 'https://urbe.build/', flag: '🇮🇹' },
 ];

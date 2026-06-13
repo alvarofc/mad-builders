@@ -17,15 +17,17 @@ const coverFor = (slug: string) => covers[`../assets/events/${slug}/cover.jpeg`]
 
 // All event photos (covers excluded) feed the two hero strips. The exact
 // selection is placeholder for now — swap freely later.
-const heroPhotos = Object.entries(
+const allHeroPhotos = Object.entries(
   import.meta.glob<{ default: ImageMetadata }>('../assets/events/*/*.jpeg', { eager: true })
 )
   .filter(([path]) => !path.endsWith('cover.jpeg'))
   .map(([, m]) => m.default);
 
-// Split into two rows; deal alternately so each row gets a varied mix.
-const stripTop = heroPhotos.filter((_, i) => i % 2 === 0);
-const stripBottom = heroPhotos.filter((_, i) => i % 2 === 1);
+// Cap how many load on the homepage — the strips only show a few at a time and
+// scroll, so there's no need to ship all ~90 event photos in the hero.
+const PER_STRIP = 14;
+const stripTop = allHeroPhotos.filter((_, i) => i % 2 === 0).slice(0, PER_STRIP);
+const stripBottom = allHeroPhotos.filter((_, i) => i % 2 === 1).slice(0, PER_STRIP);
 
 const friendLogos = import.meta.glob<{ default: ImageMetadata }>('../assets/logos/friends/*.svg', { eager: true });
 const cohostLogo = (name: string) => friendLogos[`../assets/logos/friends/${name}.svg`]?.default;
@@ -113,8 +115,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
         <div class="deal">
           <h3>proof of work</h3>
           <p>
-            We don't curate by résumé. Momentum, generosity and things you've actually shipped are
-            what matter here.
+            We don't curate by résumé. We show up, we don't ask for permission, we build, we share.
           </p>
         </div>
         <div class="deal">
@@ -134,8 +135,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       <p class="kicker">events</p>
       <h2 class="section-title">past events</h2>
       <p class="lede">
-        Firesides with founders, hands-on hack sessions, demo nights. New events land on
-        <a href={site.lumaCalendar} target="_blank" rel="noopener">our luma</a> first.
+        Firesides with founders, hands-on hack sessions, demo nights. Subscribe to
+        <a href={site.lumaCalendar} target="_blank" rel="noopener">our luma calendar</a> to get notified about new events.
       </p>
       <div class="event-grid">
         {events.map((e) => (
@@ -149,17 +150,18 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
         ))}
       </div>
       <div class="cohosts">
-        <span class="mono cohost-label">co-hosted with friends at</span>
+        <span class="mono cohost-label">co-hosted with our friends</span>
         <div class="cohost-row">
           {cohosts.map(
             (c) =>
-              cohostLogo(c) && (
-                <img
-                  src={cohostLogo(c)!.src}
-                  alt={c}
-                  title={c}
-                  class:list={['cohost-img', { raw: rawCohosts.has(c) }]}
-                />
+              cohostLogo(c.name) && (
+                <a class="cohost-link" href={c.url} target="_blank" rel="noopener" title={c.name}>
+                  <img
+                    src={cohostLogo(c.name)!.src}
+                    alt={c.name}
+                    class:list={['cohost-img', { raw: rawCohosts.has(c.name) }]}
+                  />
+                </a>
               )
           )}
         </div>
@@ -208,10 +210,9 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       <div class="join-note" id="join">
         <h3>the house is full (for now)</h3>
         <p>
-          It filled up faster than we expected. Rather than dilute what makes this work, we've
-          paused new applications while the current cohort settles in. But the building doesn't
-          stop — join the WhatsApp community to stay close. You'll meet the founders, and you'll be
-          first to know when spots open.
+          It filled up faster than we expected, so we've paused new applications while the current
+          cohort settles in. But the building doesn't stop. Join the WhatsApp community to stay
+          close. You'll meet the founders, and you'll be first to know when spots open.
         </p>
         <a class="btn solid" href={site.whatsapp}>join the whatsapp group →</a>
       </div>
@@ -223,6 +224,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     <div class="wrap">
       <p class="kicker">from the house</p>
       <h2 class="section-title">built here</h2>
+      <p class="lede">A few of the projects our residents are building.</p>
       <div class="project-grid">
         {projects.map((pr) => (
           <a class="project" href={pr.url} target="_blank" rel="noopener">
@@ -247,11 +249,11 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       <div class="club-grid">
         <div class="club">
           <h3>book club</h3>
-          <p>One book a month, argued about over dinner. Starting soon.</p>
+          <p>One book a month. Starting soon.</p>
         </div>
         <div class="club">
           <h3>running club</h3>
-          <p>Easy morning kilometers through Retiro before the laptops open. Starting soon.</p>
+          <p>Easy morning runs through Retiro, and brunch before the laptops open. Starting soon.</p>
         </div>
       </div>
     </div>
@@ -262,10 +264,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     <div class="wrap">
       <p class="kicker">sisters</p>
       <h2 class="section-title">sister houses worldwide</h2>
-      <p class="lede">
-        Communities and hubs we trade couches, intros and ideas with. If you're part of one, the
-        door is open.
-      </p>
+      <p class="lede">If you're part of these communities, the door is open.</p>
       <div class="sister-wall">
         {sisters.map((s) => {
           const logo = sisterLogo(s.logo);
@@ -352,6 +351,12 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     .hero-lede {
       font-size: 17px;
     }
+    .samplia {
+      font-size: 14px;
+    }
+    .samplia img {
+      height: 16px;
+    }
     .hero-ctas {
       margin: 22px 0 32px;
     }
@@ -368,9 +373,10 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin: 6px 0 0;
-    font-size: 13.5px;
-    color: var(--cream-faint);
+    margin: 4px 0 0;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--cream-dim);
     text-decoration: none;
     transition: color 0.15s;
   }
@@ -384,7 +390,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     transition: opacity 0.15s;
   }
   .samplia:hover {
-    color: var(--cream-dim);
+    color: var(--cream);
   }
   .samplia:hover img {
     opacity: 1;
@@ -520,6 +526,9 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     flex-wrap: wrap;
     margin-top: 26px;
   }
+  .cohost-link {
+    display: inline-flex;
+  }
   .cohost-img {
     height: 26px;
     width: auto;
@@ -530,7 +539,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   .cohost-img.raw {
     filter: none;
   }
-  .cohost-img:hover {
+  .cohost-link:hover .cohost-img {
     opacity: 1;
   }
 

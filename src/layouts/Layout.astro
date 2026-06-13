@@ -50,14 +50,16 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       <div class="wrap footer-bar mono">
         <span>madrid, spain</span>
         <div class="socials">
-          {site.socials.map(
-            (s) =>
-              iconFor(s.icon) && (
-                <a href={s.url} target="_blank" rel="noopener" aria-label={s.label} title={s.label}>
-                  <img src={iconFor(s.icon)!.src} alt={s.label} />
-                </a>
-              )
-          )}
+          {site.socials.map((s) => {
+            const icon = iconFor(s.icon);
+            if (!icon) return null;
+            const img = <img src={icon.src} alt={s.label} title={s.label} />;
+            return s.url ? (
+              <a href={s.url} target="_blank" rel="noopener" aria-label={s.label}>{img}</a>
+            ) : (
+              img
+            );
+          })}
         </div>
         <span>est. 2025 · mad.builders</span>
       </div>
@@ -121,7 +123,11 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       gap: 16px;
       font-size: 12px;
     }
-    .links a:not(.cta):not(:nth-child(-n + 3)) {
+    .wordmark {
+      white-space: nowrap;
+    }
+    /* single-page site — drop the in-page anchors on mobile, keep the CTA */
+    .links a:not(.cta) {
       display: none;
     }
   }
@@ -151,7 +157,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     opacity: 0.6;
     transition: opacity 0.15s;
   }
-  .socials a:hover img {
+  .socials img:hover {
     opacity: 1;
   }
   @media (max-width: 640px) {

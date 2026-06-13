@@ -39,7 +39,7 @@ export const events: CommunityEvent[] = [
   },
   {
     slug: 'zero-to-agent',
-    title: 'Zero to Agent',
+    title: 'Cursor: Zero to Agent',
     date: '2026-04-25',
     luma: 'https://luma.com/lxh33wab',
     blurb: 'Build an AI agent from scratch in one afternoon.',
@@ -53,7 +53,7 @@ export const events: CommunityEvent[] = [
   },
   {
     slug: 'gtm-hackathon',
-    title: 'GTM Hackathon',
+    title: 'Lovable: GTM Hackathon',
     date: '2026-04-15',
     luma: 'https://luma.com/9ulrsqir',
     blurb: 'One day to build your go-to-market machine.',
@@ -81,5 +81,18 @@ export const events: CommunityEvent[] = [
   },
 ];
 
-// Companies we have co-hosted events with.
-export const cohosts = ['lovable', 'cursor', 'vercel', 'metabase', 'revenuecat', 'clawcon'];
+// Companies we have co-hosted events with. `name` matches the logo file in
+// src/assets/logos/friends/<name>.svg
+export interface Cohost {
+  name: string;
+  url: string;
+}
+
+export const cohosts: Cohost[] = [
+  { name: 'lovable', url: 'https://lovable.dev/' },
+  { name: 'cursor', url: 'https://cursor.com/' },
+  { name: 'vercel', url: 'https://vercel.com/' },
+  { name: 'metabase', url: 'https://www.metabase.com/' },
+  { name: 'revenuecat', url: 'https://www.revenuecat.com/' },
+  { name: 'clawcon', url: 'https://www.claw-con.com/' },
+];
