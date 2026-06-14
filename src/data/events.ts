@@ -39,7 +39,7 @@ export const events: CommunityEvent[] = [
   },
   {
     slug: 'zero-to-agent',
-    title: 'Cursor: Zero to Agent',
+    title: 'Vercel: Zero to Agent',
     date: '2026-04-25',
     luma: 'https://luma.com/lxh33wab',
     blurb: 'Build an AI agent from scratch in one afternoon.',

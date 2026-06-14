@@ -28,6 +28,8 @@ const allHeroPhotos = Object.entries(
 const PER_STRIP = 14;
 const stripTop = allHeroPhotos.filter((_, i) => i % 2 === 0).slice(0, PER_STRIP);
 const stripBottom = allHeroPhotos.filter((_, i) => i % 2 === 1).slice(0, PER_STRIP);
+// Both strips feed one lightbox; indices are top photos first, then bottom.
+const lightboxPhotos = [...stripTop, ...stripBottom];
 
 const friendLogos = import.meta.glob<{ default: ImageMetadata }>('../assets/logos/friends/*.svg', { eager: true });
 const cohostLogo = (name: string) => friendLogos[`../assets/logos/friends/${name}.svg`]?.default;
@@ -65,26 +67,24 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       {/* el oso y el madroño — Madrid's coat of arms, as a faint crest */}
       <img class="hero-crest" src={osoCrest.src} alt="" aria-hidden="true" />
       <div class="wrap">
-        <h1>the builders' house.</h1>
+        <h1>the builders' <br class="brk-m" /><span class="nowrap">house in <br class="brk-d" /><span class="proper">Madrid</span></span></h1>
         <p class="lede hero-lede">
-          Where builders, founders and VCs meet, in the heart of Madrid<!--
-          --><svg class="flag" viewBox="0 0 30 20" role="img" aria-label="Spain"><rect width="30" height="20" fill="#AA151B"/><rect y="5" width="30" height="10" fill="#F1BF00"/></svg>
+          Where builders, founders and VCs meet, hosted by<!--
+          --><a class="samplia-inline" href="https://samplia.com" target="_blank" rel="noopener" aria-label="Samplia"><img src={sampliaLogo.src} alt="Samplia" /></a>
         </p>
-        <a class="samplia" href="https://samplia.com" target="_blank" rel="noopener">
-          our home, thanks to
-          <img src={sampliaLogo.src} alt="Samplia" />
-        </a>
         <div class="hero-ctas">
           <a class="btn solid" href={site.whatsapp}>whatsapp group →</a>
-          <a class="btn" href="#events">past events</a>
+          <a class="btn" href="#events">events</a>
         </div>
       </div>
     </div>
 
     <!-- photos / marquee / photos band -->
     <div class="strip">
-      {stripTop.map((img) => (
-        <Image src={img} alt="inside the mad builders house" width={420} class="strip-img" loading="lazy" />
+      {stripTop.map((img, i) => (
+        <button class="strip-shot" data-index={i} aria-label="expand photo">
+          <Image src={img} alt="inside the mad builders house" width={420} class="strip-img" loading="lazy" />
+        </button>
       ))}
     </div>
     <div class="ticker mono" aria-hidden="true">
@@ -99,8 +99,10 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       </div>
     </div>
     <div class="strip">
-      {stripBottom.map((img) => (
-        <Image src={img} alt="inside the mad builders house" width={420} class="strip-img" loading="lazy" />
+      {stripBottom.map((img, i) => (
+        <button class="strip-shot" data-index={stripTop.length + i} aria-label="expand photo">
+          <Image src={img} alt="inside the mad builders house" width={420} class="strip-img" loading="lazy" />
+        </button>
       ))}
     </div>
   </section>
@@ -109,7 +111,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <section class="section light">
     <div class="wrap">
       <p class="kicker">what this is</p>
-      <h2 class="section-title">no bullshit. just building.</h2>
+      <h2 class="section-title"><span class="nowrap">no bullshit.</span> <span class="nowrap">just building.</span></h2>
       <div class="deal-grid">
         <div class="deal">
           <h3>a real house</h3>
@@ -214,13 +216,13 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       </div>
 
       <div class="join-note" id="join">
-        <h3>the house is full (for now)</h3>
+        <h3><span class="nowrap">the house is full</span> <span class="nowrap">(for now)</span></h3>
         <p>
           It filled up faster than we expected, so we've paused new applications while the current
           cohort settles in. But the building doesn't stop. Join the WhatsApp community to stay
           close. You'll meet the founders, and you'll be first to know when spots open.
         </p>
-        <a class="btn solid" href={site.whatsapp}>join the whatsapp group →</a>
+        <a class="btn solid" href={site.whatsapp}>whatsapp group →</a>
       </div>
     </div>
   </section>
@@ -251,7 +253,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <section class="section light">
     <div class="wrap">
       <p class="kicker">off-hours</p>
-      <h2 class="section-title">not everything is a sprint</h2>
+      <h2 class="section-title">we touch grass, too</h2>
       <div class="club-grid">
         <div class="club">
           <h3>book club</h3>
@@ -270,7 +272,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     <div class="wrap">
       <p class="kicker">sisters</p>
       <h2 class="section-title">sister houses worldwide</h2>
-      <p class="lede">If you're part of these communities, the door is open.</p>
+      <p class="lede">Friends we've made around the world, building places like ours and sharing the same values. If you're part of one of them, our door is open.</p>
       <div class="sister-wall">
         {sisters.map((s) => {
           const logo = sisterLogo(s.logo);
@@ -299,7 +301,50 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       </div>
     </div>
   </section>
+
+  <dialog id="hero-lightbox">
+    <button id="hlb-close" class="mono" aria-label="close">close ×</button>
+    <button id="hlb-prev" class="mono" aria-label="previous">←</button>
+    <div id="hlb-stage">
+      {lightboxPhotos.map((p, i) => (
+        <Image src={p} alt="inside the mad builders house" width={1600} class="hlb-img" data-index={i} loading="lazy" />
+      ))}
+    </div>
+    <button id="hlb-next" class="mono" aria-label="next">→</button>
+  </dialog>
 </Layout>
+
+<script>
+  const dialog = document.getElementById('hero-lightbox') as HTMLDialogElement;
+  if (dialog) {
+    const imgs = [...dialog.querySelectorAll<HTMLImageElement>('.hlb-img')];
+    let current = 0;
+
+    const show = (i: number) => {
+      current = (i + imgs.length) % imgs.length;
+      imgs.forEach((img, j) => (img.style.display = j === current ? 'block' : 'none'));
+    };
+
+    document.querySelectorAll<HTMLButtonElement>('.strip-shot').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        show(Number(btn.dataset.index));
+        dialog.showModal();
+      });
+    });
+
+    document.getElementById('hlb-close')!.addEventListener('click', () => dialog.close());
+    document.getElementById('hlb-prev')!.addEventListener('click', () => show(current - 1));
+    document.getElementById('hlb-next')!.addEventListener('click', () => show(current + 1));
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!dialog.open) return;
+      if (e.key === 'ArrowLeft') show(current - 1);
+      if (e.key === 'ArrowRight') show(current + 1);
+    });
+  }
+</script>
 
 <style>
   .hero {
@@ -317,7 +362,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   .hero-crest {
     position: absolute;
     top: 50%;
-    right: clamp(-40px, 1vw, 24px);
+    /* hug the content column on ultra-wide instead of floating at the far edge */
+    right: max(clamp(-40px, 1vw, 24px), calc((100% - 1280px) / 2));
     transform: translateY(-50%);
     height: 112%;
     max-height: 540px;
@@ -328,9 +374,21 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     z-index: 0;
   }
   .hero h1 {
-    font-size: clamp(42px, 8.5vw, 116px);
+    font-size: clamp(40px, 7vw, 92px);
     text-transform: lowercase;
     margin: 0 0 22px;
+    color: var(--cream-dim);
+  }
+  .hero h1 .proper {
+    text-transform: none;
+    color: var(--cream);
+  }
+  /* desktop: break before "Madrid" so it sits alone on line 2 */
+  .brk-m {
+    display: none;
+  }
+  .nowrap {
+    white-space: nowrap;
   }
   .hero-lede {
     font-size: 20px;
@@ -354,51 +412,40 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     .hero h1 {
       margin: 0 0 16px;
     }
+    /* mobile: break after "the builders'" so "house in Madrid" stays together */
+    .brk-d {
+      display: none;
+    }
+    .brk-m {
+      display: inline;
+    }
     .hero-lede {
       font-size: 17px;
     }
-    .samplia {
-      font-size: 14px;
-    }
-    .samplia img {
-      height: 16px;
+    .hero-lede .samplia-inline img {
+      height: 18px;
+      padding: 3px 6px;
     }
     .hero-ctas {
       margin: 22px 0 32px;
     }
   }
-  .flag {
-    display: inline-block;
-    width: 25px;
-    height: 16px;
-    border-radius: 3px;
-    vertical-align: -1px;
-    margin-left: 8px;
-  }
-  .samplia {
+  .samplia-inline {
     display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin: 4px 0 0;
-    font-family: var(--font-sans);
-    font-size: 15px;
-    color: var(--cream-dim);
-    text-decoration: none;
-    transition: color 0.15s;
+    vertical-align: middle;
+    margin-left: 9px;
   }
-  .samplia img {
-    height: 18px;
+  .samplia-inline img {
+    height: 24px;
     width: auto;
+    display: block;
     background: var(--cream);
     border-radius: 5px;
-    padding: 4px 8px;
-    opacity: 0.85;
+    padding: 4px 7px;
+    opacity: 0.9;
     transition: opacity 0.15s;
   }
-  .samplia:hover {
-    color: var(--cream);
-  }
-  .samplia:hover img {
+  .samplia-inline:hover img {
     opacity: 1;
   }
 
@@ -410,6 +457,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     text-transform: uppercase;
     color: var(--cream-dim);
     white-space: nowrap;
+    max-width: 1600px;
+    margin-inline: auto;
   }
   .ticker-track {
     display: inline-flex;
@@ -424,6 +473,15 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     font-style: normal;
     color: var(--cream-faint);
     margin: 0 14px;
+  }
+  @media (max-width: 640px) {
+    .ticker {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+    .tick i {
+      margin: 0 9px;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     .ticker-track {
@@ -442,17 +500,36 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     padding: 10px;
     overflow-x: auto;
     scrollbar-width: none;
+    max-width: 1600px;
+    margin-inline: auto;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
   }
   .strip::-webkit-scrollbar {
     display: none;
   }
+  .strip-shot {
+    flex-shrink: 0;
+    display: block;
+    height: var(--strip-h);
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+    border-radius: 6px;
+  }
   .strip :global(.strip-img) {
+    display: block;
     height: var(--strip-h);
     width: auto;
     object-fit: cover;
     border-radius: 6px;
-    flex-shrink: 0;
     filter: saturate(0.92);
+    transition: filter 0.15s;
+  }
+  .strip-shot:hover :global(.strip-img) {
+    filter: saturate(1);
   }
 
   .deal-grid {
@@ -607,6 +684,19 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     opacity: 1;
     transform: translateY(-1px);
   }
+  /* the residents grid is a single wide column on mobile — scale name + icons up to match */
+  @media (max-width: 640px) {
+    .person-name {
+      font-size: 16px;
+    }
+    .person-links {
+      gap: 14px;
+    }
+    .person-link {
+      width: 20px;
+      height: 20px;
+    }
+  }
 
   .join-note {
     margin-top: 72px;
@@ -709,9 +799,9 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   }
   .sister-flag {
     position: absolute;
-    top: -10px;
-    right: -8px;
-    font-size: 26px;
+    top: -12px;
+    right: -9px;
+    font-size: 42px;
     line-height: 1;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
   }
@@ -743,5 +833,56 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     filter: grayscale(1);
     mix-blend-mode: multiply;
     opacity: 0.85;
+  }
+
+  /* hero photo lightbox */
+  #hero-lightbox {
+    background: rgba(16, 30, 25, 0.96);
+    border: 0;
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px;
+  }
+  #hero-lightbox[open] {
+    display: flex;
+  }
+  #hero-lightbox::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  #hlb-stage {
+    max-width: min(1200px, 84vw);
+    max-height: 88vh;
+  }
+  #hlb-stage :global(.hlb-img) {
+    display: none;
+    max-width: 100%;
+    max-height: 88vh;
+    width: auto;
+    height: auto;
+    border-radius: 6px;
+  }
+  #hero-lightbox button {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--cream);
+    border-radius: 999px;
+    padding: 10px 18px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #hero-lightbox button:hover {
+    background: var(--cream);
+    color: var(--green);
+  }
+  #hlb-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
   }
 </style>

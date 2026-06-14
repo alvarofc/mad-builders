@@ -34,7 +34,7 @@ const fmt = new Date(Date.UTC(dy, dm - 1, dd))
       <p class="kicker">{fmt}</p>
       <h1 class="section-title">{event.title}</h1>
       {event.blurb && <p class="lede">{event.blurb}</p>}
-      <a class="btn event-luma" href={event.luma} target="_blank" rel="noopener">event page on luma →</a>
+      <a class="btn event-luma" href={event.luma} target="_blank" rel="noopener">luma →</a>
 
       {photos.length > 0 ? (
         <div class="gallery">
@@ -45,7 +45,7 @@ const fmt = new Date(Date.UTC(dy, dm - 1, dd))
           ))}
         </div>
       ) : (
-        <p class="lede no-photos">photos from this one are still on someone's phone.</p>
+        <p class="lede no-photos">no photos yet, we were too busy building.</p>
       )}
     </div>
   </section>
