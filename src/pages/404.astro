@@ -3,18 +3,18 @@ import Layout from '../layouts/Layout.astro';
 import { site } from '../data/site';
 ---
 
-<Layout title="404 — lost in madrid · mad builders" description="This page doesn't exist." noindex={true}>
+<Layout title="404 — lost in Madrid · mad builders" description="This page doesn't exist." noindex={true}>
   <section class="section notfound">
     <div class="wrap">
       <p class="kicker">error 404</p>
-      <h1 class="section-title">lost in madrid</h1>
+      <h1 class="section-title">lost in <span class="proper">Madrid</span></h1>
       <p class="lede">
-        this page packed up and left the building. it happens. let's get you back to where the
-        builders are.
+        this page is probably out for a siesta or grabbing some tapas. let's get you back to
+        where the builders are.
       </p>
       <div class="actions">
-        <a class="btn solid" href="/">← back home</a>
-        <a class="btn" href={site.whatsapp} target="_blank" rel="noopener">join the whatsapp →</a>
+        <a class="btn solid" href="/">← home</a>
+        <a class="btn" href={site.whatsapp} target="_blank" rel="noopener">whatsapp group →</a>
       </div>
     </div>
   </section>
@@ -25,6 +25,9 @@ import { site } from '../data/site';
     min-height: 60vh;
     display: flex;
     align-items: center;
+  }
+  .section-title .proper {
+    text-transform: none;
   }
   .actions {
     display: flex;
