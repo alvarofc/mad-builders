@@ -57,50 +57,23 @@ import Layout from '../../layouts/Layout.astro';
     const url = urlInput.value.trim();
     if (!url) return null;
     const branded = brandInput.checked;
-    // High error-correction when branded so the centre mark stays scannable.
-    const qr = QrCode.encodeText(url, branded ? QrCode.Ecc.HIGH : QrCode.Ecc.MEDIUM);
+    const qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
     const n = qr.size;
     const px = (n + QUIET * 2) * SCALE;
-    return { qr, n, px, branded };
+    // Space below the code for the wordmark when branded. Nothing covers the QR.
+    const pad = branded ? Math.round(px * 0.16) : 0;
+    return { qr, n, px, branded, pad };
   }
 
-  // Geometry + fitted font size for the centred mad.builders chip.
-  function brandMetrics(px: number) {
-    const boxW = Math.round(px * 0.52);
-    const boxH = Math.round(px * 0.17);
-    const x = Math.round((px - boxW) / 2);
-    const y = Math.round((px - boxH) / 2);
-    const radius = Math.round(boxH * 0.3);
-    let fs = boxH * 0.52;
-    ctx.font = `500 ${fs}px ${FONT}`;
-    const maxW = boxW - boxW * 0.28;
-    const w = ctx.measureText('mad.builders').width;
-    if (w > maxW) fs = Math.floor((fs * maxW) / w);
-    return { boxW, boxH, x, y, radius, fs };
-  }
-
-  function roundRect(x: number, y: number, w: number, h: number, r: number) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-
-  function drawBrand(px: number) {
-    const { boxW, boxH, x, y, radius, fs } = brandMetrics(px);
-    ctx.fillStyle = CREAM;
-    roundRect(x, y, boxW, boxH, radius);
-    ctx.fill();
+  function drawWordmark(px: number, pad: number) {
+    const fs = Math.round(pad * 0.46);
     ctx.font = `500 ${fs}px ${FONT}`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     const madW = ctx.measureText('mad').width;
     const total = madW + ctx.measureText('.builders').width;
     const tx = px / 2 - total / 2;
-    const ty = y + boxH / 2;
+    const ty = px + pad / 2;
     ctx.fillStyle = GREEN;
     ctx.fillText('mad', tx, ty);
     ctx.fillStyle = DIM;
@@ -121,33 +94,33 @@ import Layout from '../../layouts/Layout.astro';
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       return;
     }
-    const { qr, n, px, branded } = data;
+    const { qr, n, px, branded, pad } = data;
     canvas.width = px;
-    canvas.height = px;
+    canvas.height = px + pad;
     ctx.fillStyle = CREAM;
-    ctx.fillRect(0, 0, px, px);
+    ctx.fillRect(0, 0, px, px + pad);
     ctx.fillStyle = GREEN;
     for (let y = 0; y < n; y++)
       for (let x = 0; x < n; x++)
         if (qr.getModule(x, y)) ctx.fillRect((x + QUIET) * SCALE, (y + QUIET) * SCALE, SCALE, SCALE);
-    if (branded) drawBrand(px);
+    if (branded) drawWordmark(px, pad);
   }
 
   function buildSvg() {
     const data = build();
     if (!data) return null;
-    const { qr, n, px, branded } = data;
+    const { qr, n, px, branded, pad } = data;
     let path = '';
     for (let y = 0; y < n; y++)
       for (let x = 0; x < n; x++)
         if (qr.getModule(x, y)) path += `M${(x + QUIET) * SCALE} ${(y + QUIET) * SCALE}h${SCALE}v${SCALE}h-${SCALE}z`;
-    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 ${px} ${px}">`;
-    svg += `<rect width="${px}" height="${px}" fill="${CREAM}"/>`;
+    const h = px + pad;
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${h}" viewBox="0 0 ${px} ${h}">`;
+    svg += `<rect width="${px}" height="${h}" fill="${CREAM}"/>`;
     svg += `<path d="${path}" fill="${GREEN}"/>`;
     if (branded) {
-      const { boxW, boxH, x, y, radius, fs } = brandMetrics(px);
-      svg += `<rect x="${x}" y="${y}" width="${boxW}" height="${boxH}" rx="${radius}" fill="${CREAM}"/>`;
-      svg += `<text x="${px / 2}" y="${y + boxH / 2}" font-family="Bricolage Grotesque, sans-serif" font-weight="500" font-size="${fs}" text-anchor="middle" dominant-baseline="middle"><tspan fill="${GREEN}">mad</tspan><tspan fill="${DIM}">.builders</tspan></text>`;
+      const fs = Math.round(pad * 0.46);
+      svg += `<text x="${px / 2}" y="${px + pad / 2}" font-family="Bricolage Grotesque, sans-serif" font-weight="500" font-size="${fs}" text-anchor="middle" dominant-baseline="middle"><tspan fill="${GREEN}">mad</tspan><tspan fill="${DIM}">.builders</tspan></text>`;
     }
     svg += '</svg>';
     return svg;
