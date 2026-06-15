@@ -63,7 +63,7 @@ import Layout from '../../layouts/Layout.astro';
     const url = urlInput.value.trim();
     if (!url) return null;
     const qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
-    const n = qr.getSize();
+    const n = qr.size;
     const px = (n + QUIET * 2) * SCALE;
     const caption = capInput.value.trim();
     const capFont = Math.round(SCALE * 2.6);
