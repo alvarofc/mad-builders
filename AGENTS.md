@@ -7,7 +7,8 @@ the single source of agent conventions for the repo; CLAUDE.md points here.
 
 Read the brand guide before writing copy or building UI:
 
-- `BRAND.md` (portable summary) and the live `/brand` page (`src/pages/brand.astro`).
+- The live `/brand` page (`src/pages/brand.astro`) is the single source of truth
+  for logo, colour, type and voice.
 - Voice: terse, lowercase, plain. A builder talking, not a brochure.
 - Writing style: apply the humanizer skill at
   [`.agents/skills/humanizer/SKILL.md`](.agents/skills/humanizer/SKILL.md) to all
