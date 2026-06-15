@@ -1,7 +1,7 @@
 export const SITE = 'https://www.mad.builders'
 
 export const DEFAULT_TITLE = "mad builders — the builders' house in madrid"
-export const DEFAULT_DESCRIPTION = "The builders' house — where builders, founders and VCs meet in the heart of Madrid. AI, hardware & robotics, healthtech, digital assets."
+export const DEFAULT_DESCRIPTION = "The builders' house, where builders, founders and VCs meet in the heart of Madrid. AI, hardware & robotics, healthtech, digital assets."
 export const OG_IMAGE = '/og.png'
 export const LOCALE = 'en_US'
 export const SITE_NAME = 'mad builders'

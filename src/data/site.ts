@@ -3,7 +3,7 @@ export const site = {
   name: 'mad builders',
   domain: 'https://mad.builders',
   description:
-    'The builders\' house — where builders, founders and VCs meet in the heart of Madrid. AI, hardware & robotics, healthtech, digital assets.',
+    'The builders\' house, where builders, founders and VCs meet in the heart of Madrid. AI, hardware & robotics, healthtech, digital assets.',
 
   whatsapp: 'https://chat.whatsapp.com/HvbO3AbATu53tUvHF53q84',
   lumaCalendar: 'https://luma.com/madbuilders',
