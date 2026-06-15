@@ -61,6 +61,18 @@ const donts = [
 ---
 
 <Layout title="brand guide | mad.builders" noindex={true}>
+  <nav class="brand-toc mono" aria-label="brand guide sections">
+    <div class="wrap brand-toc-inner">
+      <a href="#logo">logo</a>
+      <a href="#colour">colour</a>
+      <a href="#type">type</a>
+      <a href="#voice">voice</a>
+      <a href="#photography">photo</a>
+      <a href="#focus">focus</a>
+      <a href="#assets">assets</a>
+      <a class="toc-tool" href="/brand/qr">qr tool →</a>
+    </div>
+  </nav>
   <section class="section brand-head">
     <div class="wrap">
       <p class="kicker">brand guide</p>
@@ -73,7 +85,7 @@ const donts = [
   </section>
 
   <!-- LOGO -->
-  <section class="section light">
+  <section class="section light" id="logo">
     <div class="wrap">
       <p class="kicker">01 · logo</p>
       <h2 class="section-title">the wordmark</h2>
@@ -111,7 +123,7 @@ const donts = [
   </section>
 
   <!-- COLOUR -->
-  <section class="section">
+  <section class="section" id="colour">
     <div class="wrap">
       <p class="kicker">02 · colour</p>
       <h2 class="section-title">green &amp; cream</h2>
@@ -145,7 +157,7 @@ const donts = [
   </section>
 
   <!-- TYPE -->
-  <section class="section light">
+  <section class="section light" id="type">
     <div class="wrap">
       <p class="kicker">03 · type</p>
       <h2 class="section-title">three faces</h2>
@@ -168,7 +180,7 @@ const donts = [
   </section>
 
   <!-- VOICE -->
-  <section class="section">
+  <section class="section" id="voice">
     <div class="wrap">
       <p class="kicker">04 · voice</p>
       <h2 class="section-title">how it talks</h2>
@@ -190,7 +202,7 @@ const donts = [
   </section>
 
   <!-- PHOTOGRAPHY -->
-  <section class="section light">
+  <section class="section light" id="photography">
     <div class="wrap">
       <p class="kicker">05 · photography</p>
       <h2 class="section-title">candid, not stock</h2>
@@ -203,7 +215,7 @@ const donts = [
   </section>
 
   <!-- FOCUS -->
-  <section class="section">
+  <section class="section" id="focus">
     <div class="wrap">
       <p class="kicker">06 · focus areas</p>
       <h2 class="section-title">what gets built here</h2>
@@ -214,11 +226,35 @@ const donts = [
       </div>
     </div>
   </section>
+
+  <!-- ASSETS -->
+  <section class="section light" id="assets">
+    <div class="wrap">
+      <p class="kicker">07 · assets</p>
+      <h2 class="section-title">logos, stickers, tools</h2>
+      <p class="lede">Downloadable files and the little tools we use to make event collateral.</p>
+      <div class="asset-grid">
+        <div class="asset-card">
+          <p class="asset-h">logo files</p>
+          <p class="asset-note">svg + png lockups, cream-on-green and green-on-cream. drop them in <code>src/assets/brand/</code> and we link them here.</p>
+        </div>
+        <div class="asset-card">
+          <p class="asset-h">stickers</p>
+          <p class="asset-note">sticker artwork for events and laptops. coming once the designs land.</p>
+        </div>
+        <a class="asset-card" href="/brand/qr">
+          <p class="asset-h">qr generator →</p>
+          <p class="asset-note">make a branded qr from any url, with an optional caption line.</p>
+        </a>
+      </div>
+    </div>
+  </section>
 </Layout>
 
 <style>
   .brand-head {
-    padding-top: 80px;
+    padding-top: 64px;
+    padding-bottom: 36px;
   }
 
   /* logo boards */
@@ -413,5 +449,87 @@ const donts = [
   .section.light code {
     background: rgba(26, 52, 43, 0.08);
     color: var(--green);
+  }
+
+  /* docs layout: sticky section nav + tighter density */
+  .brand-toc {
+    position: sticky;
+    top: 64px;
+    z-index: 90;
+    background: color-mix(in srgb, var(--green) 90%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand-toc-inner {
+    display: flex;
+    gap: 22px;
+    align-items: center;
+    height: 46px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .brand-toc-inner::-webkit-scrollbar {
+    display: none;
+  }
+  .brand-toc a {
+    color: var(--cream-dim);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+  .brand-toc a:hover {
+    color: var(--cream);
+  }
+  .brand-toc .toc-tool {
+    color: var(--cream);
+  }
+
+  .section {
+    padding: 56px 0;
+  }
+  section[id] {
+    scroll-margin-top: 118px;
+  }
+
+  /* assets */
+  .asset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 36px;
+  }
+  .asset-card {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .asset-h {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  .asset-note {
+    margin: 0;
+    color: var(--cream-dim);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  a.asset-card:hover {
+    border-color: var(--cream-dim);
+  }
+  .section.light .asset-card {
+    border-color: rgba(26, 52, 43, 0.14);
+  }
+  .section.light .asset-note {
+    color: rgba(26, 52, 43, 0.72);
+  }
+  .section.light a.asset-card:hover {
+    border-color: rgba(26, 52, 43, 0.4);
   }
 </style>
