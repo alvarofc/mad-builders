@@ -418,6 +418,21 @@ const donts = [
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
     render();
   }
+
+  // Highlight the TOC link for the section currently in view.
+  const tocLinks = [...document.querySelectorAll<HTMLAnchorElement>('.brand-toc a')];
+  const linkFor = new Map(tocLinks.map((a) => [a.getAttribute('href')!.slice(1), a]));
+  const spy = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        tocLinks.forEach((a) => a.classList.remove('active'));
+        linkFor.get((e.target as HTMLElement).id)?.classList.add('active');
+      }
+    },
+    { rootMargin: '-45% 0px -50% 0px' }
+  );
+  document.querySelectorAll('section[id]').forEach((s) => spy.observe(s));
 </script>
 
 <style>
@@ -649,11 +664,14 @@ const donts = [
     white-space: nowrap;
     transition: color 0.15s;
   }
-  .brand-toc a:hover {
+  .brand-toc a:hover,
+  .brand-toc a.active {
     color: var(--cream);
   }
-  .brand-toc .toc-tool {
-    color: var(--cream);
+  .brand-toc a.active {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 1px;
   }
 
   .section {
