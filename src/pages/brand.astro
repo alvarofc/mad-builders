@@ -254,6 +254,10 @@ const donts = [
               <input id="qr-brand" type="checkbox" checked />
               <span class="mono">add the mad.builders mark</span>
             </label>
+            <label class="qr-check">
+              <input id="qr-url-show" type="checkbox" />
+              <span class="mono">show the url</span>
+            </label>
             <p class="qr-error mono" id="qr-error" hidden></p>
           </form>
           <div class="qr-preview">
@@ -278,10 +282,12 @@ const donts = [
     const CREAM = '#f6f5f0';
     const DIM = 'rgba(26, 52, 43, 0.5)';
     const FONT = '"Bricolage Grotesque", sans-serif';
+    const MONO = '"IBM Plex Mono", monospace';
     const SCALE = 16;
     const QUIET = 4;
 
     const brandInput = document.getElementById('qr-brand') as HTMLInputElement;
+    const urlShow = document.getElementById('qr-url-show') as HTMLInputElement;
     const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
     const errEl = document.getElementById('qr-error') as HTMLElement;
     const ctx = canvas.getContext('2d')!;
@@ -289,12 +295,17 @@ const donts = [
     function build() {
       const url = urlInput!.value.trim();
       if (!url) return null;
-      const branded = brandInput.checked;
       const qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
-      const n = qr.size;
-      const px = (n + QUIET * 2) * SCALE;
-      const fs = branded ? Math.round(SCALE * 2.2) : 0;
-      return { qr, n, px, branded, fs };
+      return { qr, url, branded: brandInput.checked, showUrl: urlShow.checked };
+    }
+
+    // Strip protocol, www and trailing slash, then truncate to fit the width.
+    const cleanUrl = (u: string) => u.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+    function fit(text: string, maxW: number) {
+      if (ctx.measureText(text).width <= maxW) return text;
+      let t = text;
+      while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+      return t + '…';
     }
 
     function render() {
@@ -311,28 +322,52 @@ const donts = [
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         return;
       }
-      const { qr, n, px, branded, fs } = data;
+      const { qr, url, branded, showUrl } = data;
+      const n = qr.size;
+      const px = (n + QUIET * 2) * SCALE;
+      const codeBottom = (n + QUIET) * SCALE;
+      const topGap = SCALE;
+      const lineGap = Math.round(SCALE * 0.55);
+      const botMargin = Math.round(SCALE * 1.5);
+
+      const lines: { kind: 'mark' | 'url'; fs: number }[] = [];
+      if (branded) lines.push({ kind: 'mark', fs: Math.round(SCALE * 2.2) });
+      if (showUrl) lines.push({ kind: 'url', fs: Math.round(SCALE * 1.25) });
+      let capH = 0;
+      if (lines.length) {
+        capH = topGap + botMargin;
+        lines.forEach((l, i) => (capH += l.fs + (i ? lineGap : 0)));
+      }
+
       canvas.width = px;
-      canvas.height = px + fs;
+      canvas.height = Math.max(px, codeBottom + capH);
       ctx.fillStyle = CREAM;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = GREEN;
       for (let y = 0; y < n; y++)
         for (let x = 0; x < n; x++)
           if (qr.getModule(x, y)) ctx.fillRect((x + QUIET) * SCALE, (y + QUIET) * SCALE, SCALE, SCALE);
-      if (branded) {
-        // Sit the wordmark ~2 modules under the code, inside the bottom quiet area.
-        const ty = (n + QUIET) * SCALE + SCALE * 2 + fs / 2;
-        ctx.font = `500 ${fs}px ${FONT}`;
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'left';
-        const madW = ctx.measureText('mad').width;
-        const total = madW + ctx.measureText('.builders').width;
-        const tx = px / 2 - total / 2;
-        ctx.fillStyle = GREEN;
-        ctx.fillText('mad', tx, ty);
-        ctx.fillStyle = DIM;
-        ctx.fillText('.builders', tx + madW, ty);
+
+      let cy = codeBottom + topGap;
+      ctx.textBaseline = 'top';
+      for (const l of lines) {
+        if (l.kind === 'mark') {
+          ctx.font = `500 ${l.fs}px ${FONT}`;
+          ctx.textAlign = 'left';
+          const madW = ctx.measureText('mad').width;
+          const total = madW + ctx.measureText('.builders').width;
+          const tx = px / 2 - total / 2;
+          ctx.fillStyle = GREEN;
+          ctx.fillText('mad', tx, cy);
+          ctx.fillStyle = DIM;
+          ctx.fillText('.builders', tx + madW, cy);
+        } else {
+          ctx.font = `${l.fs}px ${MONO}`;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = DIM;
+          ctx.fillText(fit(cleanUrl(url), px * 0.9), px / 2, cy);
+        }
+        cy += l.fs + lineGap;
       }
     }
 
@@ -351,6 +386,7 @@ const donts = [
     };
     urlInput.addEventListener('input', onInput);
     brandInput.addEventListener('change', render);
+    urlShow.addEventListener('change', render);
 
     // Wait for the brand font so the wordmark renders correctly on first paint.
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
