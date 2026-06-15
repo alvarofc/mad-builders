@@ -8,9 +8,6 @@ import Layout from '../../layouts/Layout.astro';
       <a href="/brand#assets" class="mono back">← brand guide</a>
       <p class="kicker">brand · tools</p>
       <h1 class="section-title">qr generator</h1>
-      <p class="lede">
-        Paste a URL and download a branded QR for stickers, posters and decks.
-      </p>
 
       <div class="qr-layout">
         <form class="qr-form" autocomplete="off">
@@ -210,10 +207,6 @@ import Layout from '../../layouts/Layout.astro';
     .qr-layout {
       grid-template-columns: 1fr;
       gap: 32px;
-    }
-    /* stacked: show the QR first, controls below, so it isn't buried */
-    .qr-preview {
-      order: -1;
     }
   }
   .qr-form {
