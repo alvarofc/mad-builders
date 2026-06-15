@@ -74,7 +74,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   </nav>
 
   <!-- hero -->
-  <section class="hero">
+  <section class="hero" id="hero">
     <div class="hero-top">
       {/* el oso y el madroño — Madrid's coat of arms, as a faint crest */}
       <img class="hero-crest" src={osoCrest.src} alt="" aria-hidden="true" />
@@ -332,7 +332,10 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       for (const e of entries) {
         if (!e.isIntersecting) continue;
         subLinks.forEach((a) => a.classList.remove('active'));
-        subLinkFor.get((e.target as HTMLElement).id)?.classList.add('active');
+        // Hero in view = nothing active
+        if ((e.target as HTMLElement).id !== 'hero') {
+          subLinkFor.get((e.target as HTMLElement).id)?.classList.add('active');
+        }
       }
     },
     { rootMargin: '-45% 0px -50% 0px' }
