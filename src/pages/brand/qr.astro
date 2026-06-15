@@ -180,6 +180,10 @@ import Layout from '../../layouts/Layout.astro';
       grid-template-columns: 1fr;
       gap: 32px;
     }
+    /* stacked: show the QR first, controls below, so it isn't buried */
+    .qr-preview {
+      order: -1;
+    }
   }
   .qr-form {
     display: flex;
