@@ -1,0 +1,8 @@
+# esbuild & sharp ship prebuilt native binaries (no build script needed on any
+# supported platform — macOS, Linux glibc/musl, etc.), so we decline their
+# install scripts. This silences pnpm's ERR_PNPM_IGNORED_BUILDS without running
+# anything. Set to `true` only if you need a from-source compile on an exotic
+# platform with no prebuilt binary.
+allowBuilds:
+  esbuild: false
+  sharp: false
