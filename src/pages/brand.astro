@@ -5,7 +5,7 @@ import { site } from '../data/site';
 // Pulled straight from the design tokens in src/styles/global.css so this page
 // can't drift from the real site.
 const greens = [
-  { name: '--green', hex: '#1a342b', use: 'primary background — the brand green' },
+  { name: '--green', hex: '#1a342b', use: 'primary background, the brand green' },
   { name: '--green-deep', hex: '#142a22', use: 'footer / deepest surface' },
   { name: '--green-soft', hex: '#214136', use: 'raised surfaces on green' },
 ];
@@ -18,27 +18,27 @@ const inks = [
 
 const fonts = [
   {
-    name: 'Archivo',
-    role: 'display & body',
-    where: 'headings, hero, body copy, cards, UI — the workhorse',
-    sample: "the builders' house",
-    family: "'Archivo', sans-serif",
-    weight: 600,
-    size: '34px',
-  },
-  {
     name: 'Bricolage Grotesque',
     role: 'logo only',
-    where: 'the mad.builders wordmark — nowhere else',
+    where: 'the mad.builders wordmark, and nothing else',
     sample: 'mad.builders',
     family: "'Bricolage Grotesque', sans-serif",
     weight: 700,
     size: '34px',
   },
   {
+    name: 'Archivo',
+    role: 'display & body',
+    where: 'headings, hero, body copy, cards and UI. the workhorse',
+    sample: "the builders' house",
+    family: "'Archivo', sans-serif",
+    weight: 600,
+    size: '34px',
+  },
+  {
     name: 'IBM Plex Mono',
     role: 'labels & UI',
-    where: 'kickers, buttons, nav, ticker, footer — uppercase, letter-spaced',
+    where: 'kickers, buttons, nav, ticker, footer. uppercase and letter-spaced',
     sample: 'WHAT THIS IS ///',
     family: "'IBM Plex Mono', monospace",
     weight: 500,
@@ -47,27 +47,27 @@ const fonts = [
 ];
 
 const dos = [
-  'lowercase headings — "no bullshit. just building."',
+  'lowercase headings, like "no bullshit. just building."',
   'short, concrete, plain words',
-  'builder-first; a little Madrid flavour ("siesta", "tapas")',
-  'mono, uppercase kickers as section labels',
+  'builder-first, with a little Madrid flavour ("siesta", "tapas")',
+  'periods and commas over em-dashes',
 ];
 const donts = [
-  'Title Case Or ALL-CAPS Headlines',
+  'Title Case or ALL-CAPS headlines',
   'corporate fluff, hype words, buzzwords',
   'jargon when a plain word works',
-  'long paragraphs where a line will do',
+  'em-dash pile-ups and other "AI tells"',
 ];
 ---
 
-<Layout title="brand guide — mad.builders" noindex={true}>
+<Layout title="mad.builders brand guide" noindex={true}>
   <section class="section brand-head">
     <div class="wrap">
       <p class="kicker">brand guide</p>
       <h1 class="section-title">the look &amp; the voice</h1>
       <p class="lede">
-        The single reference for the mad.builders identity — logo, colour, type and tone.
-        Tokens here are the same ones the site renders from, so this page stays honest.
+        The single reference for the mad.builders identity: logo, colour, type and tone.
+        The tokens here are the same ones the site renders from, so the page stays honest.
       </p>
     </div>
   </section>
@@ -93,7 +93,7 @@ const donts = [
         <div class="rule do">
           <p class="rule-h mono">do</p>
           <ul>
-            <li>keep the dimmed dot — it’s part of the mark</li>
+            <li>keep the dimmed dot, it’s part of the mark</li>
             <li>give it clear space (≈ the height of the “m” all around)</li>
             <li>cream-on-green or green-on-cream, nothing else</li>
           </ul>
@@ -117,7 +117,7 @@ const donts = [
       <h2 class="section-title">green &amp; cream</h2>
       <p class="lede">
         Deep green and warm cream carry everything. Sponsor colours (e.g. Samplia red) live
-        only inside a sponsor’s own logo — never in the core palette.
+        only inside a sponsor’s own logo, never in the core palette.
       </p>
       <div class="kicker sub mono">surfaces</div>
       <div class="swatches">
@@ -173,8 +173,8 @@ const donts = [
       <p class="kicker">04 · voice</p>
       <h2 class="section-title">how it talks</h2>
       <p class="lede">
-        Terse, lowercase, a bit irreverent — like a builder, not a brochure. Dial the edge
-        back (clear, not crude) when talking to VCs and sponsors.
+        Terse, lowercase, a bit irreverent. It should sound like a builder, not a brochure.
+        Ease off when talking to VCs and sponsors: stay clear, skip the crude.
       </p>
       <div class="rules">
         <div class="rule do">
@@ -195,9 +195,9 @@ const donts = [
       <p class="kicker">05 · photography</p>
       <h2 class="section-title">candid, not stock</h2>
       <p class="lede">
-        Real moments from the house — rooftops, talks, packed rooms at golden hour. Slightly
+        Real moments from the house: rooftops, talks, packed rooms at golden hour. Slightly
         desaturated (<code>filter: saturate(0.92)</code>) so nothing screams. Edges fade into
-        the green in the strips. Never staged stock photography.
+        the green in the strips. Never staged stock.
       </p>
     </div>
   </section>
@@ -353,9 +353,6 @@ const donts = [
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: var(--cream-faint);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 4px 12px;
   }
   .spec-sample {
     margin: 0 0 12px;
@@ -412,7 +409,6 @@ const donts = [
   }
   .section.light .role-tag {
     color: rgba(26, 52, 43, 0.5);
-    border-color: rgba(26, 52, 43, 0.18);
   }
   .section.light code {
     background: rgba(26, 52, 43, 0.08);
