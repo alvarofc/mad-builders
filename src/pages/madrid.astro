@@ -33,7 +33,7 @@ const kinds = [
     </div>
   </section>
 
-  <section class="section">
+  <section class="section light">
     <div class="wrap">
       <p class="kicker">communities</p>
       <h2 class="section-title">who's organizing</h2>
@@ -70,7 +70,7 @@ const kinds = [
     </div>
   </section>
 
-  <section class="section">
+  <section class="section light">
     <div class="wrap">
       <p class="kicker">the map</p>
       <h2 class="section-title">where things happen</h2>
@@ -160,6 +160,7 @@ const kinds = [
     border-radius: 10px;
     padding: 26px;
     background: var(--green-deep);
+    color: var(--cream);
   }
   .community h3 {
     font-size: 20px;
@@ -210,5 +211,16 @@ const kinds = [
     height: 520px;
     border-radius: 10px;
     border: 1px solid var(--line);
+  }
+
+  /* green-ink tweaks for the cream (.section.light) sections */
+  .section.light .legend {
+    color: rgba(26, 52, 43, 0.7);
+  }
+  .section.light .legend-item i {
+    box-shadow: 0 0 0 1px rgba(26, 52, 43, 0.2);
+  }
+  .section.light #map {
+    border-color: rgba(26, 52, 43, 0.14);
   }
 </style>
