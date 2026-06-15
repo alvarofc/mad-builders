@@ -73,7 +73,7 @@ const donts = [
   </section>
 
   <!-- LOGO -->
-  <section class="section">
+  <section class="section light">
     <div class="wrap">
       <p class="kicker">01 · logo</p>
       <h2 class="section-title">the wordmark</h2>
@@ -145,7 +145,7 @@ const donts = [
   </section>
 
   <!-- TYPE -->
-  <section class="section">
+  <section class="section light">
     <div class="wrap">
       <p class="kicker">03 · type</p>
       <h2 class="section-title">three faces</h2>
@@ -190,7 +190,7 @@ const donts = [
   </section>
 
   <!-- PHOTOGRAPHY -->
-  <section class="section">
+  <section class="section light">
     <div class="wrap">
       <p class="kicker">05 · photography</p>
       <h2 class="section-title">candid, not stock</h2>
@@ -241,6 +241,7 @@ const donts = [
   }
   .cream-board {
     background: var(--cream);
+    border: 1px solid rgba(26, 52, 43, 0.12);
   }
   .mark {
     font-family: 'Bricolage Grotesque', var(--font-sans);
@@ -388,5 +389,33 @@ const donts = [
     background: var(--green-soft);
     padding: 2px 6px;
     border-radius: 4px;
+  }
+
+  /* green-ink overrides for components sitting on cream (.section.light) */
+  .section.light .rule,
+  .section.light .specimen {
+    border-color: rgba(26, 52, 43, 0.14);
+  }
+  .section.light .rule ul,
+  .section.light .spec-where {
+    color: rgba(26, 52, 43, 0.72);
+  }
+  .section.light .rule.do .rule-h {
+    color: #3b6d11;
+  }
+  .section.light .rule.dont .rule-h {
+    color: #993c1d;
+  }
+  .section.light .sw-name,
+  .section.light .spec-sample {
+    color: var(--green);
+  }
+  .section.light .role-tag {
+    color: rgba(26, 52, 43, 0.5);
+    border-color: rgba(26, 52, 43, 0.18);
+  }
+  .section.light code {
+    background: rgba(26, 52, 43, 0.08);
+    color: var(--green);
   }
 </style>
