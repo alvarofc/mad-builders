@@ -70,7 +70,6 @@ const donts = [
       <a href="#photography">photo</a>
       <a href="#focus">focus</a>
       <a href="#assets">assets</a>
-      <a class="toc-tool" href="/brand/qr">qr tool →</a>
     </div>
   </nav>
   <section class="section brand-head">
@@ -231,8 +230,7 @@ const donts = [
   <section class="section light" id="assets">
     <div class="wrap">
       <p class="kicker">07 · assets</p>
-      <h2 class="section-title">logos, stickers, tools</h2>
-      <p class="lede">Downloadable files and the little tools we use to make event collateral.</p>
+      <h2 class="section-title">logos, stickers, qr</h2>
       <div class="asset-grid">
         <div class="asset-card">
           <p class="asset-h">logo files</p>
@@ -242,14 +240,123 @@ const donts = [
           <p class="asset-h">stickers</p>
           <p class="asset-note">sticker artwork for events and laptops. coming once the designs land.</p>
         </div>
-        <a class="asset-card" href="/brand/qr">
-          <p class="asset-h">qr generator →</p>
-          <p class="asset-note">make a branded qr from any url, with an optional caption line.</p>
-        </a>
+      </div>
+
+      <div class="qr-tool">
+        <p class="kicker sub mono">qr generator</p>
+        <div class="qr-layout">
+          <form class="qr-form" autocomplete="off">
+            <label class="qr-field">
+              <span class="qr-label mono">url</span>
+              <input id="qr-url" type="text" placeholder="https://chat.whatsapp.com/..." value="https://mad.builders" />
+            </label>
+            <label class="qr-check">
+              <input id="qr-brand" type="checkbox" checked />
+              <span class="mono">add the mad.builders mark</span>
+            </label>
+            <p class="qr-error mono" id="qr-error" hidden></p>
+          </form>
+          <div class="qr-preview">
+            <div class="qr-canvas-wrap">
+              <canvas id="qr-canvas" aria-label="qr code preview"></canvas>
+            </div>
+            <button class="btn solid" id="dl-png" type="button">download png</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 </Layout>
+
+<script>
+  import { qrcodegen } from '../lib/qrcodegen';
+  const QrCode = qrcodegen.QrCode;
+
+  const urlInput = document.getElementById('qr-url') as HTMLInputElement | null;
+  if (urlInput) {
+    const GREEN = '#1a342b';
+    const CREAM = '#f6f5f0';
+    const DIM = 'rgba(26, 52, 43, 0.5)';
+    const FONT = '"Bricolage Grotesque", sans-serif';
+    const SCALE = 16;
+    const QUIET = 4;
+
+    const brandInput = document.getElementById('qr-brand') as HTMLInputElement;
+    const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
+    const errEl = document.getElementById('qr-error') as HTMLElement;
+    const ctx = canvas.getContext('2d')!;
+
+    function build() {
+      const url = urlInput!.value.trim();
+      if (!url) return null;
+      const branded = brandInput.checked;
+      const qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
+      const n = qr.size;
+      const px = (n + QUIET * 2) * SCALE;
+      const fs = branded ? Math.round(SCALE * 2.2) : 0;
+      return { qr, n, px, branded, fs };
+    }
+
+    function render() {
+      errEl.hidden = true;
+      let data;
+      try {
+        data = build();
+      } catch {
+        errEl.textContent = 'that url is too long to fit in a single qr.';
+        errEl.hidden = false;
+        return;
+      }
+      if (!data) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+      const { qr, n, px, branded, fs } = data;
+      canvas.width = px;
+      canvas.height = px + fs;
+      ctx.fillStyle = CREAM;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = GREEN;
+      for (let y = 0; y < n; y++)
+        for (let x = 0; x < n; x++)
+          if (qr.getModule(x, y)) ctx.fillRect((x + QUIET) * SCALE, (y + QUIET) * SCALE, SCALE, SCALE);
+      if (branded) {
+        // Sit the wordmark ~2 modules under the code, inside the bottom quiet area.
+        const ty = (n + QUIET) * SCALE + SCALE * 2 + fs / 2;
+        ctx.font = `500 ${fs}px ${FONT}`;
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left';
+        const madW = ctx.measureText('mad').width;
+        const total = madW + ctx.measureText('.builders').width;
+        const tx = px / 2 - total / 2;
+        ctx.fillStyle = GREEN;
+        ctx.fillText('mad', tx, ty);
+        ctx.fillStyle = DIM;
+        ctx.fillText('.builders', tx + madW, ty);
+      }
+    }
+
+    document.getElementById('dl-png')!.addEventListener('click', () => {
+      if (!build()) return;
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'mad-builders-qr.png';
+      a.click();
+    });
+
+    let t: number;
+    const onInput = () => {
+      clearTimeout(t);
+      t = window.setTimeout(render, 120);
+    };
+    urlInput.addEventListener('input', onInput);
+    brandInput.addEventListener('change', render);
+
+    // Wait for the brand font so the wordmark renders correctly on first paint.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+    render();
+  }
+</script>
 
 <style>
   .brand-head {
@@ -531,5 +638,92 @@ const donts = [
   }
   .section.light a.asset-card:hover {
     border-color: rgba(26, 52, 43, 0.4);
+  }
+
+  /* inline qr generator (under assets, on cream) */
+  .qr-tool {
+    margin-top: 44px;
+  }
+  .qr-tool .sub {
+    margin: 0 0 20px;
+  }
+  .qr-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .qr-layout {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+  }
+  .qr-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .qr-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(26, 52, 43, 0.5);
+    margin-bottom: 8px;
+  }
+  .qr-field input {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(26, 52, 43, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--green);
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .qr-field input:focus {
+    outline: none;
+    border-color: var(--green);
+  }
+  .qr-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(26, 52, 43, 0.7);
+  }
+  .qr-check input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .qr-error {
+    color: #993c1d;
+    font-size: 12px;
+    margin: 0;
+  }
+  .qr-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .qr-canvas-wrap {
+    border: 1px solid rgba(26, 52, 43, 0.14);
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+    max-width: 300px;
+  }
+  #qr-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
   }
 </style>
