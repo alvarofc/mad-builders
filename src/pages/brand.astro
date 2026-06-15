@@ -19,16 +19,16 @@ const inks = [
 const fonts = [
   {
     name: 'Bricolage Grotesque',
-    role: 'logo only',
+    role: 'logo',
     where: 'the mad.builders wordmark, and nothing else',
     sample: 'mad.builders',
     family: "'Bricolage Grotesque', sans-serif",
-    weight: 700,
+    weight: 500,
     size: '34px',
   },
   {
     name: 'Archivo',
-    role: 'display & body',
+    role: 'body',
     where: 'headings, hero, body copy, cards and UI. the workhorse',
     sample: "the builders' house",
     family: "'Archivo', sans-serif",
@@ -37,7 +37,7 @@ const fonts = [
   },
   {
     name: 'IBM Plex Mono',
-    role: 'labels & UI',
+    role: 'other',
     where: 'kickers, buttons, nav, ticker, footer. uppercase and letter-spaced',
     sample: 'WHAT THIS IS ///',
     family: "'IBM Plex Mono', monospace",
@@ -78,8 +78,8 @@ const donts = [
       <p class="kicker">01 · logo</p>
       <h2 class="section-title">the wordmark</h2>
       <p class="lede">
-        Bricolage Grotesque, bold. The dot stays dimmed to the same tone as “builders”.
-        Two lockups only: cream on green, or green on cream.
+        Bricolage Grotesque, medium weight. The dot stays dimmed to the same tone as
+        “builders”. Two lockups only: cream on green, or green on cream.
       </p>
       <div class="logo-boards">
         <div class="board green-board">
@@ -245,7 +245,7 @@ const donts = [
   }
   .mark {
     font-family: 'Bricolage Grotesque', var(--font-sans);
-    font-weight: 700;
+    font-weight: 500;
     font-size: 32px;
     letter-spacing: -0.02em;
     color: var(--cream);

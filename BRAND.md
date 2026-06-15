@@ -6,7 +6,7 @@ visit `/brand`. This file is the portable summary.
 
 ## Logo
 
-- Wordmark: **`mad.builders`** in **Bricolage Grotesque, 700**.
+- Wordmark: **`mad.builders`** in **Bricolage Grotesque, 500** (medium).
 - The dot and `.builders` are **dimmed** (`--cream-dim`, weight 400); `mad` is full weight.
 - Bricolage Grotesque is used **only** for the logo, nowhere else.
 - Lockups: **cream on green** or **green on cream**. Nothing else.
@@ -34,9 +34,9 @@ Sponsor colours (e.g. Samplia red) live **only** inside the sponsor's own logo, 
 
 | Font | Role | Where |
 |---|---|---|
-| **Bricolage Grotesque** | logo only | the `mad.builders` wordmark, nowhere else |
-| **Archivo** (`--font-sans`) | display & body | headings, hero, body, cards, UI. the workhorse |
-| **IBM Plex Mono** (`--font-mono`) | labels & UI | kickers, buttons, nav, ticker, footer. uppercase, letter-spaced |
+| **Bricolage Grotesque** | logo | the `mad.builders` wordmark, nowhere else |
+| **Archivo** (`--font-sans`) | body | headings, hero, body, cards, UI. the workhorse |
+| **IBM Plex Mono** (`--font-mono`) | other | kickers, buttons, nav, ticker, footer. uppercase, letter-spaced |
 
 ## Voice & tone
 
