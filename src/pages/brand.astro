@@ -78,7 +78,6 @@ const donts = [
       <h1 class="section-title">the look &amp; the voice</h1>
       <p class="lede">
         The single reference for the mad.builders identity: logo, colour, type and tone.
-        The tokens here are the same ones the site renders from, so the page stays honest.
       </p>
     </div>
   </section>
@@ -299,13 +298,32 @@ const donts = [
       return { qr, url, branded: brandInput.checked, showUrl: urlShow.checked };
     }
 
-    // Strip protocol, www and trailing slash, then truncate to fit the width.
+    // Strip protocol, www and trailing slash.
     const cleanUrl = (u: string) => u.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
-    function fit(text: string, maxW: number) {
-      if (ctx.measureText(text).width <= maxW) return text;
-      let t = text;
-      while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
-      return t + '…';
+    // Wrap to as many lines as needed to show the whole string (ctx.font set by caller).
+    function wrap(text: string, maxW: number) {
+      const out: string[] = [];
+      let cur = '';
+      for (const ch of text) {
+        if (cur && ctx.measureText(cur + ch).width > maxW) {
+          out.push(cur);
+          cur = ch;
+        } else cur += ch;
+      }
+      if (cur) out.push(cur);
+      return out;
+    }
+    function drawMark(cx: number, top: number, fs: number) {
+      ctx.font = `500 ${fs}px ${FONT}`;
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      const madW = ctx.measureText('mad').width;
+      const total = madW + ctx.measureText('.builders').width;
+      const tx = cx - total / 2;
+      ctx.fillStyle = GREEN;
+      ctx.fillText('mad', tx, top);
+      ctx.fillStyle = DIM;
+      ctx.fillText('.builders', tx + madW, top);
     }
 
     function render() {
@@ -325,49 +343,57 @@ const donts = [
       const { qr, url, branded, showUrl } = data;
       const n = qr.size;
       const px = (n + QUIET * 2) * SCALE;
+      const codeTop = QUIET * SCALE;
       const codeBottom = (n + QUIET) * SCALE;
-      const topGap = SCALE;
-      const lineGap = Math.round(SCALE * 0.55);
-      const botMargin = Math.round(SCALE * 1.5);
+      const fsW = Math.round(SCALE * 2.2);
+      const fsU = Math.round(SCALE * 1.25);
+      const lineGap = Math.round(SCALE * 0.5);
+      const edge = Math.round(SCALE * 1.4);
+      const wordmarkTop = showUrl && branded;
 
-      const lines: { kind: 'mark' | 'url'; fs: number }[] = [];
-      if (branded) lines.push({ kind: 'mark', fs: Math.round(SCALE * 2.2) });
-      if (showUrl) lines.push({ kind: 'url', fs: Math.round(SCALE * 1.25) });
-      let capH = 0;
-      if (lines.length) {
-        capH = topGap + botMargin;
-        lines.forEach((l, i) => (capH += l.fs + (i ? lineGap : 0)));
+      // Lay out captions in QR-block coords (block spans [0, px]).
+      const items: { kind: 'mark' | 'url'; text?: string; fs: number; top: number }[] = [];
+      let minY = 0;
+      let maxY = px;
+      if (wordmarkTop) {
+        const top = codeTop - SCALE * 2 - fsW; // wordmark ends ~2 modules above the code
+        items.push({ kind: 'mark', fs: fsW, top });
+        minY = Math.min(minY, top - edge);
+      }
+      if (showUrl) {
+        ctx.font = `${fsU}px ${MONO}`;
+        let cy = codeBottom + SCALE; // ~1 module below the code
+        for (const line of wrap(cleanUrl(url), px * 0.92)) {
+          items.push({ kind: 'url', text: line, fs: fsU, top: cy });
+          cy += fsU + lineGap;
+        }
+        maxY = Math.max(maxY, cy - lineGap + edge);
+      } else if (branded) {
+        const top = codeBottom + SCALE;
+        items.push({ kind: 'mark', fs: fsW, top });
+        maxY = Math.max(maxY, top + fsW + edge);
       }
 
+      const shift = -minY;
       canvas.width = px;
-      canvas.height = Math.max(px, codeBottom + capH);
+      canvas.height = Math.round(maxY - minY);
       ctx.fillStyle = CREAM;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = GREEN;
       for (let y = 0; y < n; y++)
         for (let x = 0; x < n; x++)
-          if (qr.getModule(x, y)) ctx.fillRect((x + QUIET) * SCALE, (y + QUIET) * SCALE, SCALE, SCALE);
+          if (qr.getModule(x, y)) ctx.fillRect((x + QUIET) * SCALE, (y + QUIET) * SCALE + shift, SCALE, SCALE);
 
-      let cy = codeBottom + topGap;
       ctx.textBaseline = 'top';
-      for (const l of lines) {
-        if (l.kind === 'mark') {
-          ctx.font = `500 ${l.fs}px ${FONT}`;
-          ctx.textAlign = 'left';
-          const madW = ctx.measureText('mad').width;
-          const total = madW + ctx.measureText('.builders').width;
-          const tx = px / 2 - total / 2;
-          ctx.fillStyle = GREEN;
-          ctx.fillText('mad', tx, cy);
-          ctx.fillStyle = DIM;
-          ctx.fillText('.builders', tx + madW, cy);
+      for (const it of items) {
+        if (it.kind === 'mark') {
+          drawMark(px / 2, it.top + shift, it.fs);
         } else {
-          ctx.font = `${l.fs}px ${MONO}`;
+          ctx.font = `${it.fs}px ${MONO}`;
           ctx.textAlign = 'center';
           ctx.fillStyle = DIM;
-          ctx.fillText(fit(cleanUrl(url), px * 0.9), px / 2, cy);
+          ctx.fillText(it.text!, px / 2, it.top + shift);
         }
-        cy += l.fs + lineGap;
       }
     }
 
