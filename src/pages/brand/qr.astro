@@ -9,8 +9,7 @@ import Layout from '../../layouts/Layout.astro';
       <p class="kicker">brand · tools</p>
       <h1 class="section-title">qr generator</h1>
       <p class="lede">
-        Paste a URL, add an optional caption, and download a branded QR for stickers,
-        posters and decks. Everything runs in your browser.
+        Paste a URL and download a branded QR for stickers, posters and decks.
       </p>
 
       <div class="qr-layout">
@@ -19,9 +18,9 @@ import Layout from '../../layouts/Layout.astro';
             <span class="qr-label mono">url</span>
             <input id="qr-url" type="text" placeholder="https://chat.whatsapp.com/..." value="https://mad.builders" />
           </label>
-          <label class="qr-field">
-            <span class="qr-label mono">caption (optional)</span>
-            <input id="qr-caption" type="text" maxlength="40" placeholder="mad.builders" />
+          <label class="qr-check">
+            <input id="qr-brand" type="checkbox" checked />
+            <span class="mono">add the mad.builders mark</span>
           </label>
           <p class="qr-error mono" id="qr-error" hidden></p>
         </form>
@@ -46,29 +45,69 @@ import Layout from '../../layouts/Layout.astro';
 
   const GREEN = '#1a342b';
   const CREAM = '#f6f5f0';
+  const DIM = 'rgba(26, 52, 43, 0.5)';
+  const FONT = '"Bricolage Grotesque", sans-serif';
   const SCALE = 10;
   const QUIET = 4;
 
   const urlInput = document.getElementById('qr-url') as HTMLInputElement;
-  const capInput = document.getElementById('qr-caption') as HTMLInputElement;
+  const brandInput = document.getElementById('qr-brand') as HTMLInputElement;
   const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
   const errEl = document.getElementById('qr-error') as HTMLElement;
   const ctx = canvas.getContext('2d')!;
 
-  const escapeXml = (s: string) =>
-    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-
-  // Returns { n, dark(x,y), px, capPad, capFont } for the current inputs, or null on error.
   function build() {
     const url = urlInput.value.trim();
     if (!url) return null;
-    const qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
+    const branded = brandInput.checked;
+    // High error-correction when branded so the centre mark stays scannable.
+    const qr = QrCode.encodeText(url, branded ? QrCode.Ecc.HIGH : QrCode.Ecc.MEDIUM);
     const n = qr.size;
     const px = (n + QUIET * 2) * SCALE;
-    const caption = capInput.value.trim();
-    const capFont = Math.round(SCALE * 2.6);
-    const capPad = caption ? Math.round(capFont * 2.2) : 0;
-    return { qr, n, px, caption, capFont, capPad };
+    return { qr, n, px, branded };
+  }
+
+  // Geometry + fitted font size for the centred mad.builders chip.
+  function brandMetrics(px: number) {
+    const boxW = Math.round(px * 0.52);
+    const boxH = Math.round(px * 0.17);
+    const x = Math.round((px - boxW) / 2);
+    const y = Math.round((px - boxH) / 2);
+    const radius = Math.round(boxH * 0.3);
+    let fs = boxH * 0.52;
+    ctx.font = `500 ${fs}px ${FONT}`;
+    const maxW = boxW - boxW * 0.28;
+    const w = ctx.measureText('mad.builders').width;
+    if (w > maxW) fs = Math.floor((fs * maxW) / w);
+    return { boxW, boxH, x, y, radius, fs };
+  }
+
+  function roundRect(x: number, y: number, w: number, h: number, r: number) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawBrand(px: number) {
+    const { boxW, boxH, x, y, radius, fs } = brandMetrics(px);
+    ctx.fillStyle = CREAM;
+    roundRect(x, y, boxW, boxH, radius);
+    ctx.fill();
+    ctx.font = `500 ${fs}px ${FONT}`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    const madW = ctx.measureText('mad').width;
+    const total = madW + ctx.measureText('.builders').width;
+    const tx = px / 2 - total / 2;
+    const ty = y + boxH / 2;
+    ctx.fillStyle = GREEN;
+    ctx.fillText('mad', tx, ty);
+    ctx.fillStyle = DIM;
+    ctx.fillText('.builders', tx + madW, ty);
   }
 
   function render() {
@@ -85,42 +124,34 @@ import Layout from '../../layouts/Layout.astro';
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       return;
     }
-    const { qr, n, px, caption, capFont, capPad } = data;
+    const { qr, n, px, branded } = data;
     canvas.width = px;
-    canvas.height = px + capPad;
+    canvas.height = px;
     ctx.fillStyle = CREAM;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, px, px);
     ctx.fillStyle = GREEN;
-    for (let y = 0; y < n; y++) {
-      for (let x = 0; x < n; x++) {
+    for (let y = 0; y < n; y++)
+      for (let x = 0; x < n; x++)
         if (qr.getModule(x, y)) ctx.fillRect((x + QUIET) * SCALE, (y + QUIET) * SCALE, SCALE, SCALE);
-      }
-    }
-    if (caption) {
-      ctx.fillStyle = GREEN;
-      ctx.font = `500 ${capFont}px "Bricolage Grotesque", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(caption, px / 2, px + capPad / 2 - SCALE);
-    }
+    if (branded) drawBrand(px);
   }
 
   function buildSvg() {
     const data = build();
     if (!data) return null;
-    const { qr, n, px, caption, capFont, capPad } = data;
+    const { qr, n, px, branded } = data;
     let path = '';
-    for (let y = 0; y < n; y++) {
-      for (let x = 0; x < n; x++) {
+    for (let y = 0; y < n; y++)
+      for (let x = 0; x < n; x++)
         if (qr.getModule(x, y)) path += `M${(x + QUIET) * SCALE} ${(y + QUIET) * SCALE}h${SCALE}v${SCALE}h-${SCALE}z`;
-      }
-    }
-    const h = px + capPad;
-    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${h}" viewBox="0 0 ${px} ${h}">`;
-    svg += `<rect width="${px}" height="${h}" fill="${CREAM}"/>`;
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 ${px} ${px}">`;
+    svg += `<rect width="${px}" height="${px}" fill="${CREAM}"/>`;
     svg += `<path d="${path}" fill="${GREEN}"/>`;
-    if (caption)
-      svg += `<text x="${px / 2}" y="${px + capPad / 2 - SCALE}" fill="${GREEN}" font-family="Bricolage Grotesque, sans-serif" font-weight="500" font-size="${capFont}" text-anchor="middle" dominant-baseline="middle">${escapeXml(caption)}</text>`;
+    if (branded) {
+      const { boxW, boxH, x, y, radius, fs } = brandMetrics(px);
+      svg += `<rect x="${x}" y="${y}" width="${boxW}" height="${boxH}" rx="${radius}" fill="${CREAM}"/>`;
+      svg += `<text x="${px / 2}" y="${y + boxH / 2}" font-family="Bricolage Grotesque, sans-serif" font-weight="500" font-size="${fs}" text-anchor="middle" dominant-baseline="middle"><tspan fill="${GREEN}">mad</tspan><tspan fill="${DIM}">.builders</tspan></text>`;
+    }
     svg += '</svg>';
     return svg;
   }
@@ -148,9 +179,9 @@ import Layout from '../../layouts/Layout.astro';
     t = window.setTimeout(render, 120);
   };
   urlInput.addEventListener('input', onInput);
-  capInput.addEventListener('input', onInput);
+  brandInput.addEventListener('change', render);
 
-  // Wait for the brand font so the caption renders correctly on first paint.
+  // Wait for the brand font so the centre mark renders correctly on first paint.
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
   render();
 </script>
@@ -219,6 +250,26 @@ import Layout from '../../layouts/Layout.astro';
     color: #e58a6f;
     font-size: 12px;
     margin: 0;
+  }
+  .qr-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--cream-dim);
+    transition: color 0.15s;
+  }
+  .qr-check:hover {
+    color: var(--cream);
+  }
+  .qr-check input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--cream);
+    cursor: pointer;
   }
   .qr-preview {
     display: flex;
