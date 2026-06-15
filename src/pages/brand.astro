@@ -1,0 +1,392 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { site } from '../data/site';
+
+// Pulled straight from the design tokens in src/styles/global.css so this page
+// can't drift from the real site.
+const greens = [
+  { name: '--green', hex: '#1a342b', use: 'primary background — the brand green' },
+  { name: '--green-deep', hex: '#142a22', use: 'footer / deepest surface' },
+  { name: '--green-soft', hex: '#214136', use: 'raised surfaces on green' },
+];
+const inks = [
+  { name: '--cream', hex: '#f6f5f0', use: 'primary ink on green · light-section background' },
+  { name: '--cream-dim', hex: 'rgba(246,245,240,0.62)', use: 'secondary text' },
+  { name: '--cream-faint', hex: 'rgba(246,245,240,0.38)', use: 'kickers / tertiary text' },
+  { name: '--line', hex: 'rgba(246,245,240,0.14)', use: 'hairline borders' },
+];
+
+const fonts = [
+  {
+    name: 'Archivo',
+    role: 'display & body',
+    where: 'headings, hero, body copy, cards, UI — the workhorse',
+    sample: "the builders' house",
+    family: "'Archivo', sans-serif",
+    weight: 600,
+    size: '34px',
+  },
+  {
+    name: 'Bricolage Grotesque',
+    role: 'logo only',
+    where: 'the mad.builders wordmark — nowhere else',
+    sample: 'mad.builders',
+    family: "'Bricolage Grotesque', sans-serif",
+    weight: 700,
+    size: '34px',
+  },
+  {
+    name: 'IBM Plex Mono',
+    role: 'labels & UI',
+    where: 'kickers, buttons, nav, ticker, footer — uppercase, letter-spaced',
+    sample: 'WHAT THIS IS ///',
+    family: "'IBM Plex Mono', monospace",
+    weight: 500,
+    size: '22px',
+  },
+];
+
+const dos = [
+  'lowercase headings — "no bullshit. just building."',
+  'short, concrete, plain words',
+  'builder-first; a little Madrid flavour ("siesta", "tapas")',
+  'mono, uppercase kickers as section labels',
+];
+const donts = [
+  'Title Case Or ALL-CAPS Headlines',
+  'corporate fluff, hype words, buzzwords',
+  'jargon when a plain word works',
+  'long paragraphs where a line will do',
+];
+---
+
+<Layout title="brand guide — mad.builders" noindex={true}>
+  <section class="section brand-head">
+    <div class="wrap">
+      <p class="kicker">brand guide</p>
+      <h1 class="section-title">the look &amp; the voice</h1>
+      <p class="lede">
+        The single reference for the mad.builders identity — logo, colour, type and tone.
+        Tokens here are the same ones the site renders from, so this page stays honest.
+      </p>
+    </div>
+  </section>
+
+  <!-- LOGO -->
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">01 · logo</p>
+      <h2 class="section-title">the wordmark</h2>
+      <p class="lede">
+        Bricolage Grotesque, bold. The dot stays dimmed to the same tone as “builders”.
+        Two lockups only: cream on green, or green on cream.
+      </p>
+      <div class="logo-boards">
+        <div class="board green-board">
+          <span class="mark">mad<span class="mark-dot">.builders</span></span>
+        </div>
+        <div class="board cream-board">
+          <span class="mark mark-ink">mad<span class="mark-dot-ink">.builders</span></span>
+        </div>
+      </div>
+      <div class="rules">
+        <div class="rule do">
+          <p class="rule-h mono">do</p>
+          <ul>
+            <li>keep the dimmed dot — it’s part of the mark</li>
+            <li>give it clear space (≈ the height of the “m” all around)</li>
+            <li>cream-on-green or green-on-cream, nothing else</li>
+          </ul>
+        </div>
+        <div class="rule dont">
+          <p class="rule-h mono">don’t</p>
+          <ul>
+            <li>recolour, add shadows, outlines or gradients</li>
+            <li>change the weight of “mad” vs the dimmed “.builders”</li>
+            <li>stretch, condense, or set it on a busy photo without a scrim</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOUR -->
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">02 · colour</p>
+      <h2 class="section-title">green &amp; cream</h2>
+      <p class="lede">
+        Deep green and warm cream carry everything. Sponsor colours (e.g. Samplia red) live
+        only inside a sponsor’s own logo — never in the core palette.
+      </p>
+      <div class="kicker sub mono">surfaces</div>
+      <div class="swatches">
+        {greens.map((c) => (
+          <div class="swatch">
+            <span class="chip" style={`background:${c.hex}`}></span>
+            <p class="sw-name mono">{c.name}</p>
+            <p class="sw-hex mono">{c.hex}</p>
+            <p class="sw-use">{c.use}</p>
+          </div>
+        ))}
+      </div>
+      <div class="kicker sub mono">ink &amp; lines</div>
+      <div class="swatches">
+        {inks.map((c) => (
+          <div class="swatch">
+            <span class={`chip ${c.name === '--cream' ? '' : 'chip-on-green'}`} style={`background:${c.hex}`}></span>
+            <p class="sw-name mono">{c.name}</p>
+            <p class="sw-hex mono">{c.hex}</p>
+            <p class="sw-use">{c.use}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">03 · type</p>
+      <h2 class="section-title">three faces</h2>
+      <p class="lede">Each does one job. Don’t mix the roles.</p>
+      <div class="specimens">
+        {fonts.map((f) => (
+          <div class="specimen">
+            <div class="spec-meta">
+              <p class="sw-name mono">{f.name}</p>
+              <span class="role-tag mono">{f.role}</span>
+            </div>
+            <p class="spec-sample" style={`font-family:${f.family};font-weight:${f.weight};font-size:${f.size}`}>
+              {f.sample}
+            </p>
+            <p class="spec-where">{f.where}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- VOICE -->
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">04 · voice</p>
+      <h2 class="section-title">how it talks</h2>
+      <p class="lede">
+        Terse, lowercase, a bit irreverent — like a builder, not a brochure. Dial the edge
+        back (clear, not crude) when talking to VCs and sponsors.
+      </p>
+      <div class="rules">
+        <div class="rule do">
+          <p class="rule-h mono">do</p>
+          <ul>{dos.map((d) => <li>{d}</li>)}</ul>
+        </div>
+        <div class="rule dont">
+          <p class="rule-h mono">don’t</p>
+          <ul>{donts.map((d) => <li>{d}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHOTOGRAPHY -->
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">05 · photography</p>
+      <h2 class="section-title">candid, not stock</h2>
+      <p class="lede">
+        Real moments from the house — rooftops, talks, packed rooms at golden hour. Slightly
+        desaturated (<code>filter: saturate(0.92)</code>) so nothing screams. Edges fade into
+        the green in the strips. Never staged stock photography.
+      </p>
+    </div>
+  </section>
+
+  <!-- FOCUS -->
+  <section class="section">
+    <div class="wrap">
+      <p class="kicker">06 · focus areas</p>
+      <h2 class="section-title">what gets built here</h2>
+      <div class="focus-tags mono">
+        {site.focus.map((f, i) => (
+          <span class="focus-tag">{f}{i < site.focus.length - 1 && <i> ///</i>}</span>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .brand-head {
+    padding-top: 80px;
+  }
+
+  /* logo boards */
+  .logo-boards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+    margin-top: 40px;
+  }
+  .board {
+    border-radius: 12px;
+    padding: 48px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .green-board {
+    background: var(--green-soft);
+    border: 1px solid var(--line);
+  }
+  .cream-board {
+    background: var(--cream);
+  }
+  .mark {
+    font-family: 'Bricolage Grotesque', var(--font-sans);
+    font-weight: 700;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    color: var(--cream);
+  }
+  .mark-dot {
+    color: var(--cream-dim);
+    font-weight: 400;
+  }
+  .mark-ink {
+    color: var(--green);
+  }
+  .mark-dot-ink {
+    color: rgba(26, 52, 43, 0.55);
+    font-weight: 400;
+  }
+
+  /* do / don't */
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-top: 36px;
+  }
+  .rule {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+  }
+  .rule-h {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin: 0 0 14px;
+    font-size: 12px;
+  }
+  .rule.do .rule-h {
+    color: #97c459;
+  }
+  .rule.dont .rule-h {
+    color: #e58a6f;
+  }
+  .rule ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--cream-dim);
+  }
+  .rule li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  /* swatches */
+  .sub {
+    margin: 36px 0 14px;
+  }
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  .chip {
+    display: block;
+    height: 72px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .chip-on-green {
+    border: 1px solid var(--line);
+  }
+  .sw-name {
+    font-size: 13px;
+    margin: 0 0 2px;
+  }
+  .sw-hex {
+    font-size: 12px;
+    color: var(--cream-faint);
+    margin: 0 0 6px;
+  }
+  .sw-use {
+    font-size: 14px;
+    color: var(--cream-dim);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* type specimens */
+  .specimens {
+    display: grid;
+    gap: 16px;
+    margin-top: 36px;
+  }
+  .specimen {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px 26px;
+  }
+  .spec-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .role-tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--cream-faint);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+  .spec-sample {
+    margin: 0 0 12px;
+    line-height: 1.1;
+    color: var(--cream);
+  }
+  .spec-where {
+    margin: 0;
+    color: var(--cream-dim);
+    font-size: 14px;
+  }
+
+  /* focus tags */
+  .focus-tags {
+    margin-top: 32px;
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
+    line-height: 2;
+  }
+  .focus-tag i {
+    color: var(--cream-faint);
+    font-style: normal;
+    margin: 0 6px;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--green-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+</style>
