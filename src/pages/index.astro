@@ -61,6 +61,15 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 ---
 
 <Layout>
+  <!-- section subnav -->
+  <nav class="subnav mono" aria-label="page sections">
+    <div class="wrap subnav-inner">
+      <a href="#events">events</a>
+      <a href="#residents">residents</a>
+      <a href="#builds">companies</a>
+    </div>
+  </nav>
+
   <!-- hero -->
   <section class="hero">
     <div class="hero-top">
@@ -106,15 +115,6 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
       ))}
     </div>
   </section>
-
-  <!-- section submenu -->
-  <nav class="subnav mono" aria-label="page sections">
-    <div class="wrap subnav-inner">
-      <a href="#events">events</a>
-      <a href="#residents">residents</a>
-      <a href="#builds">companies</a>
-    </div>
-  </nav>
 
   <!-- the deal -->
   <section class="section light">
