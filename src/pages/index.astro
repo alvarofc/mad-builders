@@ -107,6 +107,15 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     </div>
   </section>
 
+  <!-- section submenu -->
+  <nav class="subnav mono" aria-label="page sections">
+    <div class="wrap subnav-inner">
+      <a href="#events">events</a>
+      <a href="#residents">residents</a>
+      <a href="#builds">companies</a>
+    </div>
+  </nav>
+
   <!-- the deal -->
   <section class="section light">
     <div class="wrap">
@@ -312,6 +321,21 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 </Layout>
 
 <script>
+  // Scroll-spy: highlight the subnav link for the section in view.
+  const subLinks = [...document.querySelectorAll<HTMLAnchorElement>('.subnav a')];
+  const subLinkFor = new Map(subLinks.map((a) => [a.getAttribute('href')!.slice(1), a]));
+  const spy = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        subLinks.forEach((a) => a.classList.remove('active'));
+        subLinkFor.get((e.target as HTMLElement).id)?.classList.add('active');
+      }
+    },
+    { rootMargin: '-45% 0px -50% 0px' }
+  );
+  document.querySelectorAll<HTMLElement>('section[id]').forEach((s) => spy.observe(s));
+
   const dialog = document.getElementById('hero-lightbox') as HTMLDialogElement;
   if (dialog) {
     const imgs = [...dialog.querySelectorAll<HTMLImageElement>('.hlb-img')];
@@ -344,6 +368,46 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 </script>
 
 <style>
+  .subnav {
+    position: sticky;
+    top: 64px;
+    z-index: 90;
+    background: color-mix(in srgb, var(--green) 90%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .subnav-inner {
+    display: flex;
+    gap: 22px;
+    align-items: center;
+    height: 46px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .subnav-inner::-webkit-scrollbar { display: none; }
+  .subnav a {
+    color: var(--cream-dim);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+  .subnav a:hover,
+  .subnav a.active {
+    color: var(--cream);
+  }
+  .subnav a.active {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 1px;
+  }
+  /* sections need breathing room so the sticky nav + subnav don't cover the heading on jump */
+  section[id] {
+    scroll-margin-top: 118px;
+  }
+
   .hero {
     padding: 64px 0 0;
     overflow: hidden;
