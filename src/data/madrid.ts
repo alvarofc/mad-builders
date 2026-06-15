@@ -24,7 +24,7 @@ export const madridCommunities: MadridCommunity[] = [
   },
   {
     name: 'Tetuan Valley',
-    what: 'The OG pre-accelerator of the Madrid ecosystem.',
+    what: 'The OG pre-accelerator of the Madrid scene.',
     url: 'https://tetuanvalley.com/',
   },
 ];
