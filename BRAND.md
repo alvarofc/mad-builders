@@ -7,7 +7,7 @@ visit `/brand`. This file is the portable summary.
 ## Logo
 
 - Wordmark: **`mad.builders`** in **Bricolage Grotesque, 500** (medium).
-- The dot and `.builders` are **dimmed** (`--cream-dim`, weight 400); `mad` is full weight.
+- `mad` sits at weight 500; the dot and `.builders` drop to weight 400 and `--cream-dim`.
 - Bricolage Grotesque is used **only** for the logo, nowhere else.
 - Lockups: **cream on green** or **green on cream**. Nothing else.
 
