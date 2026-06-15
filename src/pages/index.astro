@@ -110,8 +110,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- the deal -->
   <section class="section light">
     <div class="wrap">
-      <p class="kicker">what this is</p>
-      <h2 class="section-title"><span class="nowrap">no bullshit.</span> <span class="nowrap">just building.</span></h2>
+      <h2 class="section-title">what this is</h2>
+      <p class="lede"><span class="nowrap">no bullshit.</span> <span class="nowrap">just building.</span></p>
       <div class="deal-grid">
         <div class="deal">
           <h3>a real house</h3>
@@ -140,8 +140,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- events -->
   <section class="section" id="events">
     <div class="wrap">
-      <p class="kicker">events</p>
-      <h2 class="section-title">past events</h2>
+      <h2 class="section-title">events</h2>
       <p class="lede">
         Firesides with founders, hands-on hack sessions, demo nights. Subscribe to
         <a href={site.lumaCalendar} target="_blank" rel="noopener">our luma calendar</a> to get notified about new events.
@@ -180,8 +179,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- residents -->
   <section class="section light" id="residents">
     <div class="wrap">
-      <p class="kicker">residents</p>
-      <h2 class="section-title">the current cohort</h2>
+      <h2 class="section-title">residents</h2>
+      <p class="lede">The current cohort, building out of the house right now.</p>
       <div class="people-grid">
         {people.map((p) => (
           <div class="person">
@@ -230,8 +229,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- builds -->
   <section class="section" id="builds">
     <div class="wrap">
-      <p class="kicker">from the house</p>
-      <h2 class="section-title">built here</h2>
+      <h2 class="section-title">projects</h2>
       <p class="lede">A few of the projects our residents are building.</p>
       <div class="project-grid">
         {projects.map((pr) => (
@@ -252,8 +250,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- off-hours -->
   <section class="section light">
     <div class="wrap">
-      <p class="kicker">off-hours</p>
-      <h2 class="section-title">we touch grass, too</h2>
+      <h2 class="section-title">off-hours</h2>
+      <p class="lede">we touch grass, too.</p>
       <div class="club-grid">
         <div class="club">
           <h3>book club</h3>
@@ -270,9 +268,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- sisters -->
   <section class="section">
     <div class="wrap">
-      <p class="kicker">sisters</p>
-      <h2 class="section-title">sister houses worldwide</h2>
-      <p class="lede">Friends we've made around the world, building places like ours and sharing the same values. If you're part of one of them, our door is open.</p>
+      <h2 class="section-title">friends</h2>
+      <p class="lede">Sister houses around the world, building places like ours and sharing the same values. If you're part of one of them, our door is open.</p>
       <div class="sister-wall">
         {sisters.map((s) => {
           const logo = sisterLogo(s.logo);
