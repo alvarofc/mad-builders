@@ -356,7 +356,7 @@ const donts = [
       let minY = 0;
       let maxY = px;
       if (wordmarkTop) {
-        const top = codeTop - SCALE * 2 - fsW; // wordmark ends ~2 modules above the code
+        const top = codeTop - SCALE - fsW; // wordmark ends ~1 module above the code (matches the url gap below)
         items.push({ kind: 'mark', fs: fsW, top });
         minY = Math.min(minY, top - edge);
       }
