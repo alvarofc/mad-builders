@@ -35,8 +35,8 @@ const kinds = [
 
   <section class="section light">
     <div class="wrap">
-      <p class="kicker">communities</p>
       <h2 class="section-title">who's organizing</h2>
+      <p class="lede">The communities and meetups keeping the Madrid scene moving.</p>
       <div class="community-grid">
         {madridCommunities.map((c) => (
           <div class="community">
@@ -51,8 +51,8 @@ const kinds = [
 
   <section class="section">
     <div class="wrap">
-      <p class="kicker">calendar</p>
       <h2 class="section-title">what's on this week</h2>
+      <p class="lede">Builder events across the city, ours included.</p>
       {site.lumaEmbed ? (
         <iframe
           src={site.lumaEmbed}
@@ -72,7 +72,6 @@ const kinds = [
 
   <section class="section light">
     <div class="wrap">
-      <p class="kicker">the map</p>
       <h2 class="section-title">where things happen</h2>
       <p class="lede">
         Cafés you can actually work from, VC offices, and the hubs in between. Locations are
