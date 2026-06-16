@@ -3,13 +3,14 @@ import Layout from '../layouts/Layout.astro';
 
 // Pulled straight from the design tokens in src/styles/global.css so this page
 // can't drift from the real site.
-const greens = [
+const surfaces = [
   { name: '--green', hex: '#1a342b', use: 'primary background, the brand green' },
   { name: '--green-deep', hex: '#142a22', use: 'footer / deepest surface' },
   { name: '--green-soft', hex: '#214136', use: 'raised surfaces on green' },
+  { name: '--cream', hex: '#f6f5f0', use: 'the alternate “light” section background' },
 ];
 const inks = [
-  { name: '--cream', hex: '#f6f5f0', use: 'primary ink on green · light-section background' },
+  { name: '--cream', hex: '#f6f5f0', use: 'primary ink on green' },
   { name: '--cream-dim', hex: 'rgba(246,245,240,0.62)', use: 'secondary text' },
   { name: '--cream-faint', hex: 'rgba(246,245,240,0.38)', use: 'kickers / tertiary text' },
   { name: '--line', hex: 'rgba(246,245,240,0.14)', use: 'hairline borders' },
@@ -127,7 +128,7 @@ const donts = [
       </p>
       <div class="kicker sub mono">surfaces</div>
       <div class="swatches">
-        {greens.map((c) => (
+        {surfaces.map((c) => (
           <div class="swatch">
             <span class="chip" style={`background:${c.hex}`}></span>
             <p class="sw-name mono">{c.name}</p>
