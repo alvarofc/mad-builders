@@ -9,7 +9,9 @@ Read the brand guide before writing copy or building UI:
 
 - The live `/brand` page (`src/pages/brand.astro`) is the single source of truth
   for logo, colour, type and voice.
-- Voice: terse, lowercase, plain. A builder talking, not a brochure.
+- Voice: terse, mostly lowercase, plain. A builder talking, not a brochure.
+  Section titles are sentence case (capital first letter only); card headings and
+  terse lines stay lowercase.
 - Writing style: apply the humanizer skill at
   [`.agents/skills/humanizer/SKILL.md`](.agents/skills/humanizer/SKILL.md) to all
   prose. No em-dashes, no Title Case headings, no "AI tells". Plain punctuation.
