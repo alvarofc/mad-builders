@@ -191,6 +191,10 @@ const donts = [
           <ul>{donts.map((d) => <li>{d}</li>)}</ul>
         </div>
       </div>
+      <p class="voice-note">
+        For anything longer than a line, run the prose through the
+        <a href="https://github.com/blader/humanizer/blob/main/SKILL.md" target="_blank" rel="noopener">humanizer skill</a>.
+      </p>
     </div>
   </section>
 
@@ -564,6 +568,17 @@ const donts = [
     margin: 0;
     color: var(--cream-dim);
     font-size: 14px;
+  }
+
+  .voice-note {
+    margin-top: 28px;
+    color: var(--cream-dim);
+    font-size: 15px;
+  }
+  .voice-note a {
+    color: var(--cream);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   code {
