@@ -217,20 +217,25 @@ const donts = [
       <p class="lede">Logos, stickers, and a QR generator.</p>
       <div class="asset-grid">
         <div class="asset-card">
+          <div class="asset-preview logo"><img src="/logo/mad-builders-cream.svg" alt="mad.builders wordmark" /></div>
           <p class="asset-h">logo files</p>
-          <p class="asset-note">the mad.builders wordmark, outlined. cream for dark backgrounds, green for light.</p>
+          <p class="asset-note">the mad.builders wordmark, outlined: colour (cream, green), mono (black, white), and an app icon.</p>
           <div class="asset-dl mono">
             <a href="/logo/mad-builders-cream.svg" download>cream svg</a>
-            <a href="/logo/mad-builders-cream.png" download>cream png</a>
             <a href="/logo/mad-builders-green.svg" download>green svg</a>
-            <a href="/logo/mad-builders-green.png" download>green png</a>
+            <a href="/logo/mad-builders-black.svg" download>black svg</a>
+            <a href="/logo/mad-builders-white.svg" download>white svg</a>
+            <a href="/logo/mad-builders-icon.svg" download>icon svg</a>
+            <a href="/logo/mad-builders-icon-512.png" download>icon png</a>
           </div>
         </div>
         <a class="asset-card" href="https://canva.link/ysu4fwsqiixqbzr" target="_blank" rel="noopener">
+          <div class="asset-preview profile"><img src="/logo/profile-template.svg" alt="resident profile card template" /></div>
           <p class="asset-h">profile template ↗</p>
           <p class="asset-note">the canva template for resident profile cards. duplicate it, drop in a photo and name.</p>
         </a>
         <div class="asset-card">
+          <div class="asset-preview soon"><span>coming soon</span></div>
           <p class="asset-h">stickers</p>
           <p class="asset-note">sticker artwork for events and laptops. coming once the designs land.</p>
         </div>
@@ -686,6 +691,35 @@ const donts = [
     padding: 22px 24px;
     text-decoration: none;
     color: inherit;
+  }
+  .asset-preview {
+    height: 140px;
+    margin: 0 0 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--green);
+  }
+  .asset-preview img {
+    display: block;
+  }
+  .asset-preview.logo img {
+    width: 72%;
+    height: auto;
+  }
+  .asset-preview.profile img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .asset-preview.soon {
+    color: var(--cream-faint);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 12px;
   }
   .asset-h {
     font-size: 16px;
