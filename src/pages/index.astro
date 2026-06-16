@@ -326,20 +326,31 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   // Scroll-spy: highlight the subnav link for the section in view.
   const subLinks = [...document.querySelectorAll<HTMLAnchorElement>('.subnav a')];
   const subLinkFor = new Map(subLinks.map((a) => [a.getAttribute('href')!.slice(1), a]));
+  const lastLink = subLinks[subLinks.length - 1] ?? null;
+
+  const setActive = (link: HTMLAnchorElement | null) => {
+    subLinks.forEach((a) => a.classList.remove('active'));
+    link?.classList.add('active');
+  };
+  // The last section is short and sits against the footer, so it never reaches
+  // the activation band before the page runs out of scroll — pin it at the bottom.
+  const atBottom = () =>
+    window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+
   const spy = new IntersectionObserver(
     (entries) => {
+      if (atBottom()) return setActive(lastLink);
       for (const e of entries) {
         if (!e.isIntersecting) continue;
-        subLinks.forEach((a) => a.classList.remove('active'));
         // Hero in view = nothing active
-        if ((e.target as HTMLElement).id !== 'hero') {
-          subLinkFor.get((e.target as HTMLElement).id)?.classList.add('active');
-        }
+        const id = (e.target as HTMLElement).id;
+        setActive(id === 'hero' ? null : subLinkFor.get(id) ?? null);
       }
     },
     { rootMargin: '-45% 0px -50% 0px' }
   );
   document.querySelectorAll<HTMLElement>('section[id]').forEach((s) => spy.observe(s));
+  window.addEventListener('scroll', () => atBottom() && setActive(lastLink), { passive: true });
 
   const dialog = document.getElementById('hero-lightbox') as HTMLDialogElement;
   if (dialog) {
