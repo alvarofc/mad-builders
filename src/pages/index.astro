@@ -323,52 +323,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 </Layout>
 
 <script>
-  // Scroll-spy: highlight the subnav link for the section in view.
-  const subLinks = [...document.querySelectorAll<HTMLAnchorElement>('.subnav a')];
-  const subLinkFor = new Map(subLinks.map((a) => [a.getAttribute('href')!.slice(1), a]));
-  const lastLink = subLinks[subLinks.length - 1] ?? null;
-
-  const setActive = (link: HTMLAnchorElement | null) => {
-    subLinks.forEach((a) => a.classList.remove('active'));
-    link?.classList.add('active');
-  };
-  // The last section is short and sits against the footer, so it never reaches
-  // the activation band before the page runs out of scroll — pin it at the bottom.
-  const atBottom = () =>
-    window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
-
-  // Clicking a link scrolls to a fixed spot — for the last sections that spot is
-  // the page bottom, which the spy reads the same as "scrolled to the bottom". So
-  // honour the click: pin it and pause the spy until the user actually scrolls.
-  let locked = false;
-  let lockTimer = 0;
-  subLinks.forEach((a) =>
-    a.addEventListener('click', () => {
-      setActive(a);
-      locked = true;
-      clearTimeout(lockTimer);
-      lockTimer = window.setTimeout(() => (locked = false), 900);
-    })
-  );
-  (['wheel', 'touchstart', 'keydown'] as const).forEach((ev) =>
-    window.addEventListener(ev, () => (locked = false), { passive: true })
-  );
-
-  const spy = new IntersectionObserver(
-    (entries) => {
-      if (locked) return;
-      if (atBottom()) return setActive(lastLink);
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        // Hero in view = nothing active
-        const id = (e.target as HTMLElement).id;
-        setActive(id === 'hero' ? null : subLinkFor.get(id) ?? null);
-      }
-    },
-    { rootMargin: '-45% 0px -50% 0px' }
-  );
-  document.querySelectorAll<HTMLElement>('section[id]').forEach((s) => spy.observe(s));
-  window.addEventListener('scroll', () => !locked && atBottom() && setActive(lastLink), { passive: true });
+  import '../scripts/section-subnav';
 
   const dialog = document.getElementById('hero-lightbox') as HTMLDialogElement;
   if (dialog) {
@@ -402,52 +357,6 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 </script>
 
 <style>
-  .subnav {
-    position: sticky;
-    top: 64px;
-    z-index: 90;
-    background: color-mix(in srgb, var(--green) 90%, transparent);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--line);
-  }
-  .subnav-inner {
-    display: flex;
-    gap: 22px;
-    align-items: center;
-    height: 46px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-  }
-  .subnav-inner::-webkit-scrollbar { display: none; }
-  .subnav a {
-    color: var(--cream-dim);
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color 0.15s;
-  }
-  .subnav a:hover,
-  .subnav a.active {
-    color: var(--cream);
-  }
-  .subnav a.active {
-    text-decoration: underline;
-    text-underline-offset: 6px;
-    text-decoration-thickness: 1px;
-  }
-  /* mobile: drop the section subnav (it would scroll horizontally) */
-  @media (max-width: 640px) {
-    .subnav {
-      display: none;
-    }
-  }
-  /* sections need breathing room so the sticky nav + subnav don't cover the heading on jump */
-  section[id] {
-    scroll-margin-top: 118px;
-  }
-
   .hero {
     padding: 64px 0 0;
     overflow: hidden;

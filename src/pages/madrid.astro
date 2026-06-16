@@ -11,6 +11,15 @@ const kinds = [
 ---
 
 <Layout title="madrid for builders | mad.builders">
+  <!-- section subnav -->
+  <nav class="subnav mono" aria-label="page sections">
+    <div class="wrap subnav-inner">
+      <a href="#communities">communities</a>
+      <a href="#calendar">calendar</a>
+      <a href="#spots">map</a>
+    </div>
+  </nav>
+
   <section class="page-head">
     <div class="wrap">
       <p class="kicker">the city</p>
@@ -33,7 +42,7 @@ const kinds = [
     </div>
   </section>
 
-  <section class="section light">
+  <section class="section light" id="communities">
     <div class="wrap">
       <h2 class="section-title">who's organizing</h2>
       <p class="lede">The communities and meetups keeping the Madrid scene moving.</p>
@@ -49,7 +58,7 @@ const kinds = [
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" id="calendar">
     <div class="wrap">
       <h2 class="section-title">what's on this week</h2>
       <p class="lede">Builder events across the city, ours included.</p>
@@ -70,7 +79,7 @@ const kinds = [
     </div>
   </section>
 
-  <section class="section light">
+  <section class="section light" id="spots">
     <div class="wrap">
       <h2 class="section-title">where things happen</h2>
       <p class="lede">
@@ -108,6 +117,10 @@ const kinds = [
       .addTo(map)
       .bindPopup(`<strong>${s.name}</strong><br>${s.note}`);
   });
+</script>
+
+<script>
+  import '../scripts/section-subnav';
 </script>
 
 <style>
