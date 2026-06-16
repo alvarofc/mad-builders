@@ -21,7 +21,7 @@ const eventPhotos = import.meta.glob<{ default: ImageMetadata }>('../assets/even
 const pick = (rel: string) => eventPhotos[`../assets/events/${rel}`]?.default;
 
 const stripTop = [
-  'techieclub/17.jpeg',
+  'causa-prima/6.jpeg',
   'adeyemi/1.jpeg',
   'causa-prima/5.jpeg',
   'metabase/2.jpeg',
@@ -29,7 +29,7 @@ const stripTop = [
   'revenuecat/2.jpeg',
   'causa-prima/4.jpeg',
   'ship-10x/1.jpeg',
-  'causa-prima/6.jpeg',
+  'techieclub/17.jpeg',
 ].map(pick).filter(Boolean);
 
 const stripBottom = [
