@@ -218,7 +218,13 @@ const donts = [
       <div class="asset-grid">
         <div class="asset-card">
           <p class="asset-h">logo files</p>
-          <p class="asset-note">svg + png lockups, cream-on-green and green-on-cream. drop them in <code>src/assets/brand/</code> and we link them here.</p>
+          <p class="asset-note">the mad.builders wordmark, outlined. cream for dark backgrounds, green for light.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-cream.svg" download>cream svg</a>
+            <a href="/logo/mad-builders-cream.png" download>cream png</a>
+            <a href="/logo/mad-builders-green.svg" download>green svg</a>
+            <a href="/logo/mad-builders-green.png" download>green png</a>
+          </div>
         </div>
         <div class="asset-card">
           <p class="asset-h">stickers</p>
@@ -696,6 +702,32 @@ const donts = [
   }
   .section.light .asset-note {
     color: rgba(26, 52, 43, 0.72);
+  }
+  .asset-dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-top: 14px;
+    font-size: 12px;
+  }
+  .asset-dl a {
+    color: var(--cream-dim);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .asset-dl a:hover {
+    color: var(--cream);
+    border-color: var(--cream);
+  }
+  .section.light .asset-dl a {
+    color: rgba(26, 52, 43, 0.7);
+    border-color: rgba(26, 52, 43, 0.18);
+  }
+  .section.light .asset-dl a:hover {
+    color: var(--green);
+    border-color: var(--green);
   }
   .section.light a.asset-card:hover {
     border-color: rgba(26, 52, 43, 0.4);
