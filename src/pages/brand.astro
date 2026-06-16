@@ -450,7 +450,13 @@ const donts = [
     }
 
     document.getElementById('dl-png')!.addEventListener('click', () => {
-      if (!build()) return;
+      let data;
+      try {
+        data = build();
+      } catch {
+        return; // render() already surfaces the "url too long" error
+      }
+      if (!data) return;
       const a = document.createElement('a');
       a.href = canvas.toDataURL('image/png');
       a.download = 'mad-builders-qr.png';
