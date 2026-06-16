@@ -136,6 +136,9 @@ img {
   text-transform: lowercase;
   margin-bottom: 10px;
 }
+.section-title::first-letter {
+  text-transform: uppercase;
+}
 
 .lede {
   color: var(--cream-dim);
