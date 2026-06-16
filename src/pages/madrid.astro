@@ -62,18 +62,13 @@ const kinds = [
     <div class="wrap">
       <h2 class="section-title">what's on this week</h2>
       <p class="lede">Builder events across the city, ours included.</p>
-      {site.lumaEmbed ? (
+      {site.lumaEmbed && (
         <iframe
           src={site.lumaEmbed}
           class="luma-embed"
           title="events calendar"
           loading="lazy"
         />
-      ) : (
-        <p class="lede">
-          The best single view of builder events in the city is the Luma Madrid calendar. Ours
-          land there too.
-        </p>
       )}
       <a class="btn cal-btn" href={site.lumaCalendar} target="_blank" rel="noopener">open the calendar →</a>
     </div>
