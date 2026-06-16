@@ -10,7 +10,7 @@ const kinds = [
 ];
 ---
 
-<Layout title="madrid for builders | mad.builders">
+<Layout title="Madrid for builders | mad.builders">
   <!-- section subnav -->
   <nav class="subnav mono" aria-label="page sections">
     <div class="wrap subnav-inner">
@@ -23,7 +23,7 @@ const kinds = [
   <section class="page-head">
     <div class="wrap">
       <p class="kicker">the city</p>
-      <h1 class="section-title">the builder's guide to madrid</h1>
+      <h1 class="section-title">the builder's guide to <span class="proper">Madrid</span></h1>
       <p class="lede">
         Founders are moving here, companies are opening offices here, and the weather doesn't
         hurt. A working map of the scene, kept by people who live in it.
@@ -121,6 +121,10 @@ const kinds = [
 <style>
   .page-head {
     padding: 90px 0 80px;
+  }
+  /* keep "Madrid" capitalised in the lowercase heading */
+  .section-title .proper {
+    text-transform: none;
   }
   .stat-row {
     display: grid;

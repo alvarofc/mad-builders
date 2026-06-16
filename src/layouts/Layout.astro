@@ -13,7 +13,7 @@ interface Props {
 }
 
 const {
-  title = "the builders' house in madrid | mad.builders",
+  title = "the builders' house in Madrid | mad.builders",
   description = site.description,
   noindex,
   structuredData,
@@ -43,7 +43,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
         <a href="/" class="wordmark">mad<span>.builders</span></a>
         <nav class="links mono">
           <a href="/">home</a>
-          <a href="/madrid">madrid</a>
+          <a href="/madrid">Madrid</a>
           <a href={site.whatsapp} class="cta">whatsapp →</a>
         </nav>
       </div>
@@ -57,18 +57,15 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       <div class="wrap footer-top">
         <div class="footer-brand">
           <a href="/" class="footer-mark">mad<span>.builders</span></a>
-          <p class="footer-tag">the builders' house in madrid</p>
-          <a class="footer-map mono" href="https://maps.app.goo.gl/3MxVbkH5V8UQwMMu6" target="_blank" rel="noopener">pl. del callao 1, madrid ↗</a>
+          <p class="footer-tag">the builders' house in Madrid</p>
+          <a class="footer-map mono" href="https://maps.app.goo.gl/3MxVbkH5V8UQwMMu6" target="_blank" rel="noopener">pl. del callao 1, Madrid ↗</a>
         </div>
         <nav class="footer-nav mono" aria-label="footer">
-          <a href="/#events">events</a>
-          <a href="/#residents">residents</a>
-          <a href="/#builds">companies</a>
-          <a href="/madrid">madrid</a>
           <a href="/brand">brand guide</a>
         </nav>
       </div>
       <div class="wrap footer-bar mono">
+        <span>est. 2025 · mad.builders</span>
         <div class="socials">
           {site.socials.map((s) => {
             const icon = iconFor(s.icon);
@@ -81,7 +78,6 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
             );
           })}
         </div>
-        <span>est. 2025 · mad.builders</span>
       </div>
     </footer>
     <Analytics />
