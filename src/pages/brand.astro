@@ -217,20 +217,52 @@ const donts = [
       <p class="lede">Logos, stickers, and a QR generator.</p>
       <div class="asset-grid">
         <div class="asset-card">
-          <div class="asset-preview logo"><img src="/logo/mad-builders-cream.svg" alt="mad.builders wordmark" /></div>
-          <p class="asset-h">logo files</p>
-          <p class="asset-note">the mad.builders wordmark, outlined: colour (cream, green), mono (black, white), and an app icon.</p>
+          <div class="asset-preview on-green"><img class="logo-img" src="/logo/mad-builders-cream.svg" alt="mad.builders cream" /></div>
+          <p class="asset-h">cream</p>
+          <p class="asset-note">for dark backgrounds.</p>
           <div class="asset-dl mono">
-            <a href="/logo/mad-builders-cream.svg" download>cream svg</a>
-            <a href="/logo/mad-builders-green.svg" download>green svg</a>
-            <a href="/logo/mad-builders-black.svg" download>black svg</a>
-            <a href="/logo/mad-builders-white.svg" download>white svg</a>
-            <a href="/logo/mad-builders-icon.svg" download>icon svg</a>
-            <a href="/logo/mad-builders-icon-512.png" download>icon png</a>
+            <a href="/logo/mad-builders-cream.svg" download>svg</a>
+            <a href="/logo/mad-builders-cream.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="logo-img" src="/logo/mad-builders-green.svg" alt="mad.builders green" /></div>
+          <p class="asset-h">green</p>
+          <p class="asset-note">for light backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-green.svg" download>svg</a>
+            <a href="/logo/mad-builders-green.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="logo-img" src="/logo/mad-builders-black.svg" alt="mad.builders black" /></div>
+          <p class="asset-h">black mono</p>
+          <p class="asset-note">single colour, light backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-black.svg" download>svg</a>
+            <a href="/logo/mad-builders-black.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-green"><img class="logo-img" src="/logo/mad-builders-white.svg" alt="mad.builders white" /></div>
+          <p class="asset-h">white mono</p>
+          <p class="asset-note">single colour, dark backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-white.svg" download>svg</a>
+            <a href="/logo/mad-builders-white.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="icon-img" src="/logo/mad-builders-icon.svg" alt="mad.builders app icon" /></div>
+          <p class="asset-h">app icon</p>
+          <p class="asset-note">favicon and app tile.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-icon.svg" download>svg</a>
+            <a href="/logo/mad-builders-icon-512.png" download>png</a>
           </div>
         </div>
         <a class="asset-card" href="https://canva.link/ysu4fwsqiixqbzr" target="_blank" rel="noopener">
-          <div class="asset-preview profile"><img src="/logo/profile-template.svg" alt="resident profile card template" /></div>
+          <div class="asset-preview profile"><img src="/logo/profile-template.png" alt="resident profile card template" /></div>
           <p class="asset-h">profile template ↗</p>
           <p class="asset-note">the canva template for resident profile cards. duplicate it, drop in a photo and name.</p>
         </a>
@@ -693,7 +725,7 @@ const donts = [
     color: inherit;
   }
   .asset-preview {
-    height: 140px;
+    height: 120px;
     margin: 0 0 16px;
     border-radius: 8px;
     overflow: hidden;
@@ -705,9 +737,17 @@ const donts = [
   .asset-preview img {
     display: block;
   }
-  .asset-preview.logo img {
-    width: 72%;
+  .asset-preview.on-light {
+    background: #ffffff;
+    border: 1px solid rgba(26, 52, 43, 0.08);
+  }
+  .asset-preview .logo-img {
+    width: 74%;
     height: auto;
+  }
+  .asset-preview .icon-img {
+    height: 72px;
+    width: auto;
   }
   .asset-preview.profile img {
     width: 100%;
