@@ -139,6 +139,11 @@ img {
 .section-title::first-letter {
   text-transform: uppercase;
 }
+/* numbered docs headings (brand page) start with a digit, so the first-letter
+   trick can't reach the word — set their case directly in the markup instead */
+.section-title.numbered {
+  text-transform: none;
+}
 
 .lede {
   color: var(--cream-dim);
