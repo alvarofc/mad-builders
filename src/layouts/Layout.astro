@@ -8,6 +8,7 @@ import Analytics from '@vercel/analytics/astro';
 interface Props {
   title?: string;
   description?: string;
+  image?: string;
   noindex?: boolean;
   structuredData?: Record<string, any> | Array<Record<string, any>>;
 }
@@ -15,6 +16,7 @@ interface Props {
 const {
   title = "the builders' house in Madrid | mad.builders",
   description = site.description,
+  image,
   noindex,
   structuredData,
 } = Astro.props;
@@ -29,7 +31,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
-    <SEO title={title} description={description} noindex={noindex} structuredData={structuredData} />
+    <SEO title={title} description={description} image={image} noindex={noindex} structuredData={structuredData} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
