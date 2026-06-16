@@ -246,7 +246,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
         {projects.map((pr) => (
           <a class="project" href={pr.url} target="_blank" rel="noopener">
             {projectLogo(pr.logo) ? (
-              <img src={projectLogo(pr.logo)!.src} alt={pr.name} class="project-logo" />
+              <img src={projectLogo(pr.logo)!.src} alt={pr.name} class="project-logo" data-logo={pr.logo} />
             ) : (
               <h3>{pr.name}</h3>
             )}
@@ -806,6 +806,18 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     margin: 0 0 16px;
     filter: brightness(0) invert(1);
     opacity: 0.95;
+  }
+  /* per-logo optical sizing: each mark fills its box differently (caps vs
+     lowercase, icon, built-in padding), so one height looks uneven. Tuned from
+     measured ink height plus a lowercase bump for hawkings. */
+  .project-logo[data-logo="hermet.svg"] {
+    height: 26px;
+  }
+  .project-logo[data-logo="dreamshot.svg"] {
+    height: 31px;
+  }
+  .project-logo[data-logo="hawkings.avif"] {
+    height: 34px;
   }
   .project h3 {
     font-size: 24px;
