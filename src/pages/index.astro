@@ -437,6 +437,12 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     text-underline-offset: 6px;
     text-decoration-thickness: 1px;
   }
+  /* mobile: drop the section subnav (it would scroll horizontally) */
+  @media (max-width: 640px) {
+    .subnav {
+      display: none;
+    }
+  }
   /* sections need breathing room so the sticky nav + subnav don't cover the heading on jump */
   section[id] {
     scroll-margin-top: 118px;

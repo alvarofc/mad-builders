@@ -44,7 +44,6 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
         <nav class="links mono">
           <a href="/">home</a>
           <a href="/madrid">madrid</a>
-          <a href="/brand">brand</a>
           <a href={site.whatsapp} class="cta">whatsapp →</a>
         </nav>
       </div>
@@ -133,8 +132,8 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     .wordmark {
       white-space: nowrap;
     }
-    /* single-page site — drop the in-page anchors on mobile, keep the CTA */
-    .links a:not(.cta) {
+    /* mobile: keep the page links (home, madrid), drop the whatsapp CTA */
+    .links .cta {
       display: none;
     }
   }
