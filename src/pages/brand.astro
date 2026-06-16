@@ -277,9 +277,14 @@ const donts = [
           <p class="asset-note">the canva template for resident profile cards. duplicate it, drop in a photo and name.</p>
         </a>
         <div class="asset-card">
-          <div class="asset-preview soon"><span>coming soon</span></div>
+          <div class="asset-preview sheet"><img src="/stickers/sticker-sheet.png" alt="mad.builders die-cut stickers" /></div>
           <p class="asset-h">stickers</p>
-          <p class="asset-note">sticker artwork for events and laptops. coming once the designs land.</p>
+          <p class="asset-note">die-cut artwork for laptops and events. print-ready svg.</p>
+          <div class="asset-dl mono">
+            <a href="/stickers/sticker-m.svg" download>m.</a>
+            <a href="/stickers/sticker-wordmark.svg" download>wordmark</a>
+            <a href="/stickers/sticker-tagline.svg" download>tagline</a>
+          </div>
         </div>
       </div>
     </div>
@@ -770,6 +775,11 @@ const donts = [
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+  .asset-preview.sheet img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
   .asset-preview.soon {
     color: var(--cream-faint);
