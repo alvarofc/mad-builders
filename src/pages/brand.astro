@@ -284,6 +284,7 @@ const donts = [
             <a href="/stickers/sticker-m.svg" download>m.</a>
             <a href="/stickers/sticker-wordmark.svg" download>wordmark</a>
             <a href="/stickers/sticker-tagline.svg" download>tagline</a>
+            <a href="/stickers/sticker-qr.svg" download>qr</a>
           </div>
         </div>
       </div>
@@ -692,6 +693,12 @@ const donts = [
     background: color-mix(in srgb, var(--green) 90%, transparent);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--line);
+  }
+  /* mobile: drop the section nav (same as the main page subnav) */
+  @media (max-width: 640px) {
+    .brand-toc {
+      display: none;
+    }
   }
   .brand-toc-inner {
     display: flex;
