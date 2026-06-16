@@ -57,7 +57,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       <div class="wrap footer-top">
         <div class="footer-brand">
           <a href="/" class="footer-mark">mad<span>.builders</span></a>
-          <a class="footer-map mono" href="https://maps.app.goo.gl/3MxVbkH5V8UQwMMu6" target="_blank" rel="noopener">pl. del callao 1, Madrid ↗</a>
+          <a class="footer-map mono" href="https://maps.app.goo.gl/3MxVbkH5V8UQwMMu6" target="_blank" rel="noopener">pl. del callao 1<br />Madrid, Spain ↗</a>
         </div>
         <nav class="footer-nav mono" aria-label="footer">
           <a href="/brand">brand</a>
@@ -178,6 +178,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     color: var(--cream-faint);
     text-decoration: none;
     font-size: 12px;
+    line-height: 1.7;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     transition: color 0.15s;
@@ -228,13 +229,6 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     opacity: 1;
   }
   @media (max-width: 640px) {
-    .footer-top {
-      flex-direction: column;
-      gap: 28px;
-    }
-    .footer-nav {
-      align-items: flex-start;
-    }
     .footer-bar {
       justify-content: center;
       text-align: center;
