@@ -193,6 +193,10 @@ section[id] {
 .section-title.numbered {
   text-transform: none;
 }
+/* escape hatch for proper nouns inside an otherwise lowercased heading (e.g. "Madrid") */
+.proper {
+  text-transform: none;
+}
 
 .lede {
   color: var(--cream-dim);
