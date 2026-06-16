@@ -7,6 +7,7 @@ import { events, cohosts } from '../data/events';
 import { people } from '../data/people';
 import { projects } from '../data/projects';
 import { sisters } from '../data/friends';
+import { ORGANIZATION } from '../config/seo';
 import sampliaLogo from '../assets/logos/friends/samplia.svg';
 import xIcon from '../assets/logos/socials/x.svg';
 import linkedinIcon from '../assets/logos/socials/linkedin.svg';
@@ -75,7 +76,7 @@ const fmt = (iso: string) => {
 const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 ---
 
-<Layout>
+<Layout structuredData={ORGANIZATION}>
   <!-- section subnav -->
   <nav class="subnav mono" aria-label="page sections">
     <div class="wrap subnav-inner">
