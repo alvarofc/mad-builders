@@ -70,6 +70,7 @@ const donts = [
       <a href="#voice">voice</a>
       <a href="#photography">photo</a>
       <a href="#assets">assets</a>
+      <a href="#qr">qr</a>
     </div>
   </nav>
   <section class="section brand-head">
@@ -214,7 +215,7 @@ const donts = [
   <section class="section light" id="assets">
     <div class="wrap">
       <h2 class="section-title numbered">06 · Assets</h2>
-      <p class="lede">Logos, stickers, and a QR generator.</p>
+      <p class="lede">Logos, the profile template, and stickers.</p>
       <div class="asset-grid">
         <div class="asset-card">
           <div class="asset-preview on-green"><img class="logo-img" src="/logo/mad-builders-cream.svg" alt="mad.builders cream" /></div>
@@ -243,6 +244,15 @@ const donts = [
             <a href="/logo/mad-builders-icon-512.png" download>png</a>
           </div>
         </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="logo-img" src="/logo/samplia.svg" alt="Samplia" /></div>
+          <p class="asset-h">samplia</p>
+          <p class="asset-note">our host's logo, for co-branded materials.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/samplia.svg" download>svg</a>
+            <a href="/logo/samplia.png" download>png</a>
+          </div>
+        </div>
         <a class="asset-card" href="https://canva.link/ysu4fwsqiixqbzr" target="_blank" rel="noopener">
           <div class="asset-preview profile"><img src="/logo/profile-template.png" alt="resident profile card template" /></div>
           <p class="asset-h">profile template ↗</p>
@@ -254,9 +264,15 @@ const donts = [
           <p class="asset-note">sticker artwork for events and laptops. coming once the designs land.</p>
         </div>
       </div>
+    </div>
+  </section>
 
+  <!-- QR -->
+  <section class="section light" id="qr">
+    <div class="wrap">
+      <h2 class="section-title numbered">07 · QR generator</h2>
+      <p class="lede">Make a branded QR for any link: the whatsapp group, an event, a profile.</p>
       <div class="qr-tool">
-        <p class="kicker sub mono">qr generator</p>
         <div class="qr-layout">
           <form class="qr-form" autocomplete="off">
             <label class="qr-field">
@@ -793,9 +809,12 @@ const donts = [
     border-color: rgba(26, 52, 43, 0.4);
   }
 
-  /* inline qr generator (under assets, on cream) */
+  /* qr generator: its own cream section, with a divider from assets above */
+  #qr {
+    border-top: 1px solid rgba(26, 52, 43, 0.1);
+  }
   .qr-tool {
-    margin-top: 44px;
+    margin-top: 40px;
   }
   .qr-tool .sub {
     margin: 0 0 20px;
