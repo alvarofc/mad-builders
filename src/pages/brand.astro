@@ -200,7 +200,7 @@ const donts = [
   </section>
 
   <!-- PHOTOGRAPHY -->
-  <section class="section" id="photography">
+  <section class="section light" id="photography">
     <div class="wrap">
       <h2 class="section-title numbered">05 · Photography</h2>
       <p class="lede">
@@ -212,7 +212,7 @@ const donts = [
   </section>
 
   <!-- ASSETS -->
-  <section class="section light" id="assets">
+  <section class="section" id="assets">
     <div class="wrap">
       <h2 class="section-title numbered">06 · Assets</h2>
       <p class="lede">Logos, the profile template, and stickers.</p>
@@ -242,6 +242,24 @@ const donts = [
           <div class="asset-dl mono">
             <a href="/logo/mad-builders-icon.svg" download>svg</a>
             <a href="/logo/mad-builders-icon-512.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-green"><img class="icon-img" src="/logo/mad-builders-m-cream.svg" alt="mad.builders mark, cream" /></div>
+          <p class="asset-h">mark cream</p>
+          <p class="asset-note">just the m., for dark backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-m-cream.svg" download>svg</a>
+            <a href="/logo/mad-builders-m-cream.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="icon-img" src="/logo/mad-builders-m-green.svg" alt="mad.builders mark, green" /></div>
+          <p class="asset-h">mark green</p>
+          <p class="asset-note">just the m., for light backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-m-green.svg" download>svg</a>
+            <a href="/logo/mad-builders-m-green.png" download>png</a>
           </div>
         </div>
         <div class="asset-card">
@@ -731,13 +749,14 @@ const donts = [
     align-items: center;
     justify-content: center;
     background: var(--green);
+    border: 1px solid var(--line);
   }
   .asset-preview img {
     display: block;
   }
   .asset-preview.on-light {
     background: #ffffff;
-    border: 1px solid rgba(26, 52, 43, 0.08);
+    border-color: rgba(26, 52, 43, 0.1);
   }
   .asset-preview .logo-img {
     width: 74%;
