@@ -10,14 +10,23 @@ const kinds = [
 ];
 ---
 
-<Layout title="madrid for builders — mad builders">
+<Layout title="Madrid for builders | mad.builders" image="/og-madrid.png">
+  <!-- section subnav -->
+  <nav class="subnav mono" aria-label="page sections">
+    <div class="wrap subnav-inner">
+      <a href="#communities">communities</a>
+      <a href="#calendar">calendar</a>
+      <a href="#spots">map</a>
+    </div>
+  </nav>
+
   <section class="page-head">
     <div class="wrap">
       <p class="kicker">the city</p>
-      <h1 class="section-title">the builder's guide to madrid</h1>
+      <h1 class="section-title">the builder's guide to <span class="proper">Madrid</span></h1>
       <p class="lede">
         Founders are moving here, companies are opening offices here, and the weather doesn't
-        hurt. A working map of the ecosystem, kept by people who live in it.
+        hurt. A working map of the scene, kept by people who live in it.
       </p>
       <div class="stat-row">
         {stats.map((s) => (
@@ -33,10 +42,10 @@ const kinds = [
     </div>
   </section>
 
-  <section class="section">
+  <section class="section light" id="communities">
     <div class="wrap">
-      <p class="kicker">communities</p>
       <h2 class="section-title">who's organizing</h2>
+      <p class="lede">The communities and meetups keeping the Madrid scene moving.</p>
       <div class="community-grid">
         {madridCommunities.map((c) => (
           <div class="community">
@@ -49,34 +58,28 @@ const kinds = [
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" id="calendar">
     <div class="wrap">
-      <p class="kicker">calendar</p>
       <h2 class="section-title">what's on this week</h2>
-      {site.lumaEmbed ? (
+      <p class="lede">Builder events across the city, ours included.</p>
+      {site.lumaEmbed && (
         <iframe
           src={site.lumaEmbed}
           class="luma-embed"
           title="events calendar"
           loading="lazy"
         />
-      ) : (
-        <p class="lede">
-          The best single view of builder events in the city is the Luma Madrid calendar — ours
-          land there too.
-        </p>
       )}
       <a class="btn cal-btn" href={site.lumaCalendar} target="_blank" rel="noopener">open the calendar →</a>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section light" id="spots">
     <div class="wrap">
-      <p class="kicker">the map</p>
       <h2 class="section-title">where things happen</h2>
       <p class="lede">
         Cafés you can actually work from, VC offices, and the hubs in between. Locations are
-        approximate — ping us if we missed your spot.
+        approximate, so ping us if we missed your spot.
       </p>
       <div class="legend mono">
         {kinds.map((k) => (
@@ -109,6 +112,10 @@ const kinds = [
       .addTo(map)
       .bindPopup(`<strong>${s.name}</strong><br>${s.note}`);
   });
+</script>
+
+<script>
+  import '../scripts/section-subnav';
 </script>
 
 <style>
@@ -160,6 +167,7 @@ const kinds = [
     border-radius: 10px;
     padding: 26px;
     background: var(--green-deep);
+    color: var(--cream);
   }
   .community h3 {
     font-size: 20px;
@@ -210,5 +218,16 @@ const kinds = [
     height: 520px;
     border-radius: 10px;
     border: 1px solid var(--line);
+  }
+
+  /* green-ink tweaks for the cream (.section.light) sections */
+  .section.light .legend {
+    color: rgba(26, 52, 43, 0.7);
+  }
+  .section.light .legend-item i {
+    box-shadow: 0 0 0 1px rgba(26, 52, 43, 0.2);
+  }
+  .section.light #map {
+    border-color: rgba(26, 52, 43, 0.14);
   }
 </style>

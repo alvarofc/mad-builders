@@ -2,19 +2,22 @@
 import '../styles/global.css';
 import type { ImageMetadata } from 'astro';
 import { site } from '../data/site';
+import { DEFAULT_TITLE } from '../config/seo';
 import SEO from '../components/SEO.astro';
 import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title?: string;
   description?: string;
+  image?: string;
   noindex?: boolean;
   structuredData?: Record<string, any> | Array<Record<string, any>>;
 }
 
 const {
-  title = "mad builders — the builders' house in madrid",
+  title = DEFAULT_TITLE,
   description = site.description,
+  image,
   noindex,
   structuredData,
 } = Astro.props;
@@ -29,7 +32,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
-    <SEO title={title} description={description} noindex={noindex} structuredData={structuredData} />
+    <SEO title={title} description={description} image={image} noindex={noindex} structuredData={structuredData} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -42,10 +45,8 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       <div class="wrap nav-inner">
         <a href="/" class="wordmark">mad<span>.builders</span></a>
         <nav class="links mono">
-          <a href="/#events">events</a>
-          <a href="/#residents">residents</a>
-          <a href="/#builds">projects</a>
-          {/* madrid page hidden from nav for now — still live at /madrid */}
+          <a href="/">Home</a>
+          <a href="/madrid">Madrid</a>
           <a href={site.whatsapp} class="cta">whatsapp →</a>
         </nav>
       </div>
@@ -56,8 +57,17 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     </main>
 
     <footer class="footer">
+      <div class="wrap footer-top">
+        <div class="footer-brand">
+          <a href="/" class="footer-mark">mad<span>.builders</span></a>
+          <a class="footer-map mono" href="https://maps.app.goo.gl/3MxVbkH5V8UQwMMu6" target="_blank" rel="noopener">pl. del callao 1<br />Madrid, Spain ↗</a>
+        </div>
+        <nav class="footer-nav mono" aria-label="footer">
+          <a href="/brand">brand</a>
+        </nav>
+      </div>
       <div class="wrap footer-bar mono">
-        <span>madrid, spain</span>
+        <span>est. 2025 · mad.builders</span>
         <div class="socials">
           {site.socials.map((s) => {
             const icon = iconFor(s.icon);
@@ -70,7 +80,6 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
             );
           })}
         </div>
-        <span>est. 2025 · mad.builders</span>
       </div>
     </footer>
     <Analytics />
@@ -94,7 +103,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
   }
   .wordmark {
     font-family: 'Bricolage Grotesque', var(--font-sans);
-    font-weight: 700;
+    font-weight: 500;
     font-size: 22px;
     letter-spacing: -0.02em;
     text-decoration: none;
@@ -134,16 +143,68 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     .wordmark {
       white-space: nowrap;
     }
-    /* single-page site — drop the in-page anchors on mobile, keep the CTA */
-    .links a:not(.cta) {
+    /* mobile: keep the page links (home, madrid), drop the whatsapp CTA */
+    .links .cta {
       display: none;
     }
   }
 
   .footer {
     border-top: 1px solid var(--line);
-    padding: 30px 0;
+    padding: 56px 0 28px;
     background: var(--green-deep);
+  }
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+    padding-bottom: 38px;
+  }
+  .footer-mark {
+    display: block;
+    line-height: 1;
+    font-family: 'Bricolage Grotesque', var(--font-sans);
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    color: var(--cream);
+  }
+  .footer-mark span {
+    color: var(--cream-dim);
+    font-weight: 400;
+  }
+  .footer-map {
+    display: block;
+    margin-top: 12px;
+    color: var(--cream-faint);
+    text-decoration: none;
+    font-size: 12px;
+    line-height: 1.7;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color 0.15s;
+  }
+  .footer-map:hover {
+    color: var(--cream);
+  }
+  .footer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-end;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .footer-nav a {
+    color: var(--cream-dim);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-nav a:hover {
+    color: var(--cream);
   }
   .footer-bar {
     display: flex;
@@ -152,6 +213,8 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     gap: 20px;
     flex-wrap: wrap;
     color: var(--cream-faint);
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
   }
   .socials {
     display: flex;

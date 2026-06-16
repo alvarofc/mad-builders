@@ -11,7 +11,7 @@ export interface MadridCommunity {
 export const madridCommunities: MadridCommunity[] = [
   {
     name: 'techieclub',
-    what: 'Casual builder cafés and meetups. We co-hosted one — it was packed.',
+    what: 'Casual builder cafés and meetups. We co-hosted one. It was packed.',
   },
   {
     name: 'OpenClaw Madrid',
@@ -24,7 +24,7 @@ export const madridCommunities: MadridCommunity[] = [
   },
   {
     name: 'Tetuan Valley',
-    what: 'The OG pre-accelerator of the Madrid ecosystem.',
+    what: 'The OG pre-accelerator of the Madrid scene.',
     url: 'https://tetuanvalley.com/',
   },
 ];
@@ -58,8 +58,8 @@ export const spots: Spot[] = [
 // (January 2026), produced by Fundación para el Conocimiento madri+d with
 // Dealroom.co. Update the citation if you swap any number.
 export const stats = [
-  { value: '€1.2B', label: 'venture capital into Madrid startups in 2025 — more than Barcelona' },
-  { value: '+97%', label: 'vs 2024 — the strongest funding year in years' },
+  { value: '€1.2B', label: 'venture capital into Madrid startups in 2025, more than Barcelona' },
+  { value: '+97%', label: 'vs 2024, the strongest funding year in years' },
   { value: '#7', label: 'in Europe by number of VC-backed companies (all-time)' },
 ];
 

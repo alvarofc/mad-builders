@@ -1,0 +1,880 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Pulled straight from the design tokens in src/styles/global.css so this page
+// can't drift from the real site.
+const surfaces = [
+  { name: '--green', hex: '#1a342b', use: 'primary background, the brand green' },
+  { name: '--green-deep', hex: '#142a22', use: 'footer / deepest surface' },
+  { name: '--green-soft', hex: '#214136', use: 'raised surfaces on green' },
+  { name: '--cream', hex: '#f6f5f0', use: 'the alternate “light” section background' },
+];
+const inks = [
+  { name: '--cream', hex: '#f6f5f0', use: 'primary ink on green' },
+  { name: '--cream-dim', hex: 'rgba(246,245,240,0.62)', use: 'secondary text' },
+  { name: '--cream-faint', hex: 'rgba(246,245,240,0.38)', use: 'kickers / tertiary text' },
+  { name: '--line', hex: 'rgba(246,245,240,0.14)', use: 'hairline borders' },
+];
+
+const fonts = [
+  {
+    name: 'Bricolage Grotesque',
+    role: 'logo',
+    where: 'the mad.builders wordmark, and nothing else',
+    sample: 'mad.builders',
+    family: "'Bricolage Grotesque', sans-serif",
+    weight: 500,
+    size: '34px',
+  },
+  {
+    name: 'Archivo',
+    role: 'body',
+    where: 'headings, hero, body copy, cards and UI. the workhorse',
+    sample: "the builders' house",
+    family: "'Archivo', sans-serif",
+    weight: 600,
+    size: '34px',
+  },
+  {
+    name: 'IBM Plex Mono',
+    role: 'other',
+    where: 'kickers, buttons, nav, ticker, footer. uppercase and letter-spaced',
+    sample: 'WHAT THIS IS ///',
+    family: "'IBM Plex Mono', monospace",
+    weight: 500,
+    size: '22px',
+  },
+];
+
+const dos = [
+  'sentence-case section titles: capital first letter only ("The deal", "Off-hours")',
+  'lowercase for card headings and terse lines ("a real house", "no bullshit. just building.")',
+  'short, concrete, plain words',
+  'builder-first, with a little Madrid flavour ("siesta", "tapas")',
+  'periods and commas over em-dashes',
+];
+const donts = [
+  'Title Case (capitalising every word) or ALL-CAPS headlines',
+  'corporate fluff, hype words, buzzwords',
+  'jargon when a plain word works',
+  'em-dash pile-ups and other "AI tells"',
+];
+---
+
+<Layout title="brand guide | mad.builders" noindex={true}>
+  <nav class="subnav mono" aria-label="brand guide sections">
+    <div class="wrap subnav-inner">
+      <a href="#logo">logo</a>
+      <a href="#colour">colour</a>
+      <a href="#type">type</a>
+      <a href="#voice">voice</a>
+      <a href="#photography">photo</a>
+      <a href="#assets">assets</a>
+      <a href="#qr">qr</a>
+    </div>
+  </nav>
+  <section class="section brand-head">
+    <div class="wrap">
+      <h1 class="section-title">brand guide</h1>
+      <p class="lede">
+        The single reference for the mad.builders identity: logo, colour, type and tone.
+      </p>
+    </div>
+  </section>
+
+  <!-- LOGO -->
+  <section class="section light" id="logo">
+    <div class="wrap">
+      <h2 class="section-title numbered">01 · Logo</h2>
+      <p class="lede">
+        Bricolage Grotesque, medium weight. The dot stays dimmed to the same tone as
+        “builders”. Two lockups only: cream on green, or green on cream.
+      </p>
+      <div class="logo-boards">
+        <div class="board green-board">
+          <span class="mark">mad<span class="mark-dot">.builders</span></span>
+        </div>
+        <div class="board cream-board">
+          <span class="mark mark-ink">mad<span class="mark-dot-ink">.builders</span></span>
+        </div>
+      </div>
+      <div class="rules">
+        <div class="rule do">
+          <p class="rule-h mono">do</p>
+          <ul>
+            <li>keep the dimmed dot, it’s part of the mark</li>
+            <li>give it clear space (≈ the height of the “m” all around)</li>
+            <li>cream-on-green or green-on-cream, nothing else</li>
+          </ul>
+        </div>
+        <div class="rule dont">
+          <p class="rule-h mono">don’t</p>
+          <ul>
+            <li>recolour, add shadows, outlines or gradients</li>
+            <li>change the weight of “mad” vs the dimmed “.builders”</li>
+            <li>stretch, condense, or set it on a busy photo without a scrim</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOUR -->
+  <section class="section" id="colour">
+    <div class="wrap">
+      <h2 class="section-title numbered">02 · Colour</h2>
+      <p class="lede">
+        Deep green and warm cream carry everything. Sponsor colours (e.g. Samplia red) live
+        only inside a sponsor’s own logo, never in the core palette.
+      </p>
+      <div class="kicker sub mono">surfaces</div>
+      <div class="swatches">
+        {surfaces.map((c) => (
+          <div class="swatch">
+            <span class="chip" style={`background:${c.hex}`}></span>
+            <p class="sw-name mono">{c.name}</p>
+            <p class="sw-hex mono">{c.hex}</p>
+            <p class="sw-use">{c.use}</p>
+          </div>
+        ))}
+      </div>
+      <div class="kicker sub mono">ink &amp; lines</div>
+      <div class="swatches">
+        {inks.map((c) => (
+          <div class="swatch">
+            <span class={`chip ${c.name === '--cream' ? '' : 'chip-on-green'}`} style={`background:${c.hex}`}></span>
+            <p class="sw-name mono">{c.name}</p>
+            <p class="sw-hex mono">{c.hex}</p>
+            <p class="sw-use">{c.use}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section class="section light" id="type">
+    <div class="wrap">
+      <h2 class="section-title numbered">03 · Type</h2>
+      <p class="lede">Each does one job. Don’t mix the roles.</p>
+      <div class="specimens">
+        {fonts.map((f) => (
+          <div class="specimen">
+            <div class="spec-meta">
+              <p class="sw-name mono">{f.name}</p>
+              <span class="role-tag mono">{f.role}</span>
+            </div>
+            <p class="spec-sample" style={`font-family:${f.family};font-weight:${f.weight};font-size:${f.size}`}>
+              {f.sample}
+            </p>
+            <p class="spec-where">{f.where}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- VOICE -->
+  <section class="section" id="voice">
+    <div class="wrap">
+      <h2 class="section-title numbered">04 · Voice</h2>
+      <p class="lede">
+        Terse, mostly lowercase, a little cheeky. Sound like a builder, not a brochure.
+        Around VCs and sponsors, dial it back and keep it clean.
+      </p>
+      <div class="rules">
+        <div class="rule do">
+          <p class="rule-h mono">do</p>
+          <ul>{dos.map((d) => <li>{d}</li>)}</ul>
+        </div>
+        <div class="rule dont">
+          <p class="rule-h mono">don’t</p>
+          <ul>{donts.map((d) => <li>{d}</li>)}</ul>
+        </div>
+      </div>
+      <p class="voice-note">
+        For anything longer than a line, run the prose through the
+        <a href="https://github.com/blader/humanizer/blob/main/SKILL.md" target="_blank" rel="noopener">humanizer skill</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- PHOTOGRAPHY -->
+  <section class="section light" id="photography">
+    <div class="wrap">
+      <h2 class="section-title numbered">05 · Photography</h2>
+      <p class="lede">
+        Real moments from the house: rooftops, talks, packed rooms at golden hour. Slightly
+        desaturated (<code>filter: saturate(0.92)</code>) so nothing screams. Edges fade into
+        the green in the strips. Never staged stock.
+      </p>
+    </div>
+  </section>
+
+  <!-- ASSETS -->
+  <section class="section" id="assets">
+    <div class="wrap">
+      <h2 class="section-title numbered">06 · Assets</h2>
+      <p class="lede">Logos, the profile template, and stickers.</p>
+      <div class="asset-grid">
+        <div class="asset-card">
+          <div class="asset-preview on-green"><img class="logo-img" src="/logo/mad-builders-cream.svg" alt="mad.builders cream" /></div>
+          <p class="asset-h">cream</p>
+          <p class="asset-note">for dark backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-cream.svg" download>svg</a>
+            <a href="/logo/mad-builders-cream.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="logo-img" src="/logo/mad-builders-green.svg" alt="mad.builders green" /></div>
+          <p class="asset-h">green</p>
+          <p class="asset-note">for light backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-green.svg" download>svg</a>
+            <a href="/logo/mad-builders-green.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-green"><img class="icon-img" src="/logo/mad-builders-m-cream.svg" alt="mad.builders mark, cream" /></div>
+          <p class="asset-h">mark cream</p>
+          <p class="asset-note">just the m., for dark backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-m-cream.svg" download>svg</a>
+            <a href="/logo/mad-builders-m-cream.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="icon-img" src="/logo/mad-builders-m-green.svg" alt="mad.builders mark, green" /></div>
+          <p class="asset-h">mark green</p>
+          <p class="asset-note">just the m., for light backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-m-green.svg" download>svg</a>
+            <a href="/logo/mad-builders-m-green.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="icon-img" src="/logo/mad-builders-icon.svg" alt="mad.builders app icon" /></div>
+          <p class="asset-h">app icon</p>
+          <p class="asset-note">favicon and app tile.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-icon.svg" download>svg</a>
+            <a href="/logo/mad-builders-icon-512.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="logo-img" src="/logo/samplia.svg" alt="Samplia" /></div>
+          <p class="asset-h">samplia</p>
+          <p class="asset-note">our host's logo, for co-branded materials.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/samplia.svg" download>svg</a>
+            <a href="/logo/samplia.png" download>png</a>
+          </div>
+        </div>
+        <a class="asset-card" href="https://canva.link/ysu4fwsqiixqbzr" target="_blank" rel="noopener">
+          <div class="asset-preview profile"><img src="/logo/profile-template.png" alt="resident profile card template" /></div>
+          <p class="asset-h">profile template ↗</p>
+          <p class="asset-note">the canva template for resident profile cards. duplicate it, drop in a photo and name.</p>
+        </a>
+        <div class="asset-card">
+          <div class="asset-preview sheet"><img src="/stickers/sticker-sheet.png" alt="mad.builders die-cut stickers" /></div>
+          <p class="asset-h">stickers</p>
+          <p class="asset-note">die-cut artwork for laptops and events. print-ready svg.</p>
+          <div class="asset-dl mono">
+            <a href="/stickers/mad-builders-stickers.zip" download>download all · zip</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QR -->
+  <section class="section light" id="qr">
+    <div class="wrap">
+      <h2 class="section-title numbered">07 · QR generator</h2>
+      <p class="lede">Make a branded QR for any link: the whatsapp group, an event, a profile.</p>
+      <div class="qr-tool">
+        <div class="qr-layout">
+          <form class="qr-form" autocomplete="off">
+            <label class="qr-field">
+              <span class="qr-label mono">url</span>
+              <input id="qr-url" type="text" placeholder="https://chat.whatsapp.com/..." value="https://mad.builders" />
+            </label>
+            <label class="qr-check">
+              <input id="qr-brand" type="checkbox" checked />
+              <span class="mono">add the mad.builders mark</span>
+            </label>
+            <label class="qr-check">
+              <input id="qr-url-show" type="checkbox" />
+              <span class="mono">show the url</span>
+            </label>
+            <p class="qr-error mono" id="qr-error" hidden></p>
+          </form>
+          <div class="qr-preview">
+            <div class="qr-canvas-wrap">
+              <canvas id="qr-canvas" aria-label="qr code preview"></canvas>
+            </div>
+            <button class="btn solid" id="dl-png" type="button">download png</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import '../scripts/section-subnav';
+  import { qrcodegen } from '../lib/qrcodegen';
+  const QrCode = qrcodegen.QrCode;
+
+  const urlInput = document.getElementById('qr-url') as HTMLInputElement | null;
+  if (urlInput) {
+    const GREEN = '#1a342b';
+    const CREAM = '#f6f5f0';
+    const DIM = 'rgba(26, 52, 43, 0.5)';
+    const FONT = '"Bricolage Grotesque", sans-serif';
+    const MONO = '"IBM Plex Mono", monospace';
+    const SCALE = 16;
+    const QUIET = 4;
+
+    const brandInput = document.getElementById('qr-brand') as HTMLInputElement;
+    const urlShow = document.getElementById('qr-url-show') as HTMLInputElement;
+    const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
+    const errEl = document.getElementById('qr-error') as HTMLElement;
+    const ctx = canvas.getContext('2d')!;
+
+    function build() {
+      const url = urlInput!.value.trim();
+      if (!url) return null;
+      const qr = QrCode.encodeText(url, QrCode.Ecc.MEDIUM);
+      return { qr, url, branded: brandInput.checked, showUrl: urlShow.checked };
+    }
+
+    // Strip protocol, www and trailing slash.
+    const cleanUrl = (u: string) => u.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+    // Wrap to as many lines as needed to show the whole string (ctx.font set by caller).
+    function wrap(text: string, maxW: number) {
+      const out: string[] = [];
+      let cur = '';
+      for (const ch of text) {
+        if (cur && ctx.measureText(cur + ch).width > maxW) {
+          out.push(cur);
+          cur = ch;
+        } else cur += ch;
+      }
+      if (cur) out.push(cur);
+      return out;
+    }
+    function drawMark(cx: number, top: number, fs: number) {
+      ctx.font = `500 ${fs}px ${FONT}`;
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      const madW = ctx.measureText('mad').width;
+      const total = madW + ctx.measureText('.builders').width;
+      const tx = cx - total / 2;
+      ctx.fillStyle = GREEN;
+      ctx.fillText('mad', tx, top);
+      ctx.fillStyle = DIM;
+      ctx.fillText('.builders', tx + madW, top);
+    }
+
+    function render() {
+      errEl.hidden = true;
+      let data;
+      try {
+        data = build();
+      } catch {
+        errEl.textContent = 'that url is too long to fit in a single qr.';
+        errEl.hidden = false;
+        return;
+      }
+      if (!data) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+      const { qr, url, branded, showUrl } = data;
+      const n = qr.size;
+      const px = (n + QUIET * 2) * SCALE;
+      const codeTop = QUIET * SCALE;
+      const codeBottom = (n + QUIET) * SCALE;
+      const fsW = Math.round(SCALE * 2.2);
+      const fsU = Math.round(SCALE * 1.25);
+      const lineGap = Math.round(SCALE * 0.5);
+      const edge = Math.round(SCALE * 1.4);
+      const wordmarkTop = showUrl && branded;
+
+      // Lay out captions in QR-block coords (block spans [0, px]).
+      const items: { kind: 'mark' | 'url'; text?: string; fs: number; top: number }[] = [];
+      let minY = 0;
+      let maxY = px;
+      if (wordmarkTop) {
+        const top = codeTop - SCALE - fsW; // wordmark ends ~1 module above the code (matches the url gap below)
+        items.push({ kind: 'mark', fs: fsW, top });
+        minY = Math.min(minY, top - edge);
+      }
+      if (showUrl) {
+        ctx.font = `${fsU}px ${MONO}`;
+        let cy = codeBottom + SCALE; // ~1 module below the code
+        for (const line of wrap(cleanUrl(url), px * 0.92)) {
+          items.push({ kind: 'url', text: line, fs: fsU, top: cy });
+          cy += fsU + lineGap;
+        }
+        maxY = Math.max(maxY, cy - lineGap + edge);
+      } else if (branded) {
+        const top = codeBottom + SCALE;
+        items.push({ kind: 'mark', fs: fsW, top });
+        maxY = Math.max(maxY, top + fsW + edge);
+      }
+
+      const shift = -minY;
+      canvas.width = px;
+      canvas.height = Math.round(maxY - minY);
+      ctx.fillStyle = CREAM;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = GREEN;
+      for (let y = 0; y < n; y++)
+        for (let x = 0; x < n; x++)
+          if (qr.getModule(x, y)) ctx.fillRect((x + QUIET) * SCALE, (y + QUIET) * SCALE + shift, SCALE, SCALE);
+
+      ctx.textBaseline = 'top';
+      for (const it of items) {
+        if (it.kind === 'mark') {
+          drawMark(px / 2, it.top + shift, it.fs);
+        } else {
+          ctx.font = `${it.fs}px ${MONO}`;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = DIM;
+          ctx.fillText(it.text!, px / 2, it.top + shift);
+        }
+      }
+    }
+
+    document.getElementById('dl-png')!.addEventListener('click', () => {
+      let data;
+      try {
+        data = build();
+      } catch {
+        return; // render() already surfaces the "url too long" error
+      }
+      if (!data) return;
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'mad-builders-qr.png';
+      a.click();
+    });
+
+    let t: number;
+    const onInput = () => {
+      clearTimeout(t);
+      t = window.setTimeout(render, 120);
+    };
+    urlInput.addEventListener('input', onInput);
+    brandInput.addEventListener('change', render);
+    urlShow.addEventListener('change', render);
+
+    // Wait for the brand font so the wordmark renders correctly on first paint.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+    render();
+  }
+
+</script>
+
+<style>
+  .brand-head {
+    padding-top: 64px;
+    padding-bottom: 36px;
+  }
+
+  /* logo boards */
+  .logo-boards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+    margin-top: 40px;
+  }
+  .board {
+    border-radius: 12px;
+    padding: 48px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .green-board {
+    background: var(--green-soft);
+    border: 1px solid var(--line);
+  }
+  .cream-board {
+    background: var(--cream);
+    border: 1px solid rgba(26, 52, 43, 0.12);
+  }
+  .mark {
+    font-family: 'Bricolage Grotesque', var(--font-sans);
+    font-weight: 500;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    color: var(--cream);
+  }
+  .mark-dot {
+    color: var(--cream-dim);
+    font-weight: 400;
+  }
+  .mark-ink {
+    color: var(--green);
+  }
+  .mark-dot-ink {
+    color: rgba(26, 52, 43, 0.55);
+    font-weight: 400;
+  }
+
+  /* do / don't */
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-top: 36px;
+  }
+  .rule {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+  }
+  .rule-h {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin: 0 0 14px;
+    font-size: 12px;
+  }
+  .rule.do .rule-h {
+    color: #97c459;
+  }
+  .rule.dont .rule-h {
+    color: #e58a6f;
+  }
+  .rule ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--cream-dim);
+  }
+  .rule li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  /* swatches */
+  .sub {
+    margin: 36px 0 14px;
+  }
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  .chip {
+    display: block;
+    height: 72px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .chip-on-green {
+    border: 1px solid var(--line);
+  }
+  .sw-name {
+    font-size: 13px;
+    margin: 0 0 2px;
+  }
+  .sw-hex {
+    font-size: 12px;
+    color: var(--cream-faint);
+    margin: 0 0 6px;
+  }
+  .sw-use {
+    font-size: 14px;
+    color: var(--cream-dim);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* type specimens */
+  .specimens {
+    display: grid;
+    gap: 16px;
+    margin-top: 36px;
+  }
+  .specimen {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px 26px;
+  }
+  .spec-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .role-tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--cream-faint);
+  }
+  .spec-sample {
+    margin: 0 0 12px;
+    line-height: 1.1;
+    color: var(--cream);
+  }
+  .spec-where {
+    margin: 0;
+    color: var(--cream-dim);
+    font-size: 14px;
+  }
+
+  .voice-note {
+    margin-top: 28px;
+    color: var(--cream-dim);
+    font-size: 15px;
+  }
+  .voice-note a {
+    color: var(--cream);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--green-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* green-ink overrides for components sitting on cream (.section.light) */
+  .section.light .rule,
+  .section.light .specimen {
+    border-color: rgba(26, 52, 43, 0.14);
+  }
+  .section.light .rule ul,
+  .section.light .spec-where {
+    color: rgba(26, 52, 43, 0.72);
+  }
+  .section.light .rule.do .rule-h {
+    color: #3b6d11;
+  }
+  .section.light .rule.dont .rule-h {
+    color: #993c1d;
+  }
+  .section.light .sw-name,
+  .section.light .spec-sample {
+    color: var(--green);
+  }
+  .section.light .role-tag {
+    color: rgba(26, 52, 43, 0.5);
+  }
+  .section.light code {
+    background: rgba(26, 52, 43, 0.08);
+    color: var(--green);
+  }
+
+  /* docs layout: tighter section density than the rest of the site */
+  .section {
+    padding: 56px 0;
+  }
+
+  /* assets */
+  .asset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 36px;
+  }
+  .asset-card {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .asset-preview {
+    height: 120px;
+    margin: 0 0 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--green);
+    border: 1px solid var(--line);
+  }
+  .asset-preview img {
+    display: block;
+  }
+  .asset-preview.on-light {
+    background: #ffffff;
+    border-color: rgba(26, 52, 43, 0.1);
+  }
+  .asset-preview .logo-img {
+    width: 74%;
+    height: auto;
+  }
+  .asset-preview .icon-img {
+    height: 72px;
+    width: auto;
+  }
+  .asset-preview.profile img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .asset-preview.sheet img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .asset-preview.soon {
+    color: var(--cream-faint);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 12px;
+  }
+  .asset-h {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  .asset-note {
+    margin: 0;
+    color: var(--cream-dim);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  a.asset-card:hover {
+    border-color: var(--cream-dim);
+  }
+  .section.light .asset-card {
+    border-color: rgba(26, 52, 43, 0.14);
+  }
+  .section.light .asset-note {
+    color: rgba(26, 52, 43, 0.72);
+  }
+  .asset-dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-top: 14px;
+    font-size: 12px;
+  }
+  .asset-dl a {
+    color: var(--cream-dim);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .asset-dl a:hover {
+    color: var(--cream);
+    border-color: var(--cream);
+  }
+  .section.light .asset-dl a {
+    color: rgba(26, 52, 43, 0.7);
+    border-color: rgba(26, 52, 43, 0.18);
+  }
+  .section.light .asset-dl a:hover {
+    color: var(--green);
+    border-color: var(--green);
+  }
+  .section.light a.asset-card:hover {
+    border-color: rgba(26, 52, 43, 0.4);
+  }
+
+  /* qr generator: its own cream section, with a divider from assets above */
+  #qr {
+    border-top: 1px solid rgba(26, 52, 43, 0.1);
+  }
+  .qr-tool {
+    margin-top: 40px;
+  }
+  .qr-tool .sub {
+    margin: 0 0 20px;
+  }
+  .qr-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .qr-layout {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+  }
+  .qr-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .qr-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(26, 52, 43, 0.5);
+    margin-bottom: 8px;
+  }
+  .qr-field input {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(26, 52, 43, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--green);
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .qr-field input:focus {
+    outline: none;
+    border-color: var(--green);
+  }
+  .qr-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(26, 52, 43, 0.7);
+  }
+  .qr-check input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .qr-error {
+    color: #993c1d;
+    font-size: 12px;
+    margin: 0;
+  }
+  .qr-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .qr-canvas-wrap {
+    border: 1px solid rgba(26, 52, 43, 0.14);
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+    max-width: 300px;
+  }
+  #qr-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+  }
+</style>

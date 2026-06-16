@@ -9,7 +9,7 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    name: 'María — hermet.ai',
+    name: 'María · hermet.ai',
     logo: 'hermet.svg',
     url: 'https://hermet.ai/',
     tagline:

@@ -1,16 +1,16 @@
 # mad builders — website
 
 **The builders' house in Madrid** — where builders, founders and VCs meet, around AI,
-hardware & robotics, biotech & longevity, and digital assets. Born from the people behind
+hardware & robotics, healthtech, and digital assets. Born from the people behind
 [Startup Embassy](https://www.startupembassy.com/). The WhatsApp community is the front door.
 
 Static site for [mad.builders](https://mad.builders), built with [Astro](https://astro.build).
 
 ```bash
-npm install     # once
-npm run dev     # local dev at localhost:4321
-npm run build   # static output in dist/
-npm run preview # test the production build locally
+pnpm install    # once
+pnpm dev        # local dev at localhost:4321
+pnpm build      # static output in dist/
+pnpm preview    # test the production build locally
 ```
 
 Deploy anywhere that serves static files (Vercel, Netlify, Cloudflare Pages) — point it at this

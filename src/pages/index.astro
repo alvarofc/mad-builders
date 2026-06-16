@@ -7,6 +7,7 @@ import { events, cohosts } from '../data/events';
 import { people } from '../data/people';
 import { projects } from '../data/projects';
 import { sisters } from '../data/friends';
+import { ORGANIZATION } from '../config/seo';
 import sampliaLogo from '../assets/logos/friends/samplia.svg';
 import xIcon from '../assets/logos/socials/x.svg';
 import linkedinIcon from '../assets/logos/socials/linkedin.svg';
@@ -15,19 +16,34 @@ import osoCrest from '../assets/brand/oso-crest.png';
 const covers = import.meta.glob<{ default: ImageMetadata }>('../assets/events/*/cover.jpeg', { eager: true });
 const coverFor = (slug: string) => covers[`../assets/events/${slug}/cover.jpeg`]?.default;
 
-// All event photos (covers excluded) feed the two hero strips. The exact
-// selection is placeholder for now — swap freely later.
-const allHeroPhotos = Object.entries(
-  import.meta.glob<{ default: ImageMetadata }>('../assets/events/*/*.jpeg', { eager: true })
-)
-  .filter(([path]) => !path.endsWith('cover.jpeg'))
-  .map(([, m]) => m.default);
+// Hand-picked hero shots. Order matters: each strip alternates wide and tall
+// frames and keeps same-event photos apart. Only these get shipped.
+const eventPhotos = import.meta.glob<{ default: ImageMetadata }>('../assets/events/*/*.jpeg', { eager: true });
+const pick = (rel: string) => eventPhotos[`../assets/events/${rel}`]?.default;
 
-// Cap how many load on the homepage — the strips only show a few at a time and
-// scroll, so there's no need to ship all ~90 event photos in the hero.
-const PER_STRIP = 14;
-const stripTop = allHeroPhotos.filter((_, i) => i % 2 === 0).slice(0, PER_STRIP);
-const stripBottom = allHeroPhotos.filter((_, i) => i % 2 === 1).slice(0, PER_STRIP);
+const stripTop = [
+  'causa-prima/5.jpeg',
+  'adeyemi/1.jpeg',
+  'causa-prima/6.jpeg',
+  'metabase/2.jpeg',
+  'zero-to-agent/7.jpeg',
+  'revenuecat/2.jpeg',
+  'causa-prima/4.jpeg',
+  'ship-10x/1.jpeg',
+  'techieclub/17.jpeg',
+].map(pick).filter(Boolean);
+
+const stripBottom = [
+  'metabase/1.jpeg',
+  'openclaw/13.jpeg',
+  'adeyemi/4.jpeg',
+  'adeyemi/2.jpeg',
+  'zero-to-agent/14.jpeg',
+  'revenuecat/6.jpeg',
+  'adeyemi/3.jpeg',
+  'causa-prima/3.jpeg',
+].map(pick).filter(Boolean);
+
 // Both strips feed one lightbox; indices are top photos first, then bottom.
 const lightboxPhotos = [...stripTop, ...stripBottom];
 
@@ -60,9 +76,21 @@ const fmt = (iso: string) => {
 const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 ---
 
-<Layout>
+<Layout structuredData={ORGANIZATION}>
+  <!-- section subnav -->
+  <nav class="subnav mono" aria-label="page sections">
+    <div class="wrap subnav-inner">
+      <a href="#deal">the deal</a>
+      <a href="#events">events</a>
+      <a href="#residents">residents</a>
+      <a href="#builds">companies</a>
+      <a href="#off-hours">off-hours</a>
+      <a href="#friends">friends</a>
+    </div>
+  </nav>
+
   <!-- hero -->
-  <section class="hero">
+  <section class="hero" id="hero">
     <div class="hero-top">
       {/* el oso y el madroño — Madrid's coat of arms, as a faint crest */}
       <img class="hero-crest" src={osoCrest.src} alt="" aria-hidden="true" />
@@ -74,7 +102,6 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
         </p>
         <div class="hero-ctas">
           <a class="btn solid" href={site.whatsapp}>whatsapp group →</a>
-          <a class="btn" href="#events">events</a>
         </div>
       </div>
     </div>
@@ -108,10 +135,10 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   </section>
 
   <!-- the deal -->
-  <section class="section light">
+  <section class="section light" id="deal">
     <div class="wrap">
-      <p class="kicker">what this is</p>
-      <h2 class="section-title"><span class="nowrap">no bullshit.</span> <span class="nowrap">just building.</span></h2>
+      <h2 class="section-title">the deal</h2>
+      <p class="lede"><span class="nowrap">no bullshit.</span> <span class="nowrap">just building.</span></p>
       <div class="deal-grid">
         <div class="deal">
           <h3>a real house</h3>
@@ -140,8 +167,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- events -->
   <section class="section" id="events">
     <div class="wrap">
-      <p class="kicker">events</p>
-      <h2 class="section-title">past events</h2>
+      <h2 class="section-title">events</h2>
       <p class="lede">
         Firesides with founders, hands-on hack sessions, demo nights. Subscribe to
         <a href={site.lumaCalendar} target="_blank" rel="noopener">our luma calendar</a> to get notified about new events.
@@ -180,8 +206,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- residents -->
   <section class="section light" id="residents">
     <div class="wrap">
-      <p class="kicker">residents</p>
-      <h2 class="section-title">the current cohort</h2>
+      <h2 class="section-title">residents</h2>
+      <p class="lede">The current cohort, building out of the house right now.</p>
       <div class="people-grid">
         {people.map((p) => (
           <div class="person">
@@ -230,14 +256,13 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- builds -->
   <section class="section" id="builds">
     <div class="wrap">
-      <p class="kicker">from the house</p>
-      <h2 class="section-title">built here</h2>
-      <p class="lede">A few of the projects our residents are building.</p>
+      <h2 class="section-title">companies</h2>
+      <p class="lede">A few of the projects by our residents.</p>
       <div class="project-grid">
         {projects.map((pr) => (
           <a class="project" href={pr.url} target="_blank" rel="noopener">
             {projectLogo(pr.logo) ? (
-              <img src={projectLogo(pr.logo)!.src} alt={pr.name} class="project-logo" />
+              <img src={projectLogo(pr.logo)!.src} alt={pr.name} class="project-logo" data-logo={pr.logo} />
             ) : (
               <h3>{pr.name}</h3>
             )}
@@ -250,10 +275,10 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   </section>
 
   <!-- off-hours -->
-  <section class="section light">
+  <section class="section light" id="off-hours">
     <div class="wrap">
-      <p class="kicker">off-hours</p>
-      <h2 class="section-title">we touch grass, too</h2>
+      <h2 class="section-title">off-hours</h2>
+      <p class="lede">we touch grass, too.</p>
       <div class="club-grid">
         <div class="club">
           <h3>book club</h3>
@@ -268,11 +293,10 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   </section>
 
   <!-- sisters -->
-  <section class="section">
+  <section class="section" id="friends">
     <div class="wrap">
-      <p class="kicker">sisters</p>
-      <h2 class="section-title">sister houses worldwide</h2>
-      <p class="lede">Friends we've made around the world, building places like ours and sharing the same values. If you're part of one of them, our door is open.</p>
+      <h2 class="section-title">friends</h2>
+      <p class="lede">Sister houses around the world, building places like ours and sharing the same values. If you're part of one of them, our door is open.</p>
       <div class="sister-wall">
         {sisters.map((s) => {
           const logo = sisterLogo(s.logo);
@@ -315,6 +339,8 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 </Layout>
 
 <script>
+  import '../scripts/section-subnav';
+
   const dialog = document.getElementById('hero-lightbox') as HTMLDialogElement;
   if (dialog) {
     const imgs = [...dialog.querySelectorAll<HTMLImageElement>('.hlb-img')];
@@ -368,7 +394,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     height: 112%;
     max-height: 540px;
     width: auto;
-    opacity: 0.19;
+    opacity: 0.10;
     pointer-events: none;
     user-select: none;
     z-index: 0;
@@ -380,7 +406,6 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     color: var(--cream-dim);
   }
   .hero h1 .proper {
-    text-transform: none;
     color: var(--cream);
   }
   /* desktop: break before "Madrid" so it sits alone on line 2 */
@@ -740,6 +765,18 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     margin: 0 0 16px;
     filter: brightness(0) invert(1);
     opacity: 0.95;
+  }
+  /* per-logo optical sizing: each mark fills its box differently (caps vs
+     lowercase, icon, built-in padding), so one height looks uneven. Tuned from
+     measured ink height plus a lowercase bump for hawkings. */
+  .project-logo[data-logo="hermet.svg"] {
+    height: 26px;
+  }
+  .project-logo[data-logo="dreamshot.svg"] {
+    height: 31px;
+  }
+  .project-logo[data-logo="hawkings.avif"] {
+    height: 34px;
   }
   .project h3 {
     font-size: 24px;

@@ -1,10 +1,10 @@
 {
-  "name": "MAD BUILDERS",
-  "short_name": "MAD",
+  "name": "mad.builders",
+  "short_name": "mad",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#1a342b",
+  "theme_color": "#1a342b",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
