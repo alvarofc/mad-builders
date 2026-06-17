@@ -51,8 +51,4 @@ const stickerClean = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} 
   ${glyph}
 </svg>`;
 await sharp(Buffer.from(stickerClean)).resize(600).png().toFile('public/stickers/sticker-mad.png');
-
-// preview composites for review
-await sharp(Buffer.from(creamSvg)).resize({ width: 700 }).flatten({ background: '#1a342b' }).png().toFile('.ogtmp/view-mad-cream.png');
-await sharp(Buffer.from(greenSvg)).resize({ width: 700 }).flatten({ background: '#f6f5f0' }).png().toFile('.ogtmp/view-mad-green.png');
-console.log('wrote mad. logos + sticker');
+console.log('wrote mad logos + sticker');

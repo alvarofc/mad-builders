@@ -1,8 +1,12 @@
-// X/Twitter header generator (1500x500): a playful scatter of tilted "pinned"
+// Social header generator (1500x500): a playful scatter of tilted "pinned"
 // hero photos filling the right side, plus the mad.builders wordmark on the
 // left. Uses the same hand-picked hero shots as the homepage. Run from repo
-// root with FONTCONFIG_FILE=.ogtmp/banner-fonts.conf so the fonts are found.
+// root with FONTCONFIG_FILE=<conf for the Bricolage fonts> so they're found.
 // Outputs public/banners/x-header.png.
+//
+// 1500x500 is X's exact header size; it's reused for LinkedIn too, which crops
+// it a bit (the wordmark is centred vertically so it survives the crop). That
+// reuse is an intentional product decision, not an oversight.
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
 

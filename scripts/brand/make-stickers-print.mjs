@@ -9,7 +9,7 @@ import { execSync } from 'node:child_process';
 
 const DIR = 'public/stickers/';
 const BLEED_MM = 3;
-const CUT = '#EC008C'; // 100% magenta — die-cut spot convention
+const CUT = '#EC008C'; // 100% magenta, die-cut spot convention
 
 // target finished (trim) height in mm per sticker; width derives from the art
 const files = {
@@ -50,12 +50,12 @@ for (const [name, c] of Object.entries(files)) {
   console.log(`${name}: trim ${Math.round(trimW)}x${c.trimH}mm, artboard ${rootW}x${rootH}mm (incl. ${BLEED_MM}mm bleed)`);
 }
 
-const readme = `mad.builders stickers — print notes
+const readme = `mad.builders stickers: print notes
 
 Each design ships as vector SVG (for die-cutting) plus a PNG preview.
 
 Die-cut:
-- The magenta line (id "CutContour") is the cut path. It's a vector outline —
+- The magenta line (id "CutContour") is the cut path. It's a vector outline,
   cut along it. Do not print the magenta.
 - Every shape has rounded corners.
 - Files include ${BLEED_MM}mm bleed (white extends past the cut line).
@@ -65,7 +65,7 @@ Finished (trim) sizes:
     qr            ${sizes['sticker-qr.svg'].trimW} x ${sizes['sticker-qr.svg'].trimH} mm
     mad.builders  ${sizes['sticker-wordmark.svg'].trimW} x ${sizes['sticker-wordmark.svg'].trimH} mm
 
-Smallest dimension is ${Math.min(...Object.values(sizes).flatMap(s => [s.trimW, s.trimH]))}mm — above a 40mm cutter minimum.
+Smallest dimension is ${Math.min(...Object.values(sizes).flatMap(s => [s.trimW, s.trimH]))}mm, above a 40mm cutter minimum.
 
 Colours: green #1a342b, cream #f6f5f0.
 `;

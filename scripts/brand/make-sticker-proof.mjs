@@ -31,8 +31,8 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
                 border-top: 0.4mm solid #1a342b; }
   .cal .cap { margin-top: 2.5mm; }
 </style></head><body><div class="page">
-  <h1>mad.builders — sticker proof</h1>
-  <p class="sub">actual size, for review. print at <b>100%</b> — turn off "fit to page" / "scale to fit".<br>
+  <h1>mad.builders sticker proof</h1>
+  <p class="sub">actual size, for review. print at <b>100%</b>. turn off "fit to page" / "scale to fit".<br>
      check the 100&nbsp;mm line at the bottom with a ruler to confirm the scale.</p>
 
   <div class="grp">
@@ -50,13 +50,22 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
   <div class="cal">
     <p class="grp-h">scale check</p>
     <div class="bar"></div>
-    <div class="cap">100 mm &mdash; measure this line; if it isn't 100&nbsp;mm, the print was scaled</div>
+    <div class="cap">100 mm reference. measure this line; if it isn't 100&nbsp;mm, the print was scaled</div>
   </div>
 </div></body></html>`;
 
+fs.mkdirSync('.ogtmp', { recursive: true });
 fs.writeFileSync('.ogtmp/sticker-proof.html', html);
 const abs = path.resolve('.ogtmp/sticker-proof.html');
 const out = path.resolve(DIR + 'sticker-proof-a4.pdf');
-const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+
+// resolve a Chrome/Chromium binary: CHROME_PATH wins, else common locations
+const chrome = process.env.CHROME_PATH || [
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
+].find((p) => fs.existsSync(p));
+if (!chrome) throw new Error('Chrome/Chromium not found. Set CHROME_PATH to the binary.');
+
 execSync(`"${chrome}" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="${out}" "file://${abs}"`, { stdio: 'inherit' });
 console.log('wrote', out);
