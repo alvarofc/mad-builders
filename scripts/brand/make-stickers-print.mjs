@@ -1,11 +1,15 @@
-// Make the sticker SVGs print/die-cut ready, in place:
+// Make the three original sticker SVGs print/die-cut ready, in place:
 //  - explicit physical size in mm (>= the printer's 4cm cutter minimum)
 //  - 3mm bleed (white background extended past the cut)
 //  - a vector cut contour: rounded outline as a 100% magenta 'CutContour' path
 // PNG previews are left untouched (they stay clean, no cut line).
-// Then rebuild the download zip with a print-notes README.
+//
+// Idempotent: SVGs that already carry a CutContour are skipped, so reruns are
+// safe. The 'mad' sticker is produced already print-ready by make-mad-mark.mjs.
+// After running this, run rebuild-sticker-pack.mjs to refresh the sheet,
+// README.txt and the download zip — that script is the one that knows all four
+// designs.
 import fs from 'node:fs';
-import { execSync } from 'node:child_process';
 
 const DIR = 'public/stickers/';
 const BLEED_MM = 3;
@@ -18,14 +22,20 @@ const files = {
   'sticker-wordmark.svg': { trimH: 45 },
 };
 
-const sizes = {};
 for (const [name, c] of Object.entries(files)) {
   const p = DIR + name;
   let s = fs.readFileSync(p, 'utf8');
 
+  if (s.includes('id="CutContour"')) {
+    console.log(`${name}: already print-ready, skipping`);
+    continue;
+  }
+
   const vb = s.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+  const rxm = s.match(/<rect[^>]*rx="([\d.]+)"[^>]*fill="#ffffff"/);
+  if (!vb || !rxm) throw new Error(`${name}: unexpected SVG format (expected clean viewBox="0 0 ..." + white rect)`);
   const W = parseFloat(vb[1]), H = parseFloat(vb[2]);
-  const RX = parseFloat(s.match(/<rect[^>]*rx="([\d.]+)"[^>]*fill="#ffffff"/)[1]);
+  const RX = parseFloat(rxm[1]);
 
   const uPerMm = H / c.trimH;          // viewBox units per mm
   const trimW = W / uPerMm;
@@ -46,35 +56,7 @@ for (const [name, c] of Object.entries(files)) {
   s = s.replace('</svg>', cut + '</svg>');
   fs.writeFileSync(p, s);
 
-  sizes[name] = { trimW: Math.round(trimW), trimH: c.trimH };
   console.log(`${name}: trim ${Math.round(trimW)}x${c.trimH}mm, artboard ${rootW}x${rootH}mm (incl. ${BLEED_MM}mm bleed)`);
 }
 
-const readme = `mad.builders stickers: print notes
-
-Each design ships as vector SVG (for die-cutting) plus a PNG preview.
-
-Die-cut:
-- The magenta line (id "CutContour") is the cut path. It's a vector outline,
-  cut along it. Do not print the magenta.
-- Every shape has rounded corners.
-- Files include ${BLEED_MM}mm bleed (white extends past the cut line).
-
-Finished (trim) sizes:
-    m.            ${sizes['sticker-m.svg'].trimW} x ${sizes['sticker-m.svg'].trimH} mm
-    qr            ${sizes['sticker-qr.svg'].trimW} x ${sizes['sticker-qr.svg'].trimH} mm
-    mad.builders  ${sizes['sticker-wordmark.svg'].trimW} x ${sizes['sticker-wordmark.svg'].trimH} mm
-
-Smallest dimension is ${Math.min(...Object.values(sizes).flatMap(s => [s.trimW, s.trimH]))}mm, above a 40mm cutter minimum.
-
-Colours: green #1a342b, cream #f6f5f0.
-`;
-fs.writeFileSync(DIR + 'README.txt', readme);
-
-// rebuild the zip: SVGs + PNG previews + README
-execSync(
-  `cd ${DIR} && rm -f mad-builders-stickers.zip && zip -q mad-builders-stickers.zip `
-  + `sticker-m.svg sticker-m.png sticker-wordmark.svg sticker-wordmark.png sticker-qr.svg sticker-qr.png README.txt`,
-  { stdio: 'inherit' }
-);
-console.log('rebuilt mad-builders-stickers.zip');
+console.log('done. run rebuild-sticker-pack.mjs to refresh the sheet, README and zip.');
