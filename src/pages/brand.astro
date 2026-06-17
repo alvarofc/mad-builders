@@ -215,7 +215,7 @@ const donts = [
   <section class="section" id="assets">
     <div class="wrap">
       <h2 class="section-title numbered">06 · Assets</h2>
-      <p class="lede">Logos, the profile template, and stickers.</p>
+      <p class="lede">Logos, the profile template, stickers, and social banners.</p>
       <div class="asset-grid">
         <div class="asset-card">
           <div class="asset-preview on-green"><img class="logo-img" src="/logo/mad-builders-cream.svg" alt="mad.builders cream" /></div>
@@ -233,6 +233,24 @@ const donts = [
           <div class="asset-dl mono">
             <a href="/logo/mad-builders-green.svg" download>svg</a>
             <a href="/logo/mad-builders-green.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-green"><img class="logo-img" src="/logo/mad-builders-mad-cream.svg" alt="mad cream" /></div>
+          <p class="asset-h">mad cream</p>
+          <p class="asset-note">the compact mark, for dark backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-mad-cream.svg" download>svg</a>
+            <a href="/logo/mad-builders-mad-cream.png" download>png</a>
+          </div>
+        </div>
+        <div class="asset-card">
+          <div class="asset-preview on-light"><img class="logo-img" src="/logo/mad-builders-mad-green.svg" alt="mad green" /></div>
+          <p class="asset-h">mad green</p>
+          <p class="asset-note">the compact mark, for light backgrounds.</p>
+          <div class="asset-dl mono">
+            <a href="/logo/mad-builders-mad-green.svg" download>svg</a>
+            <a href="/logo/mad-builders-mad-green.png" download>png</a>
           </div>
         </div>
         <div class="asset-card">
@@ -279,9 +297,17 @@ const donts = [
         <div class="asset-card">
           <div class="asset-preview sheet"><img src="/stickers/sticker-sheet.png" alt="mad.builders die-cut stickers" /></div>
           <p class="asset-h">stickers</p>
-          <p class="asset-note">die-cut artwork for laptops and events. print-ready svg.</p>
+          <p class="asset-note">die-cut vector artwork for laptops and events. 45–50 mm, with cut lines and bleed, print-ready.</p>
           <div class="asset-dl mono">
             <a href="/stickers/mad-builders-stickers.zip" download>download all · zip</a>
+          </div>
+        </div>
+        <div class="asset-card span">
+          <div class="asset-preview banner"><img src="/banners/x-header.png" alt="mad.builders X / LinkedIn header" /></div>
+          <p class="asset-h">x / linkedin header</p>
+          <p class="asset-note">1500×500 social banner, built from the house photos. drop it in as your profile header.</p>
+          <div class="asset-dl mono">
+            <a href="/banners/x-header.png" download>png</a>
           </div>
         </div>
       </div>
@@ -730,6 +756,23 @@ const donts = [
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  .asset-card.span {
+    grid-column: span 2;
+  }
+  .asset-preview.banner {
+    height: auto;
+    aspect-ratio: 3 / 1;
+  }
+  .asset-preview.banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  @media (max-width: 600px) {
+    .asset-card.span {
+      grid-column: auto;
+    }
   }
   .asset-preview.soon {
     color: var(--cream-faint);
