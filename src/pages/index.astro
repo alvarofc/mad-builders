@@ -74,6 +74,9 @@ const fmt = (iso: string) => {
 // Repeat the focus words enough times that one "reel" overflows even ultra-wide
 // screens; two identical reels animated by exactly -50% give a seamless loop.
 const ticker = Array.from({ length: 5 }, () => site.focus).flat();
+
+// Residents cohort grid is hidden for now; the join CTA below it stays visible.
+const showResidents = false;
 ---
 
 <Layout structuredData={ORGANIZATION}>
@@ -82,7 +85,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
     <div class="wrap subnav-inner">
       <a href="#deal">the deal</a>
       <a href="#events">events</a>
-      <a href="#residents">residents</a>
+      {showResidents ? <a href="#residents">residents</a> : <a href="#join">join</a>}
       <a href="#builds">companies</a>
       <a href="#off-hours">off-hours</a>
       <a href="#friends">friends</a>
@@ -206,40 +209,51 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
   <!-- residents -->
   <section class="section light" id="residents">
     <div class="wrap">
-      <h2 class="section-title">residents</h2>
-      <p class="lede">The current cohort, building out of the house right now.</p>
-      <div class="people-grid">
-        {people.map((p) => (
-          <div class="person">
-            {portraitFor(p.slug) && <Image src={portraitFor(p.slug)!} alt={p.name} width={400} class="person-img" />}
-            <div class="person-row">
-              <span class="person-name">{p.name}</span>
-              <span class="person-links">
-                {p.x && (
-                  <a
-                    class="person-link"
-                    href={p.x}
-                    target="_blank"
-                    rel="noopener"
-                    aria-label={`${p.name} on X`}
-                    style={`-webkit-mask-image:url(${xIcon.src});mask-image:url(${xIcon.src})`}
-                  ></a>
-                )}
-                {p.linkedin && (
-                  <a
-                    class="person-link"
-                    href={p.linkedin}
-                    target="_blank"
-                    rel="noopener"
-                    aria-label={`${p.name} on LinkedIn`}
-                    style={`-webkit-mask-image:url(${linkedinIcon.src});mask-image:url(${linkedinIcon.src})`}
-                  ></a>
-                )}
-              </span>
-            </div>
+      {showResidents && (
+        <>
+          <h2 class="section-title">residents</h2>
+          <p class="lede">The current cohort, building out of the house right now.</p>
+          <div class="people-grid">
+            {people.map((p) => (
+              <div class="person">
+                {portraitFor(p.slug) && <Image src={portraitFor(p.slug)!} alt={p.name} width={400} class="person-img" />}
+                <div class="person-row">
+                  <span class="person-name">{p.name}</span>
+                  <span class="person-links">
+                    {p.x && (
+                      <a
+                        class="person-link"
+                        href={p.x}
+                        target="_blank"
+                        rel="noopener"
+                        aria-label={`${p.name} on X`}
+                        style={`-webkit-mask-image:url(${xIcon.src});mask-image:url(${xIcon.src})`}
+                      ></a>
+                    )}
+                    {p.linkedin && (
+                      <a
+                        class="person-link"
+                        href={p.linkedin}
+                        target="_blank"
+                        rel="noopener"
+                        aria-label={`${p.name} on LinkedIn`}
+                        style={`-webkit-mask-image:url(${linkedinIcon.src});mask-image:url(${linkedinIcon.src})`}
+                      ></a>
+                    )}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
+
+      {!showResidents && (
+        <>
+          <h2 class="section-title">join</h2>
+          <p class="lede">Rolling admissions. Limited spots. Decisions in one week.</p>
+        </>
+      )}
 
       <div class="join-note" id="join">
         <h3><span class="nowrap">the house is full</span> <span class="nowrap">(for now)</span></h3>
