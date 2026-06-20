@@ -1,5 +1,15 @@
 ---
 import '../styles/global.css';
+// Self-hosted fonts (same-origin, no render-blocking Google Fonts chain).
+// Only the weights actually used: Archivo 400/500/600/700, IBM Plex Mono 400/500,
+// and the Bricolage Grotesque variable face for the wordmark.
+import '@fontsource/archivo/latin-400.css';
+import '@fontsource/archivo/latin-500.css';
+import '@fontsource/archivo/latin-600.css';
+import '@fontsource/archivo/latin-700.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
+import '@fontsource/ibm-plex-mono/latin-500.css';
+import '@fontsource-variable/bricolage-grotesque/wght.css';
 import type { ImageMetadata } from 'astro';
 import { site } from '../data/site';
 import { DEFAULT_TITLE } from '../config/seo';
@@ -33,12 +43,6 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <SEO title={title} description={description} image={image} noindex={noindex} structuredData={structuredData} />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=IBM+Plex+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
     <header class="nav">
@@ -102,7 +106,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     height: 64px;
   }
   .wordmark {
-    font-family: 'Bricolage Grotesque', var(--font-sans);
+    font-family: var(--font-display);
     font-weight: 500;
     font-size: 22px;
     letter-spacing: -0.02em;
@@ -164,7 +168,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
   .footer-mark {
     display: block;
     line-height: 1;
-    font-family: 'Bricolage Grotesque', var(--font-sans);
+    font-family: var(--font-display);
     font-weight: 500;
     font-size: 22px;
     letter-spacing: -0.02em;

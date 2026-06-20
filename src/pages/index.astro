@@ -96,9 +96,9 @@ const showResidents = false;
   <section class="hero" id="hero">
     <div class="hero-top">
       {/* el oso y el madroño — Madrid's coat of arms, as a faint crest */}
-      <img class="hero-crest" src={osoCrest.src} alt="" aria-hidden="true" />
+      <Image class="hero-crest" src={osoCrest} alt="" aria-hidden="true" width={560} quality={45} loading="lazy" />
       <div class="wrap">
-        <h1>the builders' <br class="brk-m" /><span class="nowrap">house in <br class="brk-d" /><span class="proper">Madrid</span></span></h1>
+        <h1>The builders' <br class="brk-m" /><span class="nowrap">house in <br class="brk-d" /><span class="proper">Madrid</span></span></h1>
         <p class="lede hero-lede">
           Where builders, founders and VCs meet, hosted by<!--
           --><a class="samplia-inline" href="https://samplia.com" target="_blank" rel="noopener" aria-label="Samplia"><img src={sampliaLogo.src} alt="Samplia" /></a>
@@ -140,24 +140,24 @@ const showResidents = false;
   <!-- the deal -->
   <section class="section light" id="deal">
     <div class="wrap">
-      <h2 class="section-title">the deal</h2>
-      <p class="lede"><span class="nowrap">no bullshit.</span> <span class="nowrap">just building.</span></p>
+      <h2 class="section-title">The deal</h2>
+      <p class="lede"><span class="nowrap">No bullshit.</span> <span class="nowrap">Just building.</span></p>
       <div class="deal-grid">
         <div class="deal">
-          <h3>a real house</h3>
+          <h3>A real house</h3>
           <p>
             A free workspace in the middle of Madrid. No membership fees, no equity, no hidden
             costs. We keep it small so it stays useful.
           </p>
         </div>
         <div class="deal">
-          <h3>proof of work</h3>
+          <h3>Proof of work</h3>
           <p>
             We don't curate by résumé. We show up, we don't ask for permission, we build, we share.
           </p>
         </div>
         <div class="deal">
-          <h3>an open door</h3>
+          <h3>An open door</h3>
           <p>
             Founders, companies and VCs pass through the house every week. Visiting Madrid? Come
             say hi.
@@ -170,7 +170,7 @@ const showResidents = false;
   <!-- events -->
   <section class="section" id="events">
     <div class="wrap">
-      <h2 class="section-title">events</h2>
+      <h2 class="section-title">Events</h2>
       <p class="lede">
         Firesides with founders, hands-on hack sessions, demo nights. Subscribe to
         <a href={site.lumaCalendar} target="_blank" rel="noopener">our luma calendar</a> to get notified about new events.
@@ -211,7 +211,7 @@ const showResidents = false;
     <div class="wrap">
       {showResidents && (
         <>
-          <h2 class="section-title">residents</h2>
+          <h2 class="section-title">Residents</h2>
           <p class="lede">The current cohort, building out of the house right now.</p>
           <div class="people-grid">
             {people.map((p) => (
@@ -250,13 +250,13 @@ const showResidents = false;
 
       {!showResidents && (
         <>
-          <h2 class="section-title">join</h2>
+          <h2 class="section-title">Join</h2>
           <p class="lede">Rolling admissions. Limited spots. Decisions in one week.</p>
         </>
       )}
 
       <div class="join-note" id="join">
-        <h3><span class="nowrap">the house is full</span> <span class="nowrap">(for now)</span></h3>
+        <h3><span class="nowrap">The house is full</span> <span class="nowrap">(for now)</span></h3>
         <p>
           It filled up faster than we expected, so we've paused new applications while the current
           cohort settles in. But the building doesn't stop. Join the WhatsApp community to stay
@@ -270,7 +270,7 @@ const showResidents = false;
   <!-- builds -->
   <section class="section" id="builds">
     <div class="wrap">
-      <h2 class="section-title">companies</h2>
+      <h2 class="section-title">Companies</h2>
       <p class="lede">A few of the projects by our residents.</p>
       <div class="project-grid">
         {projects.map((pr) => (
@@ -291,15 +291,15 @@ const showResidents = false;
   <!-- off-hours -->
   <section class="section light" id="off-hours">
     <div class="wrap">
-      <h2 class="section-title">off-hours</h2>
-      <p class="lede">we touch grass, too.</p>
+      <h2 class="section-title">Off-hours</h2>
+      <p class="lede">We touch grass, too.</p>
       <div class="club-grid">
         <div class="club">
-          <h3>book club</h3>
+          <h3>Book club</h3>
           <p>One book a month. Starting soon.</p>
         </div>
         <div class="club">
-          <h3>running club</h3>
+          <h3>Running club</h3>
           <p>Easy morning runs through Retiro, and brunch before the laptops open. Starting soon.</p>
         </div>
       </div>
@@ -309,7 +309,7 @@ const showResidents = false;
   <!-- sisters -->
   <section class="section" id="friends">
     <div class="wrap">
-      <h2 class="section-title">friends</h2>
+      <h2 class="section-title">Friends</h2>
       <p class="lede">Sister houses around the world, building places like ours and sharing the same values. If you're part of one of them, our door is open.</p>
       <div class="sister-wall">
         {sisters.map((s) => {
@@ -415,7 +415,6 @@ const showResidents = false;
   }
   .hero h1 {
     font-size: clamp(40px, 7vw, 92px);
-    text-transform: lowercase;
     margin: 0 0 22px;
     color: var(--cream-dim);
   }
@@ -585,7 +584,6 @@ const showResidents = false;
   }
   .deal h3 {
     font-size: 22px;
-    text-transform: lowercase;
     margin-bottom: 12px;
   }
   .deal p {
@@ -747,7 +745,6 @@ const showResidents = false;
   }
   .join-note h3 {
     font-size: 28px;
-    text-transform: lowercase;
     margin-bottom: 14px;
   }
   .join-note p {
@@ -796,7 +793,6 @@ const showResidents = false;
     font-size: 24px;
     line-height: 30px;
     margin: 0 0 16px;
-    text-transform: lowercase;
   }
   .project p {
     color: var(--cream-dim);
@@ -822,7 +818,6 @@ const showResidents = false;
   }
   .club h3 {
     font-size: 21px;
-    text-transform: lowercase;
     margin-bottom: 10px;
   }
   .club p {
@@ -871,7 +866,6 @@ const showResidents = false;
     font-size: 21px;
     font-weight: 600;
     letter-spacing: -0.02em;
-    text-transform: lowercase;
   }
   .sister-ink {
     filter: brightness(0);

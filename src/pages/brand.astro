@@ -22,7 +22,7 @@ const fonts = [
     role: 'logo',
     where: 'the mad.builders wordmark, and nothing else',
     sample: 'mad.builders',
-    family: "'Bricolage Grotesque', sans-serif",
+    family: "'Bricolage Grotesque Variable', sans-serif",
     weight: 500,
     size: '34px',
   },
@@ -47,8 +47,6 @@ const fonts = [
 ];
 
 const dos = [
-  'sentence-case section titles: capital first letter only ("The deal", "Off-hours")',
-  'lowercase for card headings and terse lines ("a real house", "no bullshit. just building.")',
   'short, concrete, plain words',
   'builder-first, with a little Madrid flavour ("siesta", "tapas")',
   'periods and commas over em-dashes',
@@ -61,7 +59,7 @@ const donts = [
 ];
 ---
 
-<Layout title="brand guide | mad.builders" noindex={true}>
+<Layout title="Brand guide - mad.builders" noindex={true}>
   <nav class="subnav mono" aria-label="brand guide sections">
     <div class="wrap subnav-inner">
       <a href="#logo">logo</a>
@@ -75,7 +73,7 @@ const donts = [
   </nav>
   <section class="section brand-head">
     <div class="wrap">
-      <h1 class="section-title">brand guide</h1>
+      <h1 class="section-title">Brand guide</h1>
       <p class="lede">
         The single reference for the mad.builders identity: logo, colour, type and tone.
       </p>
@@ -85,7 +83,7 @@ const donts = [
   <!-- LOGO -->
   <section class="section light" id="logo">
     <div class="wrap">
-      <h2 class="section-title numbered">01 · Logo</h2>
+      <h2 class="section-title">01 · Logo</h2>
       <p class="lede">
         Bricolage Grotesque, medium weight. The dot stays dimmed to the same tone as
         “builders”. Two lockups only: cream on green, or green on cream.
@@ -122,7 +120,7 @@ const donts = [
   <!-- COLOUR -->
   <section class="section" id="colour">
     <div class="wrap">
-      <h2 class="section-title numbered">02 · Colour</h2>
+      <h2 class="section-title">02 · Colour</h2>
       <p class="lede">
         Deep green and warm cream carry everything. Sponsor colours (e.g. Samplia red) live
         only inside a sponsor’s own logo, never in the core palette.
@@ -155,7 +153,7 @@ const donts = [
   <!-- TYPE -->
   <section class="section light" id="type">
     <div class="wrap">
-      <h2 class="section-title numbered">03 · Type</h2>
+      <h2 class="section-title">03 · Type</h2>
       <p class="lede">Each does one job. Don’t mix the roles.</p>
       <div class="specimens">
         {fonts.map((f) => (
@@ -177,9 +175,9 @@ const donts = [
   <!-- VOICE -->
   <section class="section" id="voice">
     <div class="wrap">
-      <h2 class="section-title numbered">04 · Voice</h2>
+      <h2 class="section-title">04 · Voice</h2>
       <p class="lede">
-        Terse, mostly lowercase, a little cheeky. Sound like a builder, not a brochure.
+        Terse, a little cheeky. Sound like a builder, not a brochure.
         Around VCs and sponsors, dial it back and keep it clean.
       </p>
       <div class="rules">
@@ -202,7 +200,7 @@ const donts = [
   <!-- PHOTOGRAPHY -->
   <section class="section light" id="photography">
     <div class="wrap">
-      <h2 class="section-title numbered">05 · Photography</h2>
+      <h2 class="section-title">05 · Photography</h2>
       <p class="lede">
         Real moments from the house: rooftops, talks, packed rooms at golden hour. Slightly
         desaturated (<code>filter: saturate(0.92)</code>) so nothing screams. Edges fade into
@@ -214,7 +212,7 @@ const donts = [
   <!-- ASSETS -->
   <section class="section" id="assets">
     <div class="wrap">
-      <h2 class="section-title numbered">06 · Assets</h2>
+      <h2 class="section-title">06 · Assets</h2>
       <p class="lede">Logos, the profile template, stickers, and social banners.</p>
       <div class="asset-grid">
         <div class="asset-card">
@@ -322,7 +320,7 @@ const donts = [
   <!-- QR -->
   <section class="section light" id="qr">
     <div class="wrap">
-      <h2 class="section-title numbered">07 · QR generator</h2>
+      <h2 class="section-title">07 · QR generator</h2>
       <p class="lede">Make a branded QR for any link: the whatsapp group, an event, a profile.</p>
       <div class="qr-tool">
         <div class="qr-layout">
@@ -363,7 +361,7 @@ const donts = [
     const GREEN = '#1a342b';
     const CREAM = '#f6f5f0';
     const DIM = 'rgba(26, 52, 43, 0.5)';
-    const FONT = '"Bricolage Grotesque", sans-serif';
+    const FONT = '"Bricolage Grotesque Variable", sans-serif';
     const MONO = '"IBM Plex Mono", monospace';
     const SCALE = 16;
     const QUIET = 4;
@@ -539,7 +537,7 @@ const donts = [
     border: 1px solid rgba(26, 52, 43, 0.12);
   }
   .mark {
-    font-family: 'Bricolage Grotesque', var(--font-sans);
+    font-family: var(--font-display);
     font-weight: 500;
     font-size: 32px;
     letter-spacing: -0.02em;

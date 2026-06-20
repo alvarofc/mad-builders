@@ -8,6 +8,8 @@
   --line: rgba(246, 245, 240, 0.14);
   --font-sans: 'Archivo', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  /* the wordmark / logo face — self-hosted variable font */
+  --font-display: 'Bricolage Grotesque Variable', var(--font-sans);
   --max: 1180px;
 }
 
@@ -182,20 +184,7 @@ section[id] {
 
 .section-title {
   font-size: clamp(34px, 5vw, 56px);
-  text-transform: lowercase;
   margin-bottom: 10px;
-}
-.section-title::first-letter {
-  text-transform: uppercase;
-}
-/* numbered docs headings (brand page) start with a digit, so the first-letter
-   trick can't reach the word — set their case directly in the markup instead */
-.section-title.numbered {
-  text-transform: none;
-}
-/* escape hatch for proper nouns inside an otherwise lowercased heading (e.g. "Madrid") */
-.proper {
-  text-transform: none;
 }
 
 .lede {
