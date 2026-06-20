@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.5.1",
+    "@fontsource-variable/bricolage-grotesque": "^5.2.10",
+    "@fontsource/archivo": "^5.2.8",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
     "@vercel/analytics": "^2.0.1",
     "astro": "^5.13.3",
     "sharp": "^0.34.1"

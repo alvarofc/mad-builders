@@ -27,7 +27,7 @@ const fmt = new Date(Date.UTC(dy, dm - 1, dd))
   .toLowerCase();
 ---
 
-<Layout title={`${event.title} | mad.builders`}>
+<Layout title={`${event.title} - mad.builders`}>
   <section class="event-page">
     <div class="wrap">
       <a href="/#events" class="mono back">← all events</a>
@@ -95,10 +95,6 @@ const fmt = new Date(Date.UTC(dy, dm - 1, dd))
 <style>
   .event-page {
     padding: 80px 0 110px;
-  }
-  /* event titles are proper names — don't lowercase them like section titles */
-  .event-page h1.section-title {
-    text-transform: none;
   }
   .back {
     display: inline-block;
