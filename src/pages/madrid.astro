@@ -1,4 +1,5 @@
 ---
+import type { ImageMetadata } from 'astro';
 import Layout from '../layouts/Layout.astro';
 import { spotlights, spots, stats } from '../data/madrid';
 import { calendarEvents as externalEvents } from '../data/calendar';
@@ -240,7 +241,6 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     // Local-date helpers (avoid UTC shifts: events are plain 'YYYY-MM-DD').
-    const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
     const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     // Monday-based weekday index (0 = Mon … 6 = Sun).
@@ -251,13 +251,29 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     for (const e of calendarEvents) (byDay[e.date] ||= []).push(e);
     for (const k in byDay) byDay[k].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
-    const today = startOfDay(new Date());
+    // "Today" must be the Madrid-local date, not the visitor's: events are stored
+    // as Madrid-local 'YYYY-MM-DD', so a visitor in another timezone would
+    // otherwise highlight the wrong day (and default week) around midnight.
+    const [ty, tm, td] = new Date()
+      .toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
+      .split('-')
+      .map(Number);
+    const today = new Date(ty, tm - 1, td);
     const todayKey = key(today);
     // Monday of the current week — the week view always starts here, regardless
     // of which weekday today is.
     const weekStart = addDays(today, -isoDow(today));
     let view = 'week';
     let anchor = weekStart; // week: window start (Monday); month: any day in the month
+
+    // Escape event fields before they go into innerHTML — the data is
+    // repo-controlled today, but external titles/locations shouldn't be able to
+    // inject markup if someone pastes one in.
+    const esc = (s) =>
+      String(s).replace(
+        /[&<>"']/g,
+        (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+      );
 
     const el = (tag, cls, html) => {
       const n = document.createElement(tag);
@@ -328,11 +344,11 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
       const n = el('button', 'cal-event' + (e.madbuilders ? ' is-mad' : ' is-ext'));
       n.type = 'button';
       n.addEventListener('click', () => openModal(e));
-      const img = e.image ? `<img class="cal-event-img" src="${e.image}" alt="" loading="lazy" decoding="async" />` : '';
+      const img = e.image ? `<img class="cal-event-img" src="${esc(e.image)}" alt="" loading="lazy" decoding="async" />` : '';
       const priv = e.private ? `<span class="cal-priv mono">${LOCK}private</span>` : '';
-      const time = e.time ? `<span class="cal-event-time mono">${e.time}${e.endTime ? '–' + e.endTime : ''}</span>` : '';
-      const loc = e.location ? `<span class="cal-event-loc">${e.location}</span>` : '';
-      n.innerHTML = `${img}${priv}${time}<span class="cal-event-title">${e.title}</span>${loc}`;
+      const time = e.time ? `<span class="cal-event-time mono">${esc(e.time)}${e.endTime ? '–' + esc(e.endTime) : ''}</span>` : '';
+      const loc = e.location ? `<span class="cal-event-loc">${esc(e.location)}</span>` : '';
+      n.innerHTML = `${img}${priv}${time}<span class="cal-event-title">${esc(e.title)}</span>${loc}`;
       return n;
     };
 
@@ -390,7 +406,7 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
             chip.type = 'button';
             chip.addEventListener('click', () => openModal(e));
             const chipLock = e.private ? `<span class="cal-chip-lock">${LOCK}</span>` : '';
-            chip.innerHTML = `${chipLock}${e.time ? `<span class="cal-chip-time mono">${e.time}</span>` : ''}<span class="cal-chip-title">${e.title}</span>`;
+            chip.innerHTML = `${chipLock}${e.time ? `<span class="cal-chip-time mono">${esc(e.time)}</span>` : ''}<span class="cal-chip-title">${esc(e.title)}</span>`;
             list.appendChild(chip);
           });
           cell.appendChild(list);
@@ -906,7 +922,8 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
   .cal-modal {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    /* above the sticky nav (--z-nav) and subnav (--z-subnav) */
+    z-index: calc(var(--z-nav) + 1);
     display: flex;
     align-items: center;
     justify-content: center;

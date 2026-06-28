@@ -62,8 +62,20 @@ if (subLinks.length) {
     setActive(current && current.id !== 'hero' ? subLinkFor.get(current.id) ?? null : null);
   };
 
+  // resolve() reads layout (scrollHeight/offsetTop/offsetHeight), so coalesce
+  // high-frequency events into one computation per animation frame to avoid
+  // forcing a reflow on every scroll tick.
+  let ticking = false;
+  const onEvent = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      ticking = false;
+      resolve();
+    });
+  };
   (['scroll', 'resize', 'load', 'pageshow'] as const).forEach((ev) =>
-    window.addEventListener(ev, resolve, { passive: true })
+    window.addEventListener(ev, onEvent, { passive: true })
   );
   requestAnimationFrame(resolve);
   resolve();
