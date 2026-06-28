@@ -1,85 +1,118 @@
 ---
+import type { ImageMetadata } from 'astro';
 import Layout from '../layouts/Layout.astro';
-import { site } from '../data/site';
-import { madridCommunities, spots, stats, statsSource } from '../data/madrid';
+import { spotlights, spots, stats } from '../data/madrid';
+import { calendarEvents as externalEvents } from '../data/calendar';
+import { events as communityEvents } from '../data/events';
 
 const kinds = [
-  { key: 'cafe', label: 'cafés & coworks', color: '#f6f5f0' },
-  { key: 'vc', label: 'vc offices', color: '#e8b84b' },
-  { key: 'hub', label: 'hubs & spaces', color: '#7fb89a' },
+  { key: 'company', label: 'Companies', color: 'var(--map-company)' },
+  { key: 'vc', label: 'VCs', color: 'var(--map-vc)' },
+  { key: 'hub', label: 'Hubs & Coworking', color: 'var(--map-hub)' },
 ];
+
+// Calendar data = our events (from events.ts, the single source of truth) merged
+// with external meetups (calendar.ts). Our covers are resolved here from
+// src/assets so Astro hashes/optimises them — no duplication into /public.
+const covers = import.meta.glob('../assets/events/*/cover.{jpeg,jpg,png}', {
+  eager: true,
+  import: 'default',
+});
+const coverFor = (slug: string) => {
+  const entry = Object.entries(covers).find(([path]) => path.includes(`/events/${slug}/`));
+  return entry ? (entry[1] as ImageMetadata).src : undefined;
+};
+
+const madbuildersEvents = communityEvents.map((e) => ({
+  title: e.title,
+  date: e.date,
+  time: e.time,
+  endTime: e.endTime,
+  location: e.location,
+  url: e.luma,
+  image: coverFor(e.slug),
+  description: e.blurb,
+  madbuilders: true,
+  private: e.private,
+}));
+
+const calendarEvents = [...madbuildersEvents, ...externalEvents];
 ---
 
 <Layout title="Madrid for builders - mad.builders" image="/og-madrid.png">
   <!-- section subnav -->
   <nav class="subnav mono" aria-label="page sections">
     <div class="wrap subnav-inner">
-      <a href="#communities">communities</a>
       <a href="#calendar">calendar</a>
       <a href="#spots">map</a>
+      <a href="#communities">communities</a>
     </div>
   </nav>
 
-  <section class="page-head">
+  <section class="section madrid-head" id="hero">
     <div class="wrap">
-      <p class="kicker">the city</p>
-      <h1 class="section-title">The builder's guide to Madrid</h1>
+      <h1 class="section-title madrid-title">Builder's guide to <span>Madrid</span></h1>
       <p class="lede">
-        Founders are moving here, companies are opening offices here, and the weather doesn't
-        hurt. A working map of the scene, kept by people who live in it.
+        The people, places and events you can't miss.
       </p>
       <div class="stat-row">
         {stats.map((s) => (
           <div class="stat">
-            <span class="stat-value">{s.value}</span>
-            <span class="stat-label">{s.label}</span>
-          </div>
-        ))}
-      </div>
-      <p class="stat-source mono">
-        Source: <a href={statsSource.url} target="_blank" rel="noopener">{statsSource.label}</a>
-      </p>
-    </div>
-  </section>
-
-  <section class="section light" id="communities">
-    <div class="wrap">
-      <h2 class="section-title">Who's organizing</h2>
-      <p class="lede">The communities and meetups keeping the Madrid scene moving.</p>
-      <div class="community-grid">
-        {madridCommunities.map((c) => (
-          <div class="community">
-            <h3>{c.name}</h3>
-            <p>{c.what}</p>
-            {c.url && <a class="mono" href={c.url} target="_blank" rel="noopener">visit →</a>}
+            <h3 class="stat-heading"><span class="stat-number">{s.value}</span> <span class="stat-label">{s.label}</span></h3>
+            <span class="stat-detail">{s.detail}</span>
           </div>
         ))}
       </div>
     </div>
   </section>
 
-  <section class="section" id="calendar">
+  <section class="section light" id="calendar">
     <div class="wrap">
-      <h2 class="section-title">What's on this week</h2>
+      <h2 class="section-title">Calendar</h2>
       <p class="lede">Builder events across the city, ours included.</p>
-      {site.lumaEmbed && (
-        <iframe
-          src={site.lumaEmbed}
-          class="luma-embed"
-          title="events calendar"
-          loading="lazy"
-        />
-      )}
-      <a class="btn cal-btn" href={site.lumaCalendar} target="_blank" rel="noopener">open the calendar →</a>
+
+      <div class="cal" id="cal">
+        <div class="cal-bar">
+          <div class="cal-nav mono">
+            <button type="button" class="cal-step" data-nav="prev" aria-label="previous">‹</button>
+            <span class="cal-range" id="cal-range">—</span>
+            <button type="button" class="cal-step" data-nav="next" aria-label="next">›</button>
+            <button type="button" class="cal-todaybtn" data-nav="today">today</button>
+          </div>
+          <div class="cal-views mono" role="tablist" aria-label="calendar view">
+            <button type="button" class="active" data-view="week">week</button>
+            <button type="button" data-view="month">month</button>
+          </div>
+        </div>
+        <div class="cal-body" id="cal-body"></div>
+      </div>
+
+      <div class="cal-modal" id="cal-modal" hidden>
+        <div class="cal-modal-backdrop" data-close></div>
+        <div class="cal-modal-card" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title">
+          <button type="button" class="cal-modal-close" data-close aria-label="close">×</button>
+          <img class="cal-modal-img" id="cal-modal-img" alt="" decoding="async" hidden />
+          <div class="cal-modal-text">
+            <span class="cal-modal-when mono" id="cal-modal-when"></span>
+            <h3 class="cal-modal-title" id="cal-modal-title"></h3>
+            <span class="cal-modal-priv mono" id="cal-modal-priv" hidden>
+              <svg viewBox="0 0 14 14" width="11" height="11" aria-hidden="true"><path d="M3.6 6V4.5a3.4 3.4 0 0 1 6.8 0V6" fill="none" stroke="currentColor" stroke-width="1.4"></path><rect x="2.4" y="6" width="9.2" height="6.6" rx="1.3" fill="currentColor"></rect></svg>
+              Private event
+            </span>
+            <span class="cal-modal-loc" id="cal-modal-loc"></span>
+            <p class="cal-modal-desc" id="cal-modal-desc"></p>
+            <a class="btn cal-modal-cta" id="cal-modal-cta" target="_blank" rel="noopener">View event →</a>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="section light" id="spots">
+  <section class="section" id="spots">
     <div class="wrap">
-      <h2 class="section-title">Where things happen</h2>
+      <h2 class="section-title">Map</h2>
       <p class="lede">
-        Cafés you can actually work from, VC offices, and the hubs in between. Locations are
-        approximate, so ping us if we missed your spot.
+        Startups, VCs and hubs.
       </p>
       <div class="legend mono">
         {kinds.map((k) => (
@@ -89,29 +122,326 @@ const kinds = [
       <div id="map"></div>
     </div>
   </section>
+
+  <section class="section light" id="communities">
+    <div class="wrap">
+      <h2 class="section-title">Communities</h2>
+      <p class="lede">Meetups, communities and builders.</p>
+
+      <div class="spot-list">
+        {spotlights.map((s) => (
+          <a class={`spot-row spot-${s.kind}`} href={s.url} target="_blank" rel="noopener">
+            <span class={`spot-thumb${s.logo ? ' is-logo' : ''}`}>
+              <img src={s.image} alt={s.name} loading="lazy" decoding="async" />
+            </span>
+            <span class="spot-main">
+              <h3 class="spot-name">{s.name}</h3>
+              <span class="spot-what">{s.what}</span>
+            </span>
+            <span class="spot-link mono">Visit →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
 </Layout>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script is:inline define:vars={{ spots, kinds }}>
-  const map = L.map('map', { scrollWheelZoom: false }).setView([40.4254, -3.6986], 13.5);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  const CENTER = [40.4254, -3.6986];
+  const map = L.map('map', { scrollWheelZoom: false }).setView(CENTER, 13.5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     maxZoom: 18,
   }).addTo(map);
 
-  const colorFor = Object.fromEntries(kinds.map((k) => [k.key, k.color]));
+  const root = getComputedStyle(document.documentElement);
+  const resolveColor = (value) => {
+    const token = value.match(/^var\((--[^)]+)\)$/)?.[1];
+    return token ? root.getPropertyValue(token).trim() : value;
+  };
+  const colorFor = Object.fromEntries(kinds.map((k) => [k.key, resolveColor(k.color)]));
+  const markerStroke = resolveColor('var(--green)');
+
+  // Popup link icons (website + X/Twitter).
+  const GLOBE_SVG =
+    '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M1.4 8h13.2M8 1.4c2 2.1 2 11.1 0 13.2M8 1.4c-2 2.1-2 11.1 0 13.2" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
+  const X_SVG =
+    '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M9.52 6.78 14.48 1h-1.18L8.99 6.02 5.55 1H1l5.2 7.57L1 14.86h1.18l4.55-5.29 3.63 5.29H15L9.52 6.78Zm-1.61 1.87-.53-.76L2.6 1.9h1.8l3.39 4.85.53.75 4.4 6.3h-1.8L7.91 8.65Z"/></svg>';
+
+  map.getContainer().addEventListener(
+    'wheel',
+    (event) => {
+      if (!event.metaKey && !event.ctrlKey) return;
+      event.preventDefault();
+      const nextZoom = map.getZoom() + (event.deltaY > 0 ? -1 : 1);
+      map.setZoomAround(map.mouseEventToContainerPoint(event), nextZoom);
+    },
+    { passive: false }
+  );
+
+  // Spots without a fixed address (lat/lng omitted) are fanned out in a circle
+  // around Puerta del Sol so they're all visible instead of stacking on one
+  // point. The ring radius grows with the count to keep neighbours apart.
+  const SOL = [40.4169, -3.7038];
+  const COS_LAT = Math.cos((SOL[0] * Math.PI) / 180);
+  const floating = spots.filter((s) => s.lat == null || s.lng == null);
+  const CHORD = 0.0038; // min spacing between neighbours, in degrees of latitude
+  const posFor = (s, i) => {
+    if (s.lat != null && s.lng != null) return [s.lat, s.lng];
+    const n = floating.length;
+    if (n === 1) return SOL;
+    const r = CHORD / (2 * Math.sin(Math.PI / n));
+    const a = (2 * Math.PI * i) / n - Math.PI / 2;
+    return [SOL[0] + r * Math.sin(a), SOL[1] + (r / COS_LAT) * Math.cos(a)];
+  };
+
   spots.forEach((s) => {
-    L.circleMarker([s.lat, s.lng], {
-      radius: 8,
-      color: colorFor[s.kind],
-      fillColor: colorFor[s.kind],
-      fillOpacity: 0.85,
-      weight: 1,
-    })
-      .addTo(map)
-      .bindPopup(`<strong>${s.name}</strong><br>${s.note}`);
+    const color = colorFor[s.kind] || markerStroke;
+    const pos = posFor(s, floating.indexOf(s));
+    let marker;
+    if (s.logo) {
+      // Logo inside a circle; the ring colour encodes the category.
+      const icon = L.divIcon({
+        className: 'map-logo-pin',
+        html: `<span class="map-logo" style="border-color:${color}"><img src="${s.logo}" alt="" loading="lazy" /></span>`,
+        iconSize: [42, 42],
+        iconAnchor: [21, 21],
+        popupAnchor: [0, -22],
+      });
+      marker = L.marker(pos, { icon });
+    } else {
+      marker = L.circleMarker(pos, {
+        radius: 8,
+        color: markerStroke,
+        fillColor: color,
+        fillOpacity: 0.92,
+        weight: 2,
+      });
+    }
+    const link = (href, label, svg) =>
+      `<a href="${href}" target="_blank" rel="noopener" aria-label="${label}" title="${label}">${svg}</a>`;
+    const links = [];
+    if (s.url) links.push(link(s.url, 'Website', GLOBE_SVG));
+    if (s.twitter) links.push(link(s.twitter, 'X', X_SVG));
+    const linksHtml = links.length ? `<div class="map-pop-links">${links.join('')}</div>` : '';
+    marker.addTo(map).bindPopup(`<strong>${s.name}</strong><br>${s.note}${linksHtml}`);
   });
+</script>
+
+<script is:inline define:vars={{ calendarEvents }}>
+  (() => {
+    const cal = document.getElementById('cal');
+    if (!cal) return;
+    const body = document.getElementById('cal-body');
+    const rangeLabel = document.getElementById('cal-range');
+
+    const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Local-date helpers (avoid UTC shifts: events are plain 'YYYY-MM-DD').
+    const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+    const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    // Monday-based weekday index (0 = Mon … 6 = Sun).
+    const isoDow = (d) => (d.getDay() + 6) % 7;
+
+    // Group events by date key for O(1) lookups.
+    const byDay = {};
+    for (const e of calendarEvents) (byDay[e.date] ||= []).push(e);
+    for (const k in byDay) byDay[k].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+    // "Today" must be the Madrid-local date, not the visitor's: events are stored
+    // as Madrid-local 'YYYY-MM-DD', so a visitor in another timezone would
+    // otherwise highlight the wrong day (and default week) around midnight.
+    const [ty, tm, td] = new Date()
+      .toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
+      .split('-')
+      .map(Number);
+    const today = new Date(ty, tm - 1, td);
+    const todayKey = key(today);
+    // Monday of the current week — the week view always starts here, regardless
+    // of which weekday today is.
+    const weekStart = addDays(today, -isoDow(today));
+    let view = 'week';
+    let anchor = weekStart; // week: window start (Monday); month: any day in the month
+
+    // Escape event fields before they go into innerHTML — the data is
+    // repo-controlled today, but external titles/locations shouldn't be able to
+    // inject markup if someone pastes one in.
+    const esc = (s) =>
+      String(s).replace(
+        /[&<>"']/g,
+        (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+      );
+
+    const el = (tag, cls, html) => {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (html != null) n.innerHTML = html;
+      return n;
+    };
+
+    // Event detail modal (shared by the week and month views).
+    const modal = document.getElementById('cal-modal');
+    const modalImg = document.getElementById('cal-modal-img');
+    const modalWhen = document.getElementById('cal-modal-when');
+    const modalTitle = document.getElementById('cal-modal-title');
+    const modalLoc = document.getElementById('cal-modal-loc');
+    const modalPriv = document.getElementById('cal-modal-priv');
+    const modalDesc = document.getElementById('cal-modal-desc');
+    const modalCta = document.getElementById('cal-modal-cta');
+
+    const longDate = (dateStr, time, endTime) => {
+      const [y, m, dd] = dateStr.split('-').map(Number);
+      const d = new Date(y, m - 1, dd);
+      const date = `${DOW[isoDow(d)]} ${dd} ${MONTHS[m - 1]} ${y}`;
+      return time ? `${date} · ${time}${endTime ? '–' + endTime : ''}` : date;
+    };
+
+    const openModal = (e) => {
+      if (e.image) {
+        modalImg.src = e.image;
+        modalImg.hidden = false;
+      } else {
+        modalImg.removeAttribute('src');
+        modalImg.hidden = true;
+      }
+      modalWhen.textContent = longDate(e.date, e.time, e.endTime);
+      modalTitle.textContent = e.title;
+      modalLoc.textContent = e.location || '';
+      modalLoc.hidden = !e.location;
+      modalPriv.hidden = !e.private;
+      modalDesc.textContent = e.description || '';
+      modalDesc.hidden = !e.description;
+      if (e.url) {
+        modalCta.href = e.url;
+        modalCta.hidden = false;
+      } else {
+        modalCta.hidden = true;
+      }
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    };
+
+    modal.addEventListener('click', (ev) => {
+      if (ev.target.closest('[data-close]')) closeModal();
+    });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && !modal.hidden) closeModal();
+    });
+
+    // Small lock glyph used to mark invite-only (private) events.
+    const LOCK =
+      '<svg class="cal-lock" viewBox="0 0 14 14" width="11" height="11" aria-hidden="true"><path d="M3.6 6V4.5a3.4 3.4 0 0 1 6.8 0V6" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="2.4" y="6" width="9.2" height="6.6" rx="1.3" fill="currentColor"/></svg>';
+
+    const eventNode = (e) => {
+      const n = el('button', 'cal-event' + (e.madbuilders ? ' is-mad' : ' is-ext'));
+      n.type = 'button';
+      n.addEventListener('click', () => openModal(e));
+      const img = e.image ? `<img class="cal-event-img" src="${esc(e.image)}" alt="" loading="lazy" decoding="async" />` : '';
+      const priv = e.private ? `<span class="cal-priv mono">${LOCK}private</span>` : '';
+      const time = e.time ? `<span class="cal-event-time mono">${esc(e.time)}${e.endTime ? '–' + esc(e.endTime) : ''}</span>` : '';
+      const loc = e.location ? `<span class="cal-event-loc">${esc(e.location)}</span>` : '';
+      n.innerHTML = `${img}${priv}${time}<span class="cal-event-title">${esc(e.title)}</span>${loc}`;
+      return n;
+    };
+
+    const renderWeek = () => {
+      const start = anchor;
+      const end = addDays(start, 6);
+      rangeLabel.textContent =
+        start.getMonth() === end.getMonth()
+          ? `${start.getDate()}–${end.getDate()} ${MONTHS[end.getMonth()]} ${end.getFullYear()}`
+          : `${start.getDate()} ${MONTHS[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`;
+
+      const grid = el('div', 'cal-week');
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(start, i);
+        const k = key(d);
+        const day = el('div', 'cal-day' + (k === todayKey ? ' is-today' : ''));
+        day.appendChild(
+          el('div', 'cal-day-head', `<span class="cal-dow mono">${DOW[isoDow(d)]}</span><span class="cal-dom">${d.getDate()}</span>`)
+        );
+        const list = el('div', 'cal-day-events');
+        const evs = byDay[k];
+        if (evs && evs.length) evs.forEach((e) => list.appendChild(eventNode(e)));
+        else list.appendChild(el('div', 'cal-empty mono', '·'));
+        day.appendChild(list);
+        grid.appendChild(day);
+      }
+      body.replaceChildren(grid);
+    };
+
+    const renderMonth = () => {
+      const y = anchor.getFullYear();
+      const m = anchor.getMonth();
+      rangeLabel.textContent = `${MONTHS[m]} ${y}`;
+
+      const first = new Date(y, m, 1);
+      const gridStart = addDays(first, -isoDow(first));
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      // 5 or 6 rows depending on how the month falls.
+      const weeks = Math.ceil((isoDow(first) + daysInMonth) / 7);
+
+      const grid = el('div', 'cal-month');
+      DOW.forEach((d) => grid.appendChild(el('div', 'cal-month-dow mono', d)));
+
+      for (let i = 0; i < weeks * 7; i++) {
+        const d = addDays(gridStart, i);
+        const k = key(d);
+        const out = d.getMonth() !== m;
+        const cell = el('div', 'cal-cell' + (out ? ' is-out' : '') + (k === todayKey ? ' is-today' : ''));
+        cell.appendChild(el('div', 'cal-cell-num mono', String(d.getDate())));
+        const evs = byDay[k];
+        if (evs && evs.length) {
+          const list = el('div', 'cal-cell-events');
+          evs.forEach((e) => {
+            const chip = el('button', 'cal-chip' + (e.madbuilders ? ' is-mad' : ' is-ext'));
+            chip.type = 'button';
+            chip.addEventListener('click', () => openModal(e));
+            const chipLock = e.private ? `<span class="cal-chip-lock">${LOCK}</span>` : '';
+            chip.innerHTML = `${chipLock}${e.time ? `<span class="cal-chip-time mono">${esc(e.time)}</span>` : ''}<span class="cal-chip-title">${esc(e.title)}</span>`;
+            list.appendChild(chip);
+          });
+          cell.appendChild(list);
+        }
+        grid.appendChild(cell);
+      }
+      body.replaceChildren(grid);
+    };
+
+    const render = () => (view === 'week' ? renderWeek() : renderMonth());
+
+    cal.querySelector('.cal-views').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-view]');
+      if (!btn) return;
+      view = btn.dataset.view;
+      anchor = view === 'week' ? weekStart : new Date(today.getFullYear(), today.getMonth(), 1);
+      cal.querySelectorAll('.cal-views button').forEach((b) => b.classList.toggle('active', b === btn));
+      render();
+    });
+
+    cal.querySelector('.cal-nav').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-nav]');
+      if (!btn) return;
+      const dir = btn.dataset.nav;
+      if (dir === 'today') {
+        anchor = view === 'week' ? weekStart : new Date(today.getFullYear(), today.getMonth(), 1);
+      } else {
+        const step = dir === 'next' ? 1 : -1;
+        anchor = view === 'week' ? addDays(anchor, 7 * step) : new Date(anchor.getFullYear(), anchor.getMonth() + step, 1);
+      }
+      render();
+    });
+
+    render();
+  })();
 </script>
 
 <script>
@@ -119,79 +449,623 @@ const kinds = [
 </script>
 
 <style>
-  .page-head {
-    padding: 90px 0 80px;
+  .madrid-head {
+    padding-top: 64px;
+    padding-bottom: 56px;
+  }
+  .madrid-title {
+    color: var(--cream-dim);
+  }
+  .madrid-title span {
+    color: var(--cream);
   }
   .stat-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 32px;
-    margin-top: 56px;
-  }
-  .stat-value {
-    display: block;
-    font-size: clamp(40px, 6vw, 64px);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1;
-  }
-  .stat-label {
-    display: block;
-    color: var(--cream-dim);
-    margin-top: 12px;
-    max-width: 280px;
-  }
-  .stat-source {
-    margin-top: 28px;
-    font-size: 11px;
-    color: var(--cream-faint);
-    letter-spacing: 0.04em;
-  }
-  .stat-source a {
-    color: var(--cream-dim);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .stat-source a:hover {
-    color: var(--cream);
-  }
-
-  .community-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 26px;
-    margin-top: 48px;
-  }
-  .community {
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 26px;
-    background: var(--green-deep);
-    color: var(--cream);
-  }
-  .community h3 {
-    font-size: 20px;
-    margin-bottom: 10px;
-  }
-  .community p {
-    color: var(--cream-dim);
-    margin: 0 0 14px;
-    font-size: 15px;
-  }
-  .community a {
-    color: var(--cream);
-    font-size: 13px;
-  }
-
-  .luma-embed {
-    width: 100%;
-    height: 560px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 28px;
     margin-top: 40px;
   }
-  .cal-btn {
-    margin-top: 32px;
+  .stat {
+    border: 1px solid rgba(26, 52, 43, 0.14);
+    border-radius: 10px;
+    padding: 28px;
+    background: #fff;
+  }
+  .stat-heading {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.05;
+    max-width: 280px;
+    margin: 0;
+  }
+  .stat-number {
+    color: var(--green);
+  }
+  .stat-label {
+    color: rgba(26, 52, 43, 0.58);
+  }
+  .stat-detail {
+    display: block;
+    color: rgba(26, 52, 43, 0.72);
+    margin-top: 18px;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  /* featured spotlights as a list of lines: hubs, communities and events */
+  .spot-list {
+    margin-top: 44px;
+    border-top: 1px solid rgba(26, 52, 43, 0.14);
+  }
+  .spot-row {
+    --accent: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 22px 8px;
+    border-bottom: 1px solid rgba(26, 52, 43, 0.14);
+    color: var(--green);
+    text-decoration: none;
+    transition: background 0.15s ease, padding-left 0.15s ease;
+  }
+  .spot-row:hover {
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    padding-left: 16px;
+  }
+  .spot-hub {
+    --accent: var(--map-hub);
+  }
+  .spot-thumb {
+    flex-shrink: 0;
+    width: 96px;
+    height: 64px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--accent) 8%, #fff);
+    box-shadow: inset 0 0 0 1px rgba(26, 52, 43, 0.1);
+  }
+  .spot-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .spot-thumb.is-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--accent) 12%, var(--cream));
+  }
+  .spot-thumb.is-logo img {
+    width: auto;
+    max-width: 64%;
+    max-height: 60%;
+    object-fit: contain;
+  }
+  .spot-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .spot-name {
+    font-size: 19px;
+    margin: 0;
+    line-height: 1.1;
+  }
+  .spot-what {
+    color: rgba(26, 52, 43, 0.66);
+    font-size: 14px;
+    line-height: 1.45;
+    max-width: 60ch;
+  }
+  .spot-link {
+    flex-shrink: 0;
+    align-self: center;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .spot-row:hover .spot-link {
+    text-decoration: underline;
+  }
+  @media (max-width: 720px) {
+    .spot-row {
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .spot-link {
+      align-self: flex-start;
+      padding-left: 112px;
+    }
+  }
+</style>
+
+<!-- The calendar grid/events are built client-side via createElement, so they
+     never receive Astro's scoped data attribute. These styles must be global to
+     reach them. -->
+<style is:global>
+  .cal {
+    --cal-line: rgba(26, 52, 43, 0.14);
+    --cal-ink: rgba(26, 52, 43, 0.72);
+    --cal-faint: rgba(26, 52, 43, 0.45);
+    margin-top: 40px;
+    border: 1px solid var(--cal-line);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--cream) 92%, white);
+    overflow: hidden;
+  }
+  .cal-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--cal-line);
+  }
+  .cal-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .cal-range {
+    min-width: 11ch;
+    text-align: center;
+    color: var(--green);
+    letter-spacing: 0.02em;
+  }
+  .cal-bar button {
+    font-family: var(--font-mono);
+    color: var(--cal-ink);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .cal-step {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    line-height: 1;
+    border-color: var(--cal-line);
+  }
+  .cal-step:hover {
+    background: var(--green);
+    color: var(--cream);
+    border-color: var(--green);
+  }
+  .cal-todaybtn {
+    padding: 6px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-color: var(--cal-line);
+  }
+  .cal-todaybtn:hover {
+    background: var(--green);
+    color: var(--cream);
+    border-color: var(--green);
+  }
+  .cal-views {
+    display: inline-flex;
+    border: 1px solid var(--cal-line);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .cal-views button {
+    padding: 6px 14px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .cal-views button.active {
+    background: var(--green);
+    color: var(--cream);
+  }
+
+  /* week view */
+  .cal-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .cal-day {
+    min-height: 150px;
+    padding: 12px;
+    border-right: 1px solid var(--cal-line);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cal-day:last-child {
+    border-right: none;
+  }
+  .cal-day-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .cal-dow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cal-faint);
+  }
+  .cal-dom {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--green);
+  }
+  .cal-day.is-today {
+    background: color-mix(in srgb, var(--green) 7%, transparent);
+  }
+  .cal-day.is-today .cal-dom {
+    background: var(--green);
+    color: var(--cream);
+    border-radius: 999px;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .cal-day-events {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cal-event {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--green);
+    color: var(--cream);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .cal-event:hover {
+    transform: translateY(-1px);
+  }
+  /* madbuilders: filled green (default). external: light card with green ink. */
+  .cal-event.is-mad:hover {
+    background: var(--green-soft);
+  }
+  .cal-event.is-ext {
+    background: #fff;
+    color: var(--green);
+    border-color: var(--cal-line);
+  }
+  .cal-event.is-ext:hover {
+    background: color-mix(in srgb, var(--green) 6%, #fff);
+    border-color: color-mix(in srgb, var(--green) 35%, transparent);
+  }
+  .cal-event.is-ext .cal-event-time {
+    color: var(--cal-faint);
+  }
+  .cal-event.is-ext .cal-event-loc {
+    color: var(--cal-ink);
+  }
+  .cal-event-img {
+    width: 100%;
+    height: 72px;
+    object-fit: contain;
+    border-radius: 5px;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .cal-event-time {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--cream-dim);
+  }
+  .cal-event-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .cal-event-loc {
+    font-size: 11px;
+    color: var(--cream-dim);
+    line-height: 1.3;
+  }
+  /* private (invite-only) marker: a lock pill in the card corner */
+  .cal-priv {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--green);
+    color: var(--cream);
+    border: 1px solid var(--cream);
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    box-shadow: 0 2px 8px rgba(20, 42, 34, 0.35);
+  }
+  /* on our filled-green cards, invert so the pill still pops */
+  .cal-event.is-mad .cal-priv {
+    background: var(--cream);
+    color: var(--green);
+    border-color: var(--green);
+  }
+  .cal-lock {
+    display: block;
+    width: 10px;
+    height: 10px;
+  }
+  .cal-empty {
+    color: rgba(26, 52, 43, 0.25);
+    font-size: 14px;
+  }
+
+  /* month view */
+  .cal-month {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+  .cal-month-dow {
+    padding: 10px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cal-faint);
+    border-bottom: 1px solid var(--cal-line);
+  }
+  .cal-cell {
+    min-height: 104px;
+    padding: 8px;
+    border-right: 1px solid var(--cal-line);
+    border-bottom: 1px solid var(--cal-line);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cal-cell:nth-child(7n) {
+    border-right: none;
+  }
+  .cal-cell.is-out {
+    background: rgba(26, 52, 43, 0.03);
+  }
+  .cal-cell.is-out .cal-cell-num {
+    color: rgba(26, 52, 43, 0.3);
+  }
+  .cal-cell-num {
+    font-size: 12px;
+    color: var(--cal-ink);
+  }
+  .cal-cell.is-today .cal-cell-num {
+    background: var(--green);
+    color: var(--cream);
+    border-radius: 999px;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cal-cell-events {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .cal-chip {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    width: 100%;
+    padding: 3px 6px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: var(--green);
+    color: var(--cream);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1.25;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .cal-chip.is-mad:hover {
+    background: var(--green-soft);
+  }
+  .cal-chip.is-ext {
+    background: #fff;
+    color: var(--green);
+    border-color: var(--cal-line);
+  }
+  .cal-chip.is-ext:hover {
+    background: color-mix(in srgb, var(--green) 6%, #fff);
+    border-color: color-mix(in srgb, var(--green) 35%, transparent);
+  }
+  .cal-chip.is-ext .cal-chip-time {
+    color: var(--cal-faint);
+  }
+  .cal-chip-time {
+    font-size: 9px;
+    color: var(--cream-dim);
+    flex-shrink: 0;
+  }
+  .cal-chip-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cal-chip-lock {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .cal-chip-lock svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  /* event detail modal */
+  .cal-modal {
+    position: fixed;
+    inset: 0;
+    /* above the sticky nav (--z-nav) and subnav (--z-subnav) */
+    z-index: calc(var(--z-nav) + 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .cal-modal[hidden] {
+    display: none;
+  }
+  .cal-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(26, 52, 43, 0.55);
+    cursor: pointer;
+  }
+  .cal-modal-card {
+    position: relative;
+    z-index: 1;
+    width: min(440px, 100%);
+    background: var(--cream);
+    border-radius: 14px;
+    overflow: hidden auto;
+    max-height: calc(100vh - 48px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  }
+  .cal-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--green);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .cal-modal-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+  }
+  .cal-modal-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 22px 24px 24px;
+  }
+  .cal-modal-when {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--green);
+  }
+  .cal-modal-title {
+    margin: 0;
+    font-size: 22px;
+    color: var(--green);
+  }
+  .cal-modal-loc {
+    font-size: 14px;
+    color: rgba(26, 52, 43, 0.72);
+  }
+  .cal-modal-priv {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: var(--green);
+    color: var(--cream);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+  }
+  .cal-modal-desc {
+    margin: 4px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(26, 52, 43, 0.72);
+  }
+  .cal-modal-cta {
+    margin-top: 10px;
+    align-self: flex-start;
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .cal-modal-cta:hover {
+    background: var(--green);
+    color: var(--cream);
+  }
+  .cal-modal img[hidden],
+  .cal-modal a[hidden],
+  .cal-modal p[hidden],
+  .cal-modal span[hidden] {
+    display: none;
+  }
+
+  /* mobile: stack the week into a vertical agenda, scroll the month */
+  @media (max-width: 720px) {
+    .cal-week {
+      grid-template-columns: 1fr;
+    }
+    .cal-day {
+      min-height: 0;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 16px;
+      border-right: none;
+      border-bottom: 1px solid var(--cal-line);
+    }
+    .cal-day:last-child {
+      border-bottom: none;
+    }
+    .cal-day-head {
+      flex-direction: column;
+      align-items: center;
+      width: 48px;
+      flex-shrink: 0;
+    }
+    .cal-day-events {
+      flex: 1;
+    }
+    .cal-month {
+      font-size: 10px;
+    }
+    .cal-cell {
+      min-height: 64px;
+      padding: 5px;
+    }
+    .cal-chip-title {
+      display: none;
+    }
+    .cal-chip {
+      padding: 3px;
+    }
+    .cal-chip-time {
+      font-size: 8px;
+    }
   }
 
   .legend {
@@ -214,9 +1088,47 @@ const kinds = [
     display: inline-block;
   }
   #map {
-    height: 520px;
+    height: 720px;
     border-radius: 10px;
     border: 1px solid var(--line);
+    background: var(--cream);
+  }
+  /* logo markers: a logo in a circle, ringed in the category colour */
+  .map-logo-pin {
+    background: none;
+    border: none;
+  }
+  .map-logo {
+    display: block;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid var(--green);
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(20, 42, 34, 0.3);
+  }
+  .map-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+  }
+  /* popup website + X icon links */
+  .leaflet-popup-content .map-pop-links {
+    display: flex;
+    gap: 6px;
+    margin-top: 9px;
+  }
+  .leaflet-popup-content .map-pop-links a {
+    display: inline-flex;
+    color: var(--green);
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+  }
+  .leaflet-popup-content .map-pop-links a:hover {
+    opacity: 1;
   }
 
   /* green-ink tweaks for the cream (.section.light) sections */
