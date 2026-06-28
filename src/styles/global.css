@@ -6,11 +6,19 @@
   --cream-dim: rgba(246, 245, 240, 0.62);
   --cream-faint: rgba(246, 245, 240, 0.38);
   --line: rgba(246, 245, 240, 0.14);
+  /* /madrid map category colours (legend swatch + marker border). Tunable —
+     the brand is green/cream, so these are three earthy accents picked to read
+     both on the dark-green legend and on the light map. */
+  --map-company: #7d4f93; /* plum */
+  --map-vc: #c08a2c; /* ochre */
+  --map-hub: #3f8a86; /* teal */
   --font-sans: 'Archivo', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
   /* the wordmark / logo face — self-hosted variable font */
   --font-display: 'Bricolage Grotesque Variable', var(--font-sans);
   --max: 1180px;
+  --z-nav: 1200;
+  --z-subnav: 1100;
 }
 
 * {
@@ -89,7 +97,7 @@ img {
 .subnav {
   position: sticky;
   top: 64px;
-  z-index: 90;
+  z-index: var(--z-subnav);
   background: color-mix(in srgb, var(--green) 90%, transparent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);

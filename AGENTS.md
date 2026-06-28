@@ -19,6 +19,12 @@ the single source of agent conventions for the repo; CLAUDE.md points here.
 - Don't run `pnpm approve-builds`. esbuild and sharp build scripts are
   intentionally declined in `pnpm-workspace.yaml` (rationale in the file).
 
+## Workflow
+
+- Never commit, stage, push, or open a PR unless the user explicitly asks for it.
+- Do not run checks, start a dev server, or open the page/browser unless the user
+  explicitly asks for it.
+
 ## Conventions
 
 - Design tokens live in `src/styles/global.css` (`:root`). Reuse them; never hardcode colours.
