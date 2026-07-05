@@ -1,0 +1,132 @@
+---
+// Self-contained layout for the /sz popup city page.
+// Kept separate from the main site Layout so this page keeps its own design
+// and color tokens without inheriting the mad.builders nav/footer — but it
+// shares the brand type faces (Archivo, IBM Plex Mono, Bricolage Grotesque).
+import '@fontsource/archivo/latin-400.css';
+import '@fontsource/archivo/latin-500.css';
+import '@fontsource/archivo/latin-600.css';
+import '@fontsource/archivo/latin-700.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
+import '@fontsource/ibm-plex-mono/latin-500.css';
+import '@fontsource-variable/bricolage-grotesque/wght.css';
+interface Props {
+  title?: string;
+  description?: string;
+  bodyClass?: string;
+}
+
+const {
+  title = 'mad.sz, un puente con China - mad.builders',
+  description = 'Una popup city de cuatro semanas en Shenzhen. Inmersión en el ecosistema tech en China: labs, fábricas, cultura. Organizado por mad.builders y the-mu.',
+  bodyClass,
+} = Astro.props;
+
+const base = Astro.site ?? new URL('https://www.mad.builders');
+const ogImage = new URL('/og-sz.png', base).toString();
+const canonical = new URL(Astro.url.pathname, base).toString();
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --paper: #faf6ef;
+    --ink: #191714;
+    --ink-soft: #57534b;
+    --blue: #2b46d4;
+    --blue-dark: #1e33a3;
+    --terra: #c0553d;
+    --cream: #fffdf8;
+    --line: #e4ddd0;
+
+    /* week accents, pulled from the muShanghai theme banners */
+    --w-ai: #e0492e;
+    --w-bio: #a3b021;
+    --w-robotics: #5b4bc4;
+    --w-culture: #e88cb6;
+
+    --font-sans: 'Archivo', system-ui, -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+    --font-display: 'Bricolage Grotesque Variable', var(--font-sans);
+    --font-body: var(--font-sans);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    line-height: 1.08;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>

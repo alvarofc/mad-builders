@@ -1,0 +1,1383 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '../layouts/ShenzhenLayout.astro';
+import { EVENT, APPLY_URL, images, weeks, companies, faqs } from '../data/shenzhen';
+// the-mu logo for the hero lockup. the-mu = "The Mu" popup-city organiser; its
+// logo ships cream-on-transparent, so both marks get a mono ink treatment via CSS.
+// mad.builders wordmark is referenced from /public by URL below.
+import theMu from '../assets/logos/sisters/the-mu.svg';
+
+// Partner links: mad.builders back to the site home, the-mu to their site.
+const MAD_URL = '/';
+const THE_MU_URL = 'https://mushanghai.xyz/';
+
+const stamps = ['活', '科', '机', '道'];
+const gallery = [
+  images.themuStage,
+  images.galleryNight,
+  images.themuTownhall,
+  images.galleryKeynote,
+  images.galleryGlove,
+  images.themuStageDay,
+];
+
+// Photos that open in the lightbox on click (everything except the hero and the
+// decorative marquee). Order here = the prev/next order inside the lightbox.
+// Indices are wired to each thumbnail via data-zoom-index below.
+const zoomPhotos = [
+  ...weeks.map((w) => w.img), // 0–3
+  images.hackathon, // 4
+  images.chinaRobot, // 5
+  images.chinaPanel, // 6
+  images.themuBanners, // 7
+];
+---
+
+<Layout bodyClass="po" title="mad.sz, un puente con China - mad.builders">
+  <header class="po-nav">
+    <div class="po-nav-inner">
+      <a href="#top" class="po-logo">
+        <span>mad.<b>sz</b></span>
+      </a>
+      <nav>
+        <a href="#plan">plan</a>
+        <a href="#china">china</a>
+        <a href="#the-mu">the-mu</a>
+        <a href="#faq">faq</a>
+      </nav>
+      <div class="po-lang" role="group" aria-label="Idioma / Language / 语言">
+        <button type="button" class="po-lang-btn" data-lang="es">ES</button>
+        <button type="button" class="po-lang-btn" data-lang="en">EN</button>
+        <button type="button" class="po-lang-btn" data-lang="zh">中文</button>
+      </div>
+      <a href={APPLY_URL} class="po-nav-cta">Aplicar</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="po-hero">
+      <div class="po-hero-inner">
+        <p class="po-eyebrow">
+          <a class="po-eyebrow-link" href={MAD_URL} aria-label="mad.builders">
+            <img class="po-eyebrow-logo po-eyebrow-logo-mad" src="/logo/mad-builders-green.svg" alt="mad.builders" />
+          </a>
+          <span class="po-eyebrow-x">×</span>
+          <a class="po-eyebrow-link" href={THE_MU_URL} target="_blank" rel="noopener" aria-label="the-mu">
+            <img class="po-eyebrow-logo po-eyebrow-logo-mu" src={theMu.src} alt="the-mu" />
+          </a>
+        </p>
+        <h1>mad.<em>sz</em></h1>
+        <p class="po-hero-sub">Un mes de inmersión en el ecosistema deep tech y cultural en China.</p>
+
+        <div class="po-stickers">
+          <div class="po-stickers-row">
+            <span class="po-sticker po-sticker-blue">📍 Shenzhen</span>
+            <span class="po-sticker po-sticker-lime">🗓 {EVENT.dateShort}</span>
+          </div>
+          <div class="po-stickers-row">
+            <span class="po-sticker po-sticker-pink">✦ 4 semanas · 12 builders</span>
+          </div>
+        </div>
+      </div>
+
+      <figure class="po-hero-fig">
+        <Image
+          src={images.hero}
+          alt="Escenario al anochecer de muShanghai con un ponente y el público sentado frente a la pantalla"
+          widths={[700, 1100, 1600]}
+          sizes="(max-width: 900px) 100vw, 46vw"
+          loading="eager"
+        />
+        <span class="po-fig-tag">muShanghai '26</span>
+      </figure>
+    </section>
+
+    <!-- EL PLAN -->
+    <section class="po-section" id="plan">
+      <div class="po-h">
+        <span class="po-h-stamp">01</span>
+        <h2>el plan</h2>
+      </div>
+      <p class="po-lede">
+        Una <mark>popup city de cuatro semanas temáticas</mark> en Shenzhen. Seleccionamos un grupo de builders y
+        <mark>cubrimos los gastos</mark>.
+      </p>
+
+      <div class="po-weeks">
+        {
+          weeks.map((w, i) => (
+            <article class="po-week" style={`--c: ${w.color}`}>
+              <div class="po-week-photo po-zoom" data-zoom-index={i}>
+                <Image src={w.img} alt={w.alt} widths={[400, 700]} sizes="(max-width: 640px) 100vw, 25vw" />
+                <span class="po-week-stamp" aria-hidden="true">{stamps[i]}</span>
+              </div>
+              <div class="po-week-body">
+                <span class="po-week-n">semana {w.n}</span>
+                <h3>{w.name}</h3>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="po-plan-two">
+        <div class="po-panel po-panel-cream">
+          <h3>Empresas del ecosistema</h3>
+          <p>Workshops y visitas con las principales empresas del ecosistema deep tech en China.</p>
+          <div class="po-chips">
+            {companies.map((c) => <span class="po-chip">{c}</span>)}
+            <span class="po-chip po-chip-dash">y más…</span>
+          </div>
+        </div>
+        <div class="po-panel po-panel-photo">
+          <Image src={images.hackathon} alt="Equipo ganador de un hackathon en muShanghai posando con su premio y un robot cuadrúpedo" widths={[500, 900]} sizes="(max-width: 900px) 100vw, 44vw" class="po-zoom" data-zoom-index={4} />
+          <div class="po-panel-tag">
+            <h3>Hackathones + Unconference</h3>
+            <p>Construye y comparte tu proyecto.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- POR QUÉ CHINA -->
+    <section class="po-china" id="china">
+      <div class="po-china-inner">
+        <div class="po-china-text">
+          <div class="po-h po-h-invert">
+            <span class="po-h-stamp">02</span>
+            <h2>por qué china</h2>
+          </div>
+          <p>
+            Los <mark>modelos open source</mark> van a tener un papel clave en el futuro de la IA, y la IA física
+            como <mark>wearables y robots</mark> está tomando cada vez más protagonismo. China
+            lidera en ambos frentes, y en otras áreas del ecosistema deep tech.
+          </p>
+          <p>
+            Pero desde fuera es difícil saber qué está pasando: la barrera del idioma y unas redes propias como WeChat
+            hacen que popup cities como muShenzhen sean <mark>la mejor forma de conocer lo que está pasando y
+            establecer contactos</mark>.
+          </p>
+        </div>
+        <div class="po-china-photos">
+          <figure><Image src={images.chinaRobot} alt="Robot cuadrúpedo repartiendo refrescos" widths={[400, 800]} sizes="(max-width: 900px) 50vw, 22vw" class="po-zoom" data-zoom-index={5} /></figure>
+          <figure><Image src={images.chinaPanel} alt="Panel sobre IA física y cadena de suministro" widths={[400, 800]} sizes="(max-width: 900px) 50vw, 22vw" class="po-zoom" data-zoom-index={6} /></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- THEMU -->
+    <section class="po-section" id="the-mu">
+      <div class="po-h">
+        <span class="po-h-stamp">03</span>
+        <h2>the-mu</h2>
+      </div>
+      <div class="po-themu">
+        <div class="po-panel po-panel-cream po-themu-text">
+          <p>
+            nuestros amigos de <a class="po-inline-link" href={THE_MU_URL} target="_blank" rel="noopener">the-mu</a>
+            llevan años organizando popup cities por todo el mundo. El último evento, <mark>muShanghai</mark>, fue un éxito, con la participación
+            de empresas como z.ai, Unitree o NIO.
+          </p>
+          <p>
+            Desde <a class="po-inline-link" href={MAD_URL}><mark>mad.builders</mark></a> organizamos un grupo para llevar
+            a builders desde España a la próxima edición, en Shenzhen.
+          </p>
+        </div>
+        <figure class="po-themu-fig">
+          <Image src={images.themuBanners} alt="Banners de las semanas temáticas de muShanghai" widths={[600, 1000, 1400]} sizes="(max-width: 900px) 100vw, 52vw" class="po-zoom" data-zoom-index={7} />
+        </figure>
+      </div>
+    </section>
+
+    <!-- marquee -->
+    <div class="po-marquee" aria-hidden="true">
+      <div class="po-marquee-track">
+        {[...gallery, ...gallery].map((g) => <Image src={g} alt="" widths={[440]} sizes="340px" class="po-marquee-img" />)}
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <section class="po-section po-faq-section" id="faq">
+      <div class="po-h">
+        <span class="po-h-stamp">04</span>
+        <h2>faq</h2>
+      </div>
+      <div class="po-faq">
+        {
+          faqs.map((f) => (
+            <details class="po-faq-item">
+              <summary>
+                {f.q}
+                <span class="po-faq-plus" aria-hidden="true">+</span>
+              </summary>
+              <p>{f.a}</p>
+            </details>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- APLICACIONES -->
+    <section class="po-apply" id="aplicaciones">
+      <div class="po-apply-stamps" aria-hidden="true">
+        {stamps.map((s) => <span>{s}</span>)}
+      </div>
+      <h2>¿Te vienes a<br />Shenzhen<em>?</em></h2>
+      <p>Cuatro semanas, gastos cubiertos, en el corazón de la tecnología en China.</p>
+      <div class="po-apply-cta">
+        <span class="po-btn po-btn-light po-btn-disabled" aria-disabled="true" data-i18n="applyBtn">Aplicar ahora →</span>
+        <span class="po-btn po-btn-ghost-light po-btn-disabled" aria-disabled="true" data-i18n="sponsorBtn">Info para sponsors</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="po-footer">
+    <span>mad.<b>sz</b></span>
+    <p>Organizado por <a class="po-inline-link" href={MAD_URL}>mad.builders</a> × <a class="po-inline-link" href={THE_MU_URL} target="_blank" rel="noopener">the-mu</a></p>
+  </footer>
+
+  <!-- click-to-zoom lightbox for the content photos -->
+  <dialog id="po-lightbox" class="po-lightbox">
+    <button id="po-lb-close" class="po-lb-btn po-lb-close" aria-label="Cerrar">✕</button>
+    <button id="po-lb-prev" class="po-lb-btn" aria-label="Anterior">←</button>
+    <div class="po-lb-stage">
+      {zoomPhotos.map((p, i) => (
+        <Image src={p} alt="" widths={[800, 1400, 2000]} sizes="90vw" class="po-lb-img" data-index={i} loading="lazy" />
+      ))}
+    </div>
+    <button id="po-lb-next" class="po-lb-btn" aria-label="Siguiente">→</button>
+  </dialog>
+</Layout>
+
+<script>
+  const dialog = document.getElementById('po-lightbox') as HTMLDialogElement | null;
+  if (dialog) {
+    const imgs = [...dialog.querySelectorAll<HTMLImageElement>('.po-lb-img')];
+    let current = 0;
+
+    const show = (i: number) => {
+      current = (i + imgs.length) % imgs.length;
+      imgs.forEach((img, j) => (img.style.display = j === current ? 'block' : 'none'));
+    };
+
+    document.querySelectorAll<HTMLElement>('[data-zoom-index]').forEach((el) => {
+      el.addEventListener('click', () => {
+        show(Number(el.dataset.zoomIndex));
+        dialog.showModal();
+      });
+    });
+
+    (document.getElementById('po-lb-close') as HTMLButtonElement).addEventListener('click', () => dialog.close());
+    (document.getElementById('po-lb-prev') as HTMLButtonElement).addEventListener('click', () => show(current - 1));
+    (document.getElementById('po-lb-next') as HTMLButtonElement).addEventListener('click', () => show(current + 1));
+    // click on the backdrop (outside the image/buttons) closes
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!dialog.open) return;
+      if (e.key === 'ArrowLeft') show(current - 1);
+      if (e.key === 'ArrowRight') show(current + 1);
+    });
+  }
+</script>
+
+<script>
+  // Client-side language switch. The page ships in Spanish; the switch swaps
+  // every text node to EN / ZH and remembers the choice. Rich strings (marks,
+  // links) are stored as HTML. Spanish is captured from the DOM on load.
+  {
+    const $ = (s: string) => document.querySelector(s) as HTMLElement | null;
+    const $$ = (s: string) => [...document.querySelectorAll<HTMLElement>(s)];
+
+    const navLinks = $$('.po-nav nav a');
+    const cta = $('.po-nav-cta');
+    const heroSub = $('.po-hero-sub');
+    const stBlue = $('.po-sticker-blue');
+    const stLime = $('.po-sticker-lime');
+    const stPink = $('.po-sticker-pink');
+    const planH = $('#plan .po-h h2');
+    const lede = $('.po-lede');
+    const compH = $('#plan .po-panel-cream h3');
+    const compP = $('#plan .po-panel-cream p');
+    const chipMore = $('.po-chip-dash');
+    const hackH = $('.po-panel-tag h3');
+    const hackP = $('.po-panel-tag p');
+    const chinaH = $('#china .po-h h2');
+    const chinaPs = $$('#china .po-china-text p');
+    const themuPs = $$('#the-mu .po-themu-text p');
+    const faqH = $('#faq .po-h h2');
+    const faqSummaries = $$('#faq .po-faq-item summary');
+    const faqAnswers = $$('#faq .po-faq-item p');
+    const applyH = $('.po-apply h2');
+    const applyP = $('.po-apply > p');
+    const applyBtn = $('[data-i18n="applyBtn"]');
+    const sponsorBtn = $('[data-i18n="sponsorBtn"]');
+    const footer = $('.po-footer p');
+    const weekNames = $$('.po-week-body h3');
+    const weekLabels = $$('.po-week-n');
+    const langBtns = $$('.po-lang-btn');
+
+    // link snippets reused inside rich strings
+    const MU = `<a class="po-inline-link" href="https://mushanghai.xyz/" target="_blank" rel="noopener">the-mu</a>`;
+    const MAD = `<a class="po-inline-link" href="/">mad.builders</a>`;
+    const MADM = `<a class="po-inline-link" href="/"><mark>mad.builders</mark></a>`;
+
+    const T: Record<string, any> = {
+      en: {
+        navPlan: 'plan', navChina: 'china', navFaq: 'faq', navCta: 'Apply',
+        heroSub: `A month immersed in China's deep tech and cultural ecosystem.`,
+        stShenzhen: '📍 Shenzhen', stDate: '🗓 November 2026', stWeeks: '✦ 4 weeks · 12 builders',
+        planH: 'the plan',
+        lede: `A <mark>four-week themed popup city</mark> in Shenzhen. We pick a group of builders and <mark>cover the costs</mark>.`,
+        compH: 'Ecosystem companies',
+        compP: `Workshops and visits with the leading companies in China's deep tech ecosystem.`,
+        chipMore: 'and more…',
+        hackH: 'Hackathons + Unconference', hackP: 'Build and share your project.',
+        chinaH: 'why china',
+        chinaP1: `<mark>Open source models</mark> will play a key role in the future of AI, and physical AI like <mark>wearables and robots</mark> is taking center stage. China leads on both fronts, and across other areas of the deep tech ecosystem.`,
+        chinaP2: `But from the outside it's hard to know what's going on: the language barrier and homegrown networks like WeChat make popup cities like muShenzhen <mark>the best way to see what's happening and make connections</mark>.`,
+        themuP1: `our friends at ${MU} have spent years running popup cities around the world. Their last event, <mark>muShanghai</mark>, was a hit, with companies like z.ai, Unitree and NIO taking part.`,
+        themuP2: `From ${MADM} we're putting together a group to bring builders from Spain to the next edition, in Shenzhen.`,
+        faqH: 'faq',
+        faqQ: ['Who is it for?', `What's expected of me?`, `What's covered?`, 'Do I have to attend the whole month?', `What's day-to-day like?`, 'Can I work from there?'],
+        faqA: [
+          'Anyone eager to learn and build. We believe a diverse group makes the experience richer, so we select candidates for a mix of ages, backgrounds and disciplines.',
+          'That you come to learn and build, and share what you learn with the rest of the community.',
+          'We cover flights and accommodation for the selected builders for the whole month.',
+          `Not required: we'll consider applications from builders who can only attend part of the month.`,
+          `Mostly we'll share a space, but the format is open: everyone sets their own agenda, joining whichever of each day's scheduled events interest them.`,
+          `Yes. the-mu has made this one of the first events in China with open internet access. So from the venue you'll reach every network without needing a VPN.`,
+        ],
+        applyH: `Coming to<br />Shenzhen<em>?</em>`,
+        applyP: `Four weeks, costs covered, at the heart of China's tech scene.`,
+        applyBtn: 'Apply now →', sponsorBtn: 'Sponsor info',
+        footer: `Organised by ${MAD} × ${MU}`,
+        weekLabel: ['week 01', 'week 02', 'week 03', 'week 04'],
+      },
+      zh: {
+        navPlan: '计划', navChina: '中国', navFaq: '问答', navCta: '申请',
+        heroSub: '在中国深科技与文化生态中沉浸一个月。',
+        stShenzhen: '📍 深圳', stDate: '🗓 2026 年 11 月', stWeeks: '✦ 4 周 · 12 位 builders',
+        planH: '计划',
+        lede: '深圳一场<mark>为期四周的主题快闪城市</mark>。我们精选一批 builders，并<mark>承担全部费用</mark>。',
+        compH: '生态企业',
+        compP: '与中国深科技生态中的头部企业进行工作坊与实地走访。',
+        chipMore: '以及更多…',
+        hackH: '黑客松 + Unconference', hackP: '打造并分享你的项目。',
+        chinaH: '为什么中国',
+        chinaP1: '<mark>开源模型</mark>将在 AI 的未来中扮演关键角色，而<mark>可穿戴设备与机器人</mark>等物理 AI 也日益成为焦点。中国在这两方面，以及深科技生态的其他领域，都处于领先地位。',
+        chinaP2: '但从外部很难了解正在发生什么：语言障碍以及微信等本土网络，使得像 muShenzhen 这样的快闪城市成为<mark>了解真实动态、建立人脉的最佳方式</mark>。',
+        themuP1: `我们的朋友 ${MU} 多年来在世界各地举办快闪城市。上一场活动 <mark>muShanghai</mark> 大获成功，z.ai、Unitree、NIO 等企业均有参与。`,
+        themuP2: `我们 ${MADM} 正在组织一支队伍，把来自西班牙的 builders 带到下一届——深圳。`,
+        faqH: '问答',
+        faqQ: ['适合谁参加？', '对我有什么期待？', '费用包含什么？', '必须参加整个月吗？', '日常是怎样的？', '可以在那里工作吗？'],
+        faqA: [
+          '任何渴望学习与创造的人。我们相信多元的群体会让体验更丰富，因此在选拔时会兼顾不同年龄、背景与专业。',
+          '希望你来学习与创造，并把收获分享给社区里的其他人。',
+          '我们为入选的 builders 承担整月的机票与住宿。',
+          '并非必须：我们也会考虑只能参加部分时间的 builders 的申请。',
+          '我们主要会共享同一个空间，但形式自由：每个人自行安排日程，参加当天感兴趣的活动。',
+          '可以。the-mu 让这成为中国最早提供开放互联网访问的活动之一。因此在场地内你无需 VPN 即可访问所有网络。',
+        ],
+        applyH: `要来<br />深圳<em>吗？</em>`,
+        applyP: '四周，费用全包，置身中国科技的核心。',
+        applyBtn: '立即申请 →', sponsorBtn: '赞助信息',
+        footer: `由 ${MAD} × ${MU} 主办`,
+        weekNames: ['AI', '生物科技与长寿', '机器人与硬件', '文化'],
+        weekLabel: ['第 01 周', '第 02 周', '第 03 周', '第 04 周'],
+      },
+    };
+
+    // capture Spanish from the DOM
+    T.es = {
+      navPlan: navLinks[0]?.innerHTML, navChina: navLinks[1]?.innerHTML, navFaq: navLinks[3]?.innerHTML,
+      navCta: cta?.innerHTML, heroSub: heroSub?.innerHTML,
+      stShenzhen: stBlue?.innerHTML, stDate: stLime?.innerHTML, stWeeks: stPink?.innerHTML,
+      planH: planH?.innerHTML, lede: lede?.innerHTML, compH: compH?.innerHTML, compP: compP?.innerHTML,
+      chipMore: chipMore?.innerHTML, hackH: hackH?.innerHTML, hackP: hackP?.innerHTML,
+      chinaH: chinaH?.innerHTML, chinaP1: chinaPs[0]?.innerHTML, chinaP2: chinaPs[1]?.innerHTML,
+      themuP1: themuPs[0]?.innerHTML, themuP2: themuPs[1]?.innerHTML,
+      faqH: faqH?.innerHTML,
+      faqQ: faqSummaries.map((s) => s.childNodes[0]?.nodeValue ?? ''),
+      faqA: faqAnswers.map((p) => p.innerHTML),
+      applyH: applyH?.innerHTML, applyP: applyP?.innerHTML,
+      applyBtn: applyBtn?.innerHTML, sponsorBtn: sponsorBtn?.innerHTML, footer: footer?.innerHTML,
+      weekNames: weekNames.map((h) => h.innerHTML), weekLabel: weekLabels.map((l) => l.innerHTML),
+    };
+
+    const setHTML = (el: HTMLElement | null, v: any) => { if (el && v != null) el.innerHTML = v; };
+
+    const render = (lang: string) => {
+      const d = Object.assign({}, T.es, T[lang] || {});
+      setHTML(navLinks[0], d.navPlan); setHTML(navLinks[1], d.navChina); setHTML(navLinks[3], d.navFaq);
+      setHTML(cta, d.navCta); setHTML(heroSub, d.heroSub);
+      setHTML(stBlue, d.stShenzhen); setHTML(stLime, d.stDate); setHTML(stPink, d.stWeeks);
+      setHTML(planH, d.planH); setHTML(lede, d.lede); setHTML(compH, d.compH); setHTML(compP, d.compP);
+      setHTML(chipMore, d.chipMore); setHTML(hackH, d.hackH); setHTML(hackP, d.hackP);
+      setHTML(chinaH, d.chinaH); setHTML(chinaPs[0], d.chinaP1); setHTML(chinaPs[1], d.chinaP2);
+      setHTML(themuPs[0], d.themuP1); setHTML(themuPs[1], d.themuP2);
+      setHTML(faqH, d.faqH);
+      faqSummaries.forEach((s, i) => { if (s.childNodes[0]) s.childNodes[0].nodeValue = d.faqQ[i]; });
+      faqAnswers.forEach((p, i) => setHTML(p, d.faqA[i]));
+      setHTML(applyH, d.applyH); setHTML(applyP, d.applyP);
+      setHTML(applyBtn, d.applyBtn); setHTML(sponsorBtn, d.sponsorBtn); setHTML(footer, d.footer);
+      weekNames.forEach((h, i) => setHTML(h, d.weekNames[i]));
+      weekLabels.forEach((l, i) => setHTML(l, d.weekLabel[i]));
+      document.documentElement.lang = lang;
+      langBtns.forEach((b) => b.classList.toggle('active', b.dataset.lang === lang));
+      try { localStorage.setItem('sz-lang', lang); } catch {}
+    };
+
+    langBtns.forEach((b) => b.addEventListener('click', () => render(b.dataset.lang!)));
+
+    let saved = 'es';
+    try { saved = localStorage.getItem('sz-lang') || 'es'; } catch {}
+    render(saved);
+  }
+</script>
+
+<style is:global>
+  body.po {
+    --paper: #fbf8f0;
+    --ink: #16150f;
+    --blue: #2340d8;
+    --lime: #99ab1e;
+    --pink: #e0669d;
+    --line: #16150f;
+    /* structural values kept in sync with the main site (src/styles/global.css)
+       so /sz lines up with the rest, while staying self-contained. */
+    --wrap: 1180px;
+    --gutter: 24px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  body.po h1,
+  body.po h2,
+  body.po h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  body.po mark {
+    background: linear-gradient(transparent 55%, #ffe27a 55%);
+    color: inherit;
+    padding: 0 0.1em;
+  }
+</style>
+
+<style>
+  .po-nav {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--paper);
+    border-bottom: 3px solid var(--line);
+  }
+
+  .po-nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 0.6rem var(--gutter);
+  }
+
+  .po-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+  }
+
+  .po-logo b {
+    color: #e5352b;
+  }
+
+  .po-nav nav {
+    display: flex;
+    gap: 1.2rem;
+    margin-left: auto;
+    font-size: 0.9rem;
+  }
+
+  .po-nav nav a {
+    color: var(--ink);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .po-nav nav a:hover {
+    color: var(--blue);
+  }
+
+  .po-nav-cta {
+    background: var(--blue);
+    color: #fff;
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    padding: 0.5rem 1.2rem;
+    border-radius: 999px;
+    border: 2px solid var(--line);
+    box-shadow: 3px 3px 0 var(--line);
+  }
+
+  /* language switcher */
+  .po-lang {
+    display: inline-flex;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .po-lang-btn {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.78rem;
+    line-height: 1;
+    padding: 0.35rem 0.6rem;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .po-lang-btn:not(:last-child) {
+    border-right: 2px solid var(--line);
+  }
+
+  .po-lang-btn.active {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  @media (max-width: 720px) {
+    .po-nav nav {
+      display: none;
+    }
+    .po-lang {
+      margin-left: auto;
+    }
+  }
+
+  /* hero */
+  .po-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    align-items: center;
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4.5rem) var(--gutter) clamp(0.5rem, 2vw, 1.5rem);
+    overflow: hidden;
+  }
+
+  .po-hero-inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  /* small "presented by" lockup — deliberately restrained so mad.sz dominates */
+  .po-eyebrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin: 0 0 0.4rem;
+  }
+
+  .po-eyebrow-link {
+    display: inline-flex;
+  }
+
+  .po-eyebrow-link:hover .po-eyebrow-logo {
+    opacity: 1;
+  }
+
+  .po-eyebrow-logo {
+    width: auto;
+    /* both partner marks in the page ink for a mono co-brand lockup */
+    filter: brightness(0);
+    opacity: 0.85;
+    transition: opacity 0.15s;
+  }
+
+  /* mad.builders is a long wordmark; themu is a compact icon+script.
+     heights are tuned per-logo to optically balance, not matched literally. */
+  .po-eyebrow-logo-mad {
+    height: 0.85rem;
+  }
+
+  .po-eyebrow-logo-mu {
+    height: 1.4rem;
+  }
+
+  .po-eyebrow-x {
+    color: var(--pink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  /* inline text links (the-mu section body + footer). :global so the styling
+     also applies to links re-injected by the language switch (which lose the
+     Astro scope attribute). */
+  :global(.po-inline-link) {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+    transition: text-decoration-color 0.15s;
+  }
+
+  :global(.po-inline-link):hover {
+    text-decoration-color: currentColor;
+  }
+
+  .po-hero h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    font-size: clamp(4rem, 12vw, 8.5rem);
+    margin: 0;
+  }
+
+  .po-hero h1 em {
+    font-style: normal;
+    color: #e5352b;
+  }
+
+  .po-apply h2 :global(em) {
+    font-style: normal;
+    color: var(--pink);
+  }
+
+  .po-hero-sub {
+    font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+    margin: 0.25rem auto 1.8rem;
+    max-width: 42ch;
+  }
+
+  /* left-aligned block, but the two rows centered relative to each other:
+     fit-content shrinks the box to the wider row, align-items centers the rest */
+  .po-stickers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .po-stickers-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  .po-sticker {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.9rem;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 2px 2px 0 var(--line);
+    background: #fff;
+    transform: rotate(-2deg);
+  }
+
+  .po-sticker-lime {
+    background: var(--lime);
+    color: #fff;
+    transform: rotate(1.5deg);
+  }
+
+  .po-sticker-blue {
+    background: var(--blue);
+    color: #fff;
+    transform: rotate(-1deg);
+  }
+
+  .po-sticker-pink {
+    background: var(--pink);
+    color: #fff;
+    transform: rotate(2deg);
+  }
+
+  .po-btn {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.85rem 1.6rem;
+    border: 2.5px solid var(--line);
+    border-radius: 999px;
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 4px 4px 0 var(--line);
+    transition:
+      transform 0.12s,
+      box-shadow 0.12s;
+  }
+
+  .po-btn:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--line);
+  }
+
+  .po-hero-fig {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    transform: rotate(1.5deg);
+  }
+
+  .po-hero-fig img {
+    width: 100%;
+    height: clamp(300px, 50vh, 520px);
+    object-fit: cover;
+    border: 3px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 8px 8px 0 var(--line);
+  }
+
+  .po-fig-tag {
+    position: absolute;
+    bottom: -0.8rem;
+    left: 1rem;
+    background: var(--lime);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.9rem;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    transform: rotate(-3deg);
+  }
+
+  @media (max-width: 860px) {
+    .po-hero {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* sections */
+  .po-section {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: clamp(3rem, 6vw, 5.5rem) var(--gutter);
+  }
+
+  /* "el plan" follows the hero directly — pull it up for a tighter transition */
+  .po-section#plan {
+    padding-top: clamp(1.5rem, 3.5vw, 3rem);
+  }
+
+  .po-h {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .po-h-stamp {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    background: var(--pink);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 800;
+    border: 2.5px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 3px 3px 0 var(--line);
+    transform: rotate(-4deg);
+  }
+
+  .po-h h2 {
+    font-size: clamp(2.2rem, 5vw, 4rem);
+  }
+
+  .po-h-invert h2,
+  .po-h-invert .po-h-stamp {
+    color: #fff;
+  }
+
+  .po-h-invert .po-h-stamp {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .po-lede {
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    max-width: 40ch;
+    margin: 0 0 2.5rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+
+  /* weeks */
+  .po-weeks {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .po-week {
+    border: 3px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 5px 5px 0 var(--line);
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .po-week:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0 var(--c);
+  }
+
+  .po-week-photo {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-bottom: 3px solid var(--line);
+  }
+
+  .po-week-photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .po-week-stamp {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    background: var(--c);
+    color: #fff;
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+
+  .po-week-body {
+    padding: 0.9rem 1rem 1.1rem;
+    border-top: 4px solid var(--c);
+  }
+
+  .po-week-n {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--c);
+  }
+
+  .po-week-body h3 {
+    font-size: 1.3rem;
+    margin-top: 0.2rem;
+  }
+
+  @media (max-width: 900px) {
+    .po-weeks {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .po-weeks {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* plan two */
+  .po-plan-two {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 1rem;
+  }
+
+  .po-panel {
+    border: 3px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 5px 5px 0 var(--line);
+    overflow: hidden;
+  }
+
+  .po-panel-cream {
+    background: #fff;
+    padding: 1.8rem;
+  }
+
+  .po-panel h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .po-panel-cream > p {
+    margin: 0 0 1.2rem;
+  }
+
+  .po-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .po-chip {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.3rem 0.85rem;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+  }
+
+  .po-chip-dash {
+    border-style: dashed;
+  }
+
+  .po-panel-photo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+  }
+
+  .po-panel-photo img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    border-bottom: 3px solid var(--line);
+  }
+
+  .po-panel-tag {
+    padding: 1.3rem 1.8rem 1.6rem;
+  }
+
+  .po-panel-tag h3 {
+    margin-bottom: 0.3rem;
+  }
+
+  .po-panel-tag p {
+    margin: 0;
+  }
+
+  @media (max-width: 820px) {
+    .po-plan-two {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* china */
+  .po-china {
+    background: var(--blue);
+    color: #fff;
+    border-top: 3px solid var(--line);
+    border-bottom: 3px solid var(--line);
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1.5px, transparent 1.6px);
+    background-size: 22px 22px;
+  }
+
+  .po-china-inner {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: clamp(3rem, 6vw, 5.5rem) var(--gutter);
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+  }
+
+  .po-china-text p {
+    font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+    max-width: 52ch;
+  }
+
+  .po-china-text mark {
+    background: linear-gradient(transparent 55%, rgba(255, 255, 255, 0.35) 55%);
+    color: #fff;
+  }
+
+  .po-china-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .po-china-photos figure {
+    margin: 0;
+  }
+
+  .po-china-photos img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border: 3px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  .po-china-photos figure:last-child {
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 820px) {
+    .po-china-inner {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* themu */
+  .po-themu {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .po-themu-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .po-themu-text p {
+    font-size: 1.05rem;
+    margin: 0 0 1rem;
+  }
+
+  .po-themu-fig {
+    margin: 0;
+  }
+
+  .po-themu-fig img {
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+    object-fit: cover;
+    border: 3px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 5px 5px 0 var(--line);
+  }
+
+  @media (max-width: 820px) {
+    .po-themu {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* marquee */
+  .po-marquee {
+    overflow: hidden;
+    border-top: 3px solid var(--line);
+    border-bottom: 3px solid var(--line);
+    background: var(--lime);
+    padding: 1rem 0;
+  }
+
+  .po-marquee-track {
+    display: flex;
+    gap: 1rem;
+    width: max-content;
+    animation: po-scroll 55s linear infinite;
+  }
+
+  .po-marquee :global(.po-marquee-img) {
+    width: 340px;
+    height: 220px;
+    object-fit: cover;
+    border: 3px solid var(--line);
+    border-radius: 8px;
+  }
+
+  @keyframes po-scroll {
+    to {
+      transform: translateX(calc(-50% - 0.5rem));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .po-marquee {
+      overflow-x: auto;
+    }
+    .po-marquee-track {
+      animation: none;
+    }
+  }
+
+  /* narrower boxes, centered — the "04 faq" heading stays full-width/left */
+  .po-faq {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-width: 760px;
+    margin-inline: auto;
+  }
+
+  .po-faq-item {
+    border: 3px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 4px 4px 0 var(--line);
+    padding: 0 1.4rem;
+  }
+
+  .po-faq-item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 0;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .po-faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .po-faq-plus {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--blue);
+    transition: transform 0.2s;
+  }
+
+  .po-faq-item[open] .po-faq-plus {
+    transform: rotate(45deg);
+  }
+
+  .po-faq-item p {
+    margin: 0 0 1.2rem;
+    max-width: 64ch;
+  }
+
+  /* apply */
+  .po-apply {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: clamp(3rem, 7vw, 6rem) var(--gutter) clamp(4rem, 8vw, 7rem);
+    text-align: center;
+    position: relative;
+  }
+
+  .po-apply-stamps {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .po-apply-stamps span {
+    width: 2.6rem;
+    height: 2.6rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.2rem;
+    border: 2.5px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 3px 3px 0 var(--line);
+  }
+
+  .po-apply-stamps span:nth-child(1) {
+    background: var(--pink);
+    color: #fff;
+    transform: rotate(-6deg);
+  }
+  .po-apply-stamps span:nth-child(2) {
+    background: var(--lime);
+    color: #fff;
+    transform: rotate(4deg);
+  }
+  .po-apply-stamps span:nth-child(3) {
+    background: var(--blue);
+    color: #fff;
+    transform: rotate(-3deg);
+  }
+  .po-apply-stamps span:nth-child(4) {
+    background: #fff;
+    transform: rotate(5deg);
+  }
+
+  .po-apply h2 {
+    font-size: clamp(2.6rem, 8vw, 6rem);
+    margin: 0 0 1rem;
+  }
+
+  .po-apply > p {
+    max-width: 48ch;
+    margin: 0 auto 2rem;
+    font-size: 1.1rem;
+  }
+
+  .po-apply-cta {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .po-btn-light {
+    background: var(--pink);
+    color: #fff;
+  }
+
+  .po-btn-ghost-light {
+    background: #fff;
+    color: var(--ink);
+  }
+
+  /* placeholder CTAs — visible but inert until the form/contact exists */
+  .po-btn-disabled {
+    cursor: default;
+  }
+
+  .po-btn-disabled:hover {
+    transform: none;
+    box-shadow: 4px 4px 0 var(--line);
+  }
+
+
+  /* footer */
+  .po-footer {
+    border-top: 3px solid var(--line);
+    padding: 2rem var(--gutter) 3rem;
+    max-width: var(--wrap);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  .po-footer span {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.4rem;
+  }
+
+  .po-footer span b {
+    color: #e5352b;
+  }
+
+  .po-footer p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  /* ─── lightbox ─── */
+  .po-zoom {
+    cursor: zoom-in;
+  }
+
+  .po-lightbox {
+    background: rgba(20, 19, 15, 0.97);
+    border: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    padding: 24px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .po-lightbox[open] {
+    display: flex;
+  }
+
+  .po-lightbox::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .po-lb-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: min(1200px, 86vw);
+    max-height: 88vh;
+  }
+
+  .po-lb-stage :global(.po-lb-img) {
+    display: none;
+    max-width: 100%;
+    max-height: 88vh;
+    width: auto;
+    height: auto;
+    border: 3px solid #fff;
+    border-radius: 8px;
+  }
+
+  .po-lb-btn {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    background: #fff;
+    color: var(--ink);
+    border: 2.5px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition:
+      transform 0.12s,
+      box-shadow 0.12s;
+  }
+
+  .po-lb-btn:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+  }
+
+  .po-lb-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 2;
+  }
+</style>
