@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import Layout from '../layouts/ShenzhenLayout.astro';
-import { EVENT, APPLY_URL, images, weeks, companies, faqs } from '../data/shenzhen';
+import { EVENT, APPLY_URL, images, weeks, companies, faqs, marqueePhotos } from '../data/shenzhen';
 // the-mu logo for the hero lockup. the-mu = "The Mu" popup-city organiser; its
 // logo ships cream-on-transparent, so both marks get a mono ink treatment via CSS.
 // mad.builders wordmark is referenced from /public by URL below.
@@ -19,6 +19,7 @@ const gallery = [
   images.galleryKeynote,
   images.galleryGlove,
   images.themuStageDay,
+  ...marqueePhotos,
 ];
 
 // Photos that open in the lightbox on click (everything except the hero and the
@@ -27,9 +28,10 @@ const gallery = [
 const zoomPhotos = [
   ...weeks.map((w) => w.img), // 0–3
   images.hackathon, // 4
-  images.chinaRobot, // 5
+  images.chinaRobotFull, // 5 — full, uncropped version of the card photo
   images.chinaPanel, // 6
   images.themuBanners, // 7
+  ...gallery, // 8+ — marquee photos
 ];
 ---
 
@@ -45,14 +47,17 @@ const zoomPhotos = [
         <a href="#the-mu">the-mu</a>
         <a href="#faq">faq</a>
       </nav>
-      <div class="po-lang" role="group" aria-label="Idioma / Language / 语言">
-        <button type="button" class="po-lang-btn" data-lang="es" aria-pressed="true">ES</button>
-        <button type="button" class="po-lang-btn" data-lang="en" aria-pressed="false">EN</button>
-        <button type="button" class="po-lang-btn" data-lang="zh" aria-pressed="false">中文</button>
-      </div>
       <a href={APPLY_URL} class="po-nav-cta">Aplicar</a>
     </div>
   </header>
+
+  <div class="po-lang-row">
+    <div class="po-lang" role="group" aria-label="Idioma / Language / 语言">
+      <button type="button" class="po-lang-btn" data-lang="es" aria-pressed="true">ES</button>
+      <button type="button" class="po-lang-btn" data-lang="en" aria-pressed="false">EN</button>
+      <button type="button" class="po-lang-btn" data-lang="zh" aria-pressed="false">中文</button>
+    </div>
+  </div>
 
   <main id="top">
     <!-- HERO -->
@@ -100,8 +105,8 @@ const zoomPhotos = [
         <h2>el plan</h2>
       </div>
       <p class="po-lede">
-        Una <mark>popup city de cuatro semanas temáticas</mark> en Shenzhen. Seleccionamos un grupo de builders y
-        <mark>cubrimos los gastos</mark>.
+        Una <mark>popup city de cuatro semanas temáticas</mark> en Shenzhen. Seleccionamos un grupo de
+        <mark>12 builders</mark> para acompañarnos.
       </p>
 
       <div class="po-weeks">
@@ -109,7 +114,7 @@ const zoomPhotos = [
           weeks.map((w, i) => (
             <article class="po-week" style={`--c: ${w.color}`}>
               <div class="po-week-photo po-zoom" data-zoom-index={i}>
-                <Image src={w.img} alt={w.alt} widths={[400, 700]} sizes="(max-width: 640px) 100vw, 25vw" />
+                <Image src={w.img} alt={w.alt} widths={[400, 700]} sizes="(max-width: 640px) 100vw, 25vw" style={w.zoom ? `transform: scale(${w.zoom})` : undefined} />
                 <span class="po-week-stamp" aria-hidden="true">{stamps[i]}</span>
               </div>
               <div class="po-week-body">
@@ -160,7 +165,7 @@ const zoomPhotos = [
           </p>
         </div>
         <div class="po-china-photos">
-          <figure><Image src={images.chinaRobot} alt="Robot cuadrúpedo repartiendo refrescos" widths={[400, 800]} sizes="(max-width: 900px) 50vw, 22vw" class="po-zoom" data-zoom-index={5} /></figure>
+          <figure><Image src={images.chinaRobot} alt="Dos asistentes manejando un robot cuadrúpedo con el móvil en muShanghai" widths={[400, 800]} sizes="(max-width: 900px) 50vw, 22vw" class="po-zoom" data-zoom-index={5} /></figure>
           <figure><Image src={images.chinaPanel} alt="Panel sobre IA física y cadena de suministro" widths={[400, 800]} sizes="(max-width: 900px) 50vw, 22vw" class="po-zoom" data-zoom-index={6} /></figure>
         </div>
       </div>
@@ -175,7 +180,7 @@ const zoomPhotos = [
       <div class="po-themu">
         <div class="po-panel po-panel-cream po-themu-text">
           <p>
-            nuestros amigos de <a class="po-inline-link" href={THE_MU_URL} target="_blank" rel="noopener">the-mu</a>
+            Nuestros amigos de <a class="po-inline-link" href={THE_MU_URL} target="_blank" rel="noopener">the-mu</a>
             llevan años organizando popup cities por todo el mundo. El último evento, <mark>muShanghai</mark>, fue un éxito, con la participación
             de empresas como z.ai, Unitree o NIO.
           </p>
@@ -192,8 +197,10 @@ const zoomPhotos = [
 
     <!-- marquee -->
     <div class="po-marquee" aria-hidden="true">
-      <div class="po-marquee-track">
-        {[...gallery, ...gallery].map((g) => <Image src={g} alt="" widths={[440]} sizes="340px" class="po-marquee-img" />)}
+      <div class="po-marquee-track" style={`animation-duration: ${gallery.length * 9}s`}>
+        {[...gallery, ...gallery].map((g, i) => (
+          <Image src={g} alt="" widths={[440]} sizes="340px" class="po-marquee-img po-zoom" data-zoom-index={8 + (i % gallery.length)} />
+        ))}
       </div>
     </div>
 
@@ -224,7 +231,7 @@ const zoomPhotos = [
         {stamps.map((s) => <span>{s}</span>)}
       </div>
       <h2>¿Te vienes a<br />Shenzhen<em>?</em></h2>
-      <p>Cuatro semanas, gastos cubiertos, en el corazón de la tecnología en China.</p>
+      <p>Cuatro semanas en el corazón de la tecnología en China.</p>
       <div class="po-apply-cta">
         <span class="po-btn po-btn-light po-btn-disabled" aria-disabled="true" data-i18n="applyBtn">Aplicar ahora →</span>
         <span class="po-btn po-btn-ghost-light po-btn-disabled" aria-disabled="true" data-i18n="sponsorBtn">Info para sponsors</span>
@@ -330,7 +337,7 @@ const zoomPhotos = [
         heroSub: `A month immersed in China's deep tech and cultural ecosystem.`,
         stShenzhen: '📍 Shenzhen', stDate: '🗓 November 2026', stWeeks: '✦ 4 weeks · 12 builders',
         planH: 'the plan',
-        lede: `A <mark>four-week themed popup city</mark> in Shenzhen. We pick a group of builders and <mark>cover the costs</mark>.`,
+        lede: `A <mark>four-week themed popup city</mark> in Shenzhen. We're selecting a group of <mark>12 builders</mark> to join us.`,
         compH: 'Ecosystem companies',
         compP: `Workshops and visits with the leading companies in China's deep tech ecosystem.`,
         chipMore: 'and more…',
@@ -338,20 +345,19 @@ const zoomPhotos = [
         chinaH: 'why china',
         chinaP1: `<mark>Open source models</mark> will play a key role in the future of AI, and physical AI like <mark>wearables and robots</mark> is taking center stage. China leads on both fronts, and across other areas of the deep tech ecosystem.`,
         chinaP2: `But from the outside it's hard to know what's going on: the language barrier and homegrown networks like WeChat make popup cities like muShenzhen <mark>the best way to see what's happening and make connections</mark>.`,
-        themuP1: `our friends at ${MU} have spent years running popup cities around the world. Their last event, <mark>muShanghai</mark>, was a hit, with companies like z.ai, Unitree and NIO taking part.`,
+        themuP1: `Our friends at ${MU} have spent years running popup cities around the world. Their last event, <mark>muShanghai</mark>, was a hit, with companies like z.ai, Unitree and NIO taking part.`,
         themuP2: `From ${MADM} we're putting together a group to bring builders from Spain to the next edition, in Shenzhen.`,
         faqH: 'faq',
-        faqQ: ['Who is it for?', `What's expected of me?`, `What's covered?`, 'Do I have to attend the whole month?', `What's day-to-day like?`, 'Can I work from there?'],
+        faqQ: ['Who is it for?', 'What does it cost?', 'Do I have to attend the whole month?', `What's day-to-day like?`, 'Can I work from there?'],
         faqA: [
-          'Anyone eager to learn and build. We believe a diverse group makes the experience richer, so we select candidates for a mix of ages, backgrounds and disciplines.',
-          'That you come to learn and build, and share what you learn with the rest of the community.',
-          'We cover flights and accommodation for the selected builders for the whole month.',
+          'Anyone eager to build and share. We believe a diverse group makes the experience richer, so we select candidates for a mix of ages, backgrounds and disciplines.',
+          `Flights are around €800, and the full month's hotel stay is around €2,000. We're in talks with sponsors to help cover part of the group's costs.`,
           `Not required: we'll consider applications from builders who can only attend part of the month.`,
           `Mostly we'll share a space, but the format is open: everyone sets their own agenda, joining whichever of each day's scheduled events interest them.`,
-          `Yes. the-mu has made this one of the first events in China with open internet access. So from the venue you'll reach every network without needing a VPN.`,
+          `Yes. the-mu has made this one of the first events in China with open internet access. So from the venue you'll reach every network and service openly, no VPN needed.`,
         ],
         applyH: `Coming to<br />Shenzhen<em>?</em>`,
-        applyP: `Four weeks, costs covered, at the heart of China's tech scene.`,
+        applyP: `Four weeks at the heart of China's tech scene.`,
         applyBtn: 'Apply now →', sponsorBtn: 'Sponsor info',
         footer: `Organised by ${MAD} × ${MU}`,
         weekLabel: ['week 01', 'week 02', 'week 03', 'week 04'],
@@ -361,7 +367,7 @@ const zoomPhotos = [
         heroSub: '在中国深科技与文化生态中沉浸一个月。',
         stShenzhen: '📍 深圳', stDate: '🗓 2026 年 11 月', stWeeks: '✦ 4 周 · 12 位 builders',
         planH: '计划',
-        lede: '深圳一场<mark>为期四周的主题快闪城市</mark>。我们精选一批 builders，并<mark>承担全部费用</mark>。',
+        lede: '深圳一场<mark>为期四周的主题快闪城市</mark>。我们将精选 <mark>12 位 builders</mark> 与我们同行。',
         compH: '生态企业',
         compP: '与中国深科技生态中的头部企业进行工作坊与实地走访。',
         chipMore: '以及更多…',
@@ -372,17 +378,16 @@ const zoomPhotos = [
         themuP1: `我们的朋友 ${MU} 多年来在世界各地举办快闪城市。上一场活动 <mark>muShanghai</mark> 大获成功，z.ai、Unitree、NIO 等企业均有参与。`,
         themuP2: `我们 ${MADM} 正在组织一支队伍，把来自西班牙的 builders 带到下一届——深圳。`,
         faqH: '问答',
-        faqQ: ['适合谁参加？', '对我有什么期待？', '费用包含什么？', '必须参加整个月吗？', '日常是怎样的？', '可以在那里工作吗？'],
+        faqQ: ['适合谁参加？', '费用是多少？', '必须参加整个月吗？', '日常是怎样的？', '可以在那里工作吗？'],
         faqA: [
-          '任何渴望学习与创造的人。我们相信多元的群体会让体验更丰富，因此在选拔时会兼顾不同年龄、背景与专业。',
-          '希望你来学习与创造，并把收获分享给社区里的其他人。',
-          '我们为入选的 builders 承担整月的机票与住宿。',
+          '任何渴望创造与分享的人。我们相信多元的群体会让体验更丰富，因此在选拔时会兼顾不同年龄、背景与专业。',
+          '机票约 800 欧元，整月酒店住宿约 2000 欧元。我们正在与赞助商洽谈，以覆盖团队的部分费用。',
           '并非必须：我们也会考虑只能参加部分时间的 builders 的申请。',
           '我们主要会共享同一个空间，但形式自由：每个人自行安排日程，参加当天感兴趣的活动。',
-          '可以。the-mu 让这成为中国最早提供开放互联网访问的活动之一。因此在场地内你无需 VPN 即可访问所有网络。',
+          '可以。the-mu 让这成为中国最早提供开放互联网访问的活动之一。因此在场地内你无需 VPN 即可自由访问所有网络与服务。',
         ],
         applyH: `要来<br />深圳<em>吗？</em>`,
-        applyP: '四周，费用全包，置身中国科技的核心。',
+        applyP: '四周时间，置身中国科技的核心。',
         applyBtn: '立即申请 →', sponsorBtn: '赞助信息',
         footer: `由 ${MAD} × ${MU} 主办`,
         weekNames: ['AI', '生物科技与长寿', '机器人与硬件', '文化'],
@@ -540,42 +545,49 @@ const zoomPhotos = [
     box-shadow: 3px 3px 0 var(--line);
   }
 
-  /* language switcher */
+  /* language switcher — bare letters below the nav, right-aligned */
+  .po-lang-row {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 0.7rem var(--gutter) 0;
+    display: flex;
+    justify-content: flex-end;
+  }
+
   .po-lang {
     display: inline-flex;
-    border: 2px solid var(--line);
-    border-radius: 999px;
-    overflow: hidden;
-    background: #fff;
+    gap: 0.9rem;
   }
 
   .po-lang-btn {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
     line-height: 1;
-    padding: 0.35rem 0.6rem;
+    padding: 0;
     border: 0;
-    background: transparent;
-    color: var(--ink);
+    background: none;
+    color: color-mix(in srgb, var(--ink) 45%, transparent);
     cursor: pointer;
+    transition: color 0.15s;
   }
 
-  .po-lang-btn:not(:last-child) {
-    border-right: 2px solid var(--line);
+  .po-lang-btn:hover {
+    color: var(--ink);
   }
 
   .po-lang-btn.active {
-    background: var(--blue);
-    color: #fff;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px;
+    text-decoration-color: #e5352b;
   }
 
   @media (max-width: 720px) {
     .po-nav nav {
       display: none;
-    }
-    .po-lang {
-      margin-left: auto;
     }
   }
 
@@ -1117,7 +1129,13 @@ const zoomPhotos = [
     display: flex;
     gap: 1rem;
     width: max-content;
+    /* duration is set inline, scaled to the number of photos */
     animation: po-scroll 55s linear infinite;
+  }
+
+  /* photos are clickable — freeze the strip while the cursor is over it */
+  .po-marquee:hover .po-marquee-track {
+    animation-play-state: paused;
   }
 
   .po-marquee :global(.po-marquee-img) {
