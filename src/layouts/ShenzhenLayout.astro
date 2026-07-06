@@ -14,16 +14,18 @@ interface Props {
   title?: string;
   description?: string;
   bodyClass?: string;
+  image?: string;
 }
 
 const {
   title = 'mad.sz, un puente con China - mad.builders',
   description = 'Una popup city de cuatro semanas en Shenzhen. Inmersión en el ecosistema tech en China: labs, fábricas, cultura. Organizado por mad.builders y the-mu.',
   bodyClass,
+  image = '/og-sz.png',
 } = Astro.props;
 
 const base = Astro.site ?? new URL('https://www.mad.builders');
-const ogImage = new URL('/og-sz.png', base).toString();
+const ogImage = new URL(image, base).toString();
 const canonical = new URL(Astro.url.pathname, base).toString();
 ---
 
@@ -58,6 +60,9 @@ const canonical = new URL(Astro.url.pathname, base).toString();
 </html>
 
 <style is:global>
+  /* Intentional exception: /sz keeps its own palette and type tokens instead of
+     reusing src/styles/global.css. The page is a self-contained, removable
+     landing with a different look from the main site — see the header comment. */
   :root {
     --paper: #faf6ef;
     --ink: #191714;

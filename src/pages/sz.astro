@@ -46,9 +46,9 @@ const zoomPhotos = [
         <a href="#faq">faq</a>
       </nav>
       <div class="po-lang" role="group" aria-label="Idioma / Language / 语言">
-        <button type="button" class="po-lang-btn" data-lang="es">ES</button>
-        <button type="button" class="po-lang-btn" data-lang="en">EN</button>
-        <button type="button" class="po-lang-btn" data-lang="zh">中文</button>
+        <button type="button" class="po-lang-btn" data-lang="es" aria-pressed="true">ES</button>
+        <button type="button" class="po-lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" class="po-lang-btn" data-lang="zh" aria-pressed="false">中文</button>
       </div>
       <a href={APPLY_URL} class="po-nav-cta">Aplicar</a>
     </div>
@@ -426,7 +426,11 @@ const zoomPhotos = [
       weekNames.forEach((h, i) => setHTML(h, d.weekNames[i]));
       weekLabels.forEach((l, i) => setHTML(l, d.weekLabel[i]));
       document.documentElement.lang = lang;
-      langBtns.forEach((b) => b.classList.toggle('active', b.dataset.lang === lang));
+      langBtns.forEach((b) => {
+        const isActive = b.dataset.lang === lang;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-pressed', String(isActive));
+      });
       try { localStorage.setItem('sz-lang', lang); } catch {}
     };
 
