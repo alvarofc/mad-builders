@@ -22,7 +22,6 @@ export const EVENT = {
 };
 
 export const APPLY_URL = '#aplicaciones'; // TODO: enlace al formulario de aplicación
-export const SPONSOR_URL = 'mailto:hola@mad.builders'; // TODO: contacto real para sponsors
 
 export const images = {
   hero,
