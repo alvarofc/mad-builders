@@ -454,6 +454,7 @@ const zoomPhotos = [
     --blue: #2340d8;
     --lime: #99ab1e;
     --pink: #e0669d;
+    --red: #e5352b;
     --line: #16150f;
     /* structural values kept in sync with the main site (src/styles/global.css)
        so /sz lines up with the rest, while staying self-contained. */
@@ -512,7 +513,7 @@ const zoomPhotos = [
   }
 
   .po-logo b {
-    color: #e5352b;
+    color: var(--red);
   }
 
   .po-nav nav {
@@ -565,7 +566,9 @@ const zoomPhotos = [
     font-size: 0.8rem;
     letter-spacing: 0.04em;
     line-height: 1;
-    padding: 0;
+    /* invisible padding to give the bare letters a usable tap target */
+    padding: 0.5rem 0.35rem;
+    margin: -0.5rem -0.15rem;
     border: 0;
     background: none;
     color: color-mix(in srgb, var(--ink) 45%, transparent);
@@ -582,7 +585,7 @@ const zoomPhotos = [
     text-decoration: underline;
     text-underline-offset: 4px;
     text-decoration-thickness: 2px;
-    text-decoration-color: #e5352b;
+    text-decoration-color: var(--red);
   }
 
   @media (max-width: 720px) {
@@ -678,7 +681,7 @@ const zoomPhotos = [
 
   .po-hero h1 em {
     font-style: normal;
-    color: #e5352b;
+    color: var(--red);
   }
 
   .po-apply h2 :global(em) {
@@ -1318,7 +1321,7 @@ const zoomPhotos = [
   }
 
   .po-footer span b {
-    color: #e5352b;
+    color: var(--red);
   }
 
   .po-footer p {
