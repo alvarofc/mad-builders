@@ -66,7 +66,7 @@ export const faqs = [
   },
   {
     q: '¿Cuál es el coste?',
-    a: 'Los vuelos están alrededor de los 800 € y la estancia del mes completo en hotel, alrededor de los 2.000 €. Estamos en conversaciones con sponsors para cubrir parte de los gastos del grupo.',
+    a: 'Los vuelos están alrededor de los 800 € y la estancia del mes completo, entre los 1.000 € y los 2.000 € según el tipo de alojamiento. Estamos en conversaciones con sponsors para cubrir parte de los gastos del grupo.',
   },
   {
     q: '¿Tengo que asistir el mes entero?',
