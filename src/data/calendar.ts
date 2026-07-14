@@ -152,6 +152,18 @@ export const calendarEvents: CalendarEvent[] = [
       'Taller de Tetuan Valley y Mad Tech Campus sobre cómo automatizar las finanzas de tu startup sin vivir en hojas de cálculo. Iñigo enseña en directo cómo Mad Tech lo hace con Claude, de los tickets al reporting, y APTKI resuelve las dudas financieras de los asistentes.',
   },
   {
+    title: 'OpenAI Build Week Community Meetup - Madrid',
+    date: '2026-07-15',
+    time: '18:30',
+    endTime: '21:00',
+    location: 'Shared after confirmation, Madrid',
+    url: 'https://luma.com/575tlio7',
+    image: '/events/openai-build-week-madrid.jpg',
+    private: true,
+    description:
+      'OpenAI Build Week meetup for around 30 builders, with a live Codex update, time to build and short community demos. Bring a laptop and an idea; registration requires approval and the venue is shared after confirmation.',
+  },
+  {
     title: 'HackSpain 2026',
     date: '2026-09-18',
     location: 'UPM ETSIT, Madrid',
