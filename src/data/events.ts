@@ -30,6 +30,17 @@ export interface CommunityEvent {
 
 export const events: CommunityEvent[] = [
   {
+    slug: 'openai-build-week',
+    title: 'OpenAI Build Week Madrid',
+    date: '2026-07-15',
+    time: '18:30',
+    endTime: '21:00',
+    location: 'Plaza del Callao, Centro',
+    luma: 'https://luma.com/575tlio7',
+    private: true,
+    blurb: 'A Codex update followed by one evening to build and share what we shipped.',
+  },
+  {
     slug: 'company-brain',
     title: 'Building an AI Company Brain',
     date: '2026-06-11',
