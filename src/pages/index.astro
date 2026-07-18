@@ -339,7 +339,7 @@ const showResidents = false;
               target={s.url ? '_blank' : undefined}
               rel={s.url ? 'noopener' : undefined}
             >
-              {s.flag && <span class="sister-flag">{s.flag}</span>}
+              {s.flag && <img class="sister-flag" src={`/flags/${s.flag}.svg`} alt="" />}
               {logo ? (
                 <img
                   src={logo.src}
@@ -859,12 +859,16 @@ const showResidents = false;
     text-decoration: none;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .sister-flag {
+  .sister-tile img.sister-flag {
     position: absolute;
-    top: -12px;
-    right: -9px;
-    font-size: 42px;
-    line-height: 1;
+    top: -8px;
+    right: -8px;
+    width: 40px;
+    height: 30px;
+    max-width: none;
+    max-height: none;
+    border-radius: 3px;
+    object-fit: cover;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
   }
   a.sister-tile:hover {
