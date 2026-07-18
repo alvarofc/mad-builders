@@ -1,10 +1,12 @@
+import { externalLinks } from '../data/site'
+
 export const SITE = 'https://www.mad.builders'
 
 export const DEFAULT_TITLE = "mad.builders - The builders' house in Madrid"
 export const DEFAULT_DESCRIPTION = "The builders' house, where builders, founders and VCs meet in the heart of Madrid. AI, hardware & robotics, healthtech, digital assets."
 export const OG_IMAGE = '/og.png'
 export const LOCALE = 'en_US'
-export const SITE_NAME = 'mad builders'
+export const SITE_NAME = 'mad.builders'
 export const THEME_COLOR = '#1a342b'
 
 export const addressLocality = 'Madrid'
@@ -19,6 +21,14 @@ export function absoluteUrl(path = '/'): string {
   }
 }
 
+// Website JSON-LD for the homepage, so search engines use the canonical brand name.
+export const WEBSITE = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: SITE,
+}
+
 // Organization JSON-LD for the homepage, so search engines can identify the brand.
 export const ORGANIZATION = {
   '@context': 'https://schema.org',
@@ -27,6 +37,7 @@ export const ORGANIZATION = {
   url: SITE,
   logo: absoluteUrl('/icon-512.png'),
   description: DEFAULT_DESCRIPTION,
+  sameAs: [externalLinks.x, externalLinks.linkedin, externalLinks.luma],
   address: {
     '@type': 'PostalAddress',
     streetAddress: 'Pl. del Callao, 1',

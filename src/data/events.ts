@@ -21,6 +21,7 @@ export interface CommunityEvent {
   date: string; // ISO 'YYYY-MM-DD' (local Madrid date)
   luma: string;
   blurb?: string; // doubles as the calendar event's description
+  coverPosition?: string; // CSS object-position for posters that need a custom crop
   // The fields below feed the /madrid calendar widget (all optional).
   time?: string; // 'HH:MM' 24h, Madrid local — start
   endTime?: string; // 'HH:MM' 24h, Madrid local
@@ -38,6 +39,7 @@ export const events: CommunityEvent[] = [
     location: 'Plaza del Callao, Centro',
     luma: 'https://luma.com/575tlio7',
     private: true,
+    coverPosition: 'center 10%',
     blurb: 'A Codex update followed by one evening to build and share what we shipped.',
   },
   {

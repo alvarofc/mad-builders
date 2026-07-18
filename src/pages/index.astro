@@ -7,11 +7,19 @@ import { events, cohosts } from '../data/events';
 import { people } from '../data/people';
 import { projects } from '../data/projects';
 import { sisters } from '../data/friends';
-import { ORGANIZATION } from '../config/seo';
+import { ORGANIZATION, WEBSITE, absoluteUrl } from '../config/seo';
 import sampliaLogo from '../assets/logos/friends/samplia.svg';
 import xIcon from '../assets/logos/socials/x.svg';
 import linkedinIcon from '../assets/logos/socials/linkedin.svg';
 import osoCrest from '../assets/brand/oso-crest.png';
+import primaryHomeImage from '../assets/events/metabase/1.jpeg';
+
+const HOME_PAGE = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  url: absoluteUrl('/'),
+  primaryImageOfPage: absoluteUrl(primaryHomeImage.src),
+};
 
 const covers = import.meta.glob<{ default: ImageMetadata }>('../assets/events/*/cover.jpeg', { eager: true });
 const coverFor = (slug: string) => covers[`../assets/events/${slug}/cover.jpeg`]?.default;
@@ -79,7 +87,7 @@ const ticker = Array.from({ length: 5 }, () => site.focus).flat();
 const showResidents = false;
 ---
 
-<Layout structuredData={ORGANIZATION}>
+<Layout structuredData={[WEBSITE, ORGANIZATION, HOME_PAGE]}>
   <!-- section subnav -->
   <nav class="subnav mono" aria-label="page sections">
     <div class="wrap subnav-inner">
@@ -178,7 +186,15 @@ const showResidents = false;
       <div class="event-grid">
         {events.map((e) => (
           <a class="event-card" href={`/events/${e.slug}/`}>
-            {coverFor(e.slug) && <Image src={coverFor(e.slug)!} alt={e.title} width={520} class="event-cover" />}
+            {coverFor(e.slug) && (
+              <Image
+                src={coverFor(e.slug)!}
+                alt={e.title}
+                width={520}
+                class="event-cover"
+                style={e.coverPosition ? `object-position: ${e.coverPosition}` : undefined}
+              />
+            )}
             <div class="event-meta">
               <span class="mono event-date">{fmt(e.date)}</span>
               <h3>{e.title}</h3>
