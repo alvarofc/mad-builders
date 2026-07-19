@@ -62,15 +62,15 @@ export const companies = ['z.ai', 'Alibaba', 'Kimi', 'NIO', 'Unitree', 'BYD', 'X
 export const faqs = [
   {
     q: '¿Para quién es?',
-    a: 'Para cualquiera con ganas de construir y compartir. Creemos que un grupo diverso hace la experiencia más rica, así que seleccionaremos los candidatos buscando variedad de edades, backgrounds y disciplinas.',
+    a: 'Para cualquiera con ganas de construir y compartir.',
   },
   {
     q: '¿Cuál es el coste?',
-    a: 'Los vuelos están alrededor de los 800 € y la estancia del mes completo, entre los 1.000 € y los 2.000 € según el tipo de alojamiento. Estamos en conversaciones con sponsors para cubrir parte de los gastos del grupo.',
+    a: 'Los vuelos están alrededor de los 800 € y la estancia del mes completo, entre los 1.000 € y los 2.000 € según el tipo de alojamiento.',
   },
   {
     q: '¿Tengo que asistir el mes entero?',
-    a: 'No es obligatorio: tendremos en cuenta aplicaciones de builders que solo puedan asistir durante parte del mes.',
+    a: 'No. Puedes asistir solo durante una parte del mes.',
   },
   {
     q: '¿Cómo es el día a día?',
@@ -79,5 +79,9 @@ export const faqs = [
   {
     q: '¿Se puede trabajar desde allí?',
     a: 'Sí. the-mu ha conseguido que este sea uno de los primeros eventos en China con acceso a internet abierto. Así que desde el venue tendrás acceso a todas las redes y servicios de forma abierta y sin necesidad de vpn.',
+  },
+  {
+    q: '¿Quieres apoyar muShenzhen?',
+    a: 'Si tu empresa quiere apoyar la iniciativa o ayudar a que más builders puedan asistir, estaremos encantados de hablar.',
   },
 ];
