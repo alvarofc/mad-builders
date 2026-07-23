@@ -79,6 +79,15 @@ const fmt = (iso: string) => {
     .toLowerCase();
 };
 
+const todayInMadrid = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' });
+const isUpcoming = (date: string) => date >= todayInMadrid;
+const listedEvents = [...events].sort((a, b) => {
+  const aUpcoming = isUpcoming(a.date);
+  const bUpcoming = isUpcoming(b.date);
+  if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+  return aUpcoming ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
+});
+
 // Repeat the focus words enough times that one "reel" overflows even ultra-wide
 // screens; two identical reels animated by exactly -50% give a seamless loop.
 const ticker = Array.from({ length: 5 }, () => site.focus).flat();
@@ -183,9 +192,10 @@ const showResidents = false;
         Firesides with founders, hands-on hack sessions, demo nights. Subscribe to
         <a href={site.lumaCalendar} target="_blank" rel="noopener">our luma calendar</a> to get notified about new events.
       </p>
+
       <div class="event-grid">
-        {events.map((e) => (
-          <a class="event-card" href={`/events/${e.slug}/`}>
+        {listedEvents.map((e) => (
+          <a class:list={['event-card', { 'is-upcoming': isUpcoming(e.date) }]} href={`/events/${e.slug}/`}>
             {coverFor(e.slug) && (
               <Image
                 src={coverFor(e.slug)!}
@@ -196,7 +206,12 @@ const showResidents = false;
               />
             )}
             <div class="event-meta">
-              <span class="mono event-date">{fmt(e.date)}</span>
+              <div class="event-date-row">
+                <span class="mono event-date">{fmt(e.date)}</span>
+                {isUpcoming(e.date) && (
+                  <span class="mono event-status"><span>upcoming ///</span></span>
+                )}
+              </div>
               <h3>{e.title}</h3>
             </div>
           </a>
@@ -614,6 +629,7 @@ const showResidents = false;
     margin-top: 48px;
   }
   .event-card {
+    position: relative;
     text-decoration: none;
     border: 1px solid var(--line);
     border-radius: 10px;
@@ -632,11 +648,38 @@ const showResidents = false;
     object-fit: cover;
   }
   .event-meta {
+    position: relative;
     padding: 14px 16px 18px;
+  }
+  .event-card.is-upcoming {
+    border-color: var(--cream-faint);
+  }
+  .event-date-row {
+    display: block;
   }
   .event-date {
     color: var(--cream-faint);
     font-size: 11px;
+  }
+  .event-status {
+    position: absolute;
+    top: -13px;
+    right: 10px;
+    z-index: 1;
+    padding: 1px;
+    background: var(--green);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    clip-path: polygon(7px 0, 100% 0, 100% 100%, 7px 100%, 0 50%);
+    filter: drop-shadow(0 3px 6px color-mix(in srgb, var(--green-deep) 35%, transparent));
+  }
+  .event-status span {
+    display: block;
+    padding: 4px 8px 4px 13px;
+    color: var(--green);
+    background: var(--cream);
+    clip-path: polygon(6px 0, 100% 0, 100% 100%, 6px 100%, 0 50%);
   }
   .event-meta h3 {
     font-size: 16px;
