@@ -18,8 +18,10 @@
 //      events go in the list below.
 //   2. Pull date, start/end time (convert to Madrid local), and location.
 //   3. Save the cover image to public/events/<slug>.jpg and reference it as
-//      '/events/<slug>.jpg'. Strip personal invite tokens from `url`
-//      (e.g. Luma's '?tk=...').
+//      '/events/<slug>.jpg'. For Luma, use the original cover asset under
+//      `/uploads/`, never the generated `/event-social/` Open Graph image.
+//      Inspect the saved image before continuing. Strip personal invite tokens
+//      from `url` (e.g. Luma's '?tk=...').
 //   4. `description`: write a 1–2 sentence summary of the event in its OWN
 //      language (es/en) — don't paste the full blurb. No em-dashes (house style).
 //   5. `private: true` if the page is invite-only / approval-required (signals:

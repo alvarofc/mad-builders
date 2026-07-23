@@ -31,6 +31,19 @@ export interface CommunityEvent {
 
 export const events: CommunityEvent[] = [
   {
+    slug: 'ingenieria-agentica-seria',
+    title: 'Ingeniería agéntica seria',
+    date: '2026-09-17',
+    time: '17:00',
+    endTime: '21:00',
+    location: 'Madrid',
+    luma: 'https://luma.com/h6z7na7z',
+    private: true,
+    coverPosition: 'center 18%',
+    blurb:
+      'Una charla técnica con Alejandro Vidal sobre agentes, feedback y observabilidad en proyectos reales. Para perfiles técnicos y de producto que ya trabajan con IA.',
+  },
+  {
     slug: 'openai-build-week',
     title: 'OpenAI Build Week Madrid',
     date: '2026-07-15',
