@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import Layout from '../layouts/ShenzhenLayout.astro';
-import { EVENT, APPLY_URL, images, weeks, companies, faqs, marqueePhotos } from '../data/shenzhen';
+import { EVENT, APPLY_URL, SPONSOR_URL, images, weeks, companies, faqs, marqueePhotos } from '../data/shenzhen';
 // the-mu logo for the hero lockup. the-mu = "The Mu" popup-city organiser; its
 // logo ships cream-on-transparent, so both marks get a mono ink treatment via CSS.
 // mad.builders wordmark is referenced from /public by URL below.
@@ -47,7 +47,7 @@ const zoomPhotos = [
         <a href="#the-mu">the-mu</a>
         <a href="#faq">faq</a>
       </nav>
-      <a href={APPLY_URL} class="po-nav-cta">Aplicar</a>
+      <a href={APPLY_URL} class="po-nav-cta" target="_blank" rel="noopener">Aplicar</a>
     </div>
   </header>
 
@@ -232,8 +232,8 @@ const zoomPhotos = [
       <h2>¿Te vienes a<br />Shenzhen<em>?</em></h2>
       <p>Cuatro semanas en el corazón de la tecnología en China.</p>
       <div class="po-apply-cta">
-        <span class="po-btn po-btn-light po-btn-disabled" aria-disabled="true" data-i18n="applyBtn">Aplicar ahora →</span>
-        <span class="po-btn po-btn-ghost-light po-btn-disabled" aria-disabled="true" data-i18n="sponsorBtn">Info para sponsors</span>
+        <a href={APPLY_URL} class="po-btn po-btn-light" target="_blank" rel="noopener" data-i18n="applyBtn">Aplicar ahora →</a>
+        <a href={SPONSOR_URL} class="po-btn po-btn-ghost-light" target="_blank" rel="noopener" data-i18n="sponsorBtn">Info para sponsors</a>
       </div>
     </section>
   </main>
@@ -1297,17 +1297,6 @@ const zoomPhotos = [
     background: #fff;
     color: var(--ink);
   }
-
-  /* placeholder CTAs — visible but inert until the form/contact exists */
-  .po-btn-disabled {
-    cursor: default;
-  }
-
-  .po-btn-disabled:hover {
-    transform: none;
-    box-shadow: 4px 4px 0 var(--line);
-  }
-
 
   /* footer */
   .po-footer {

@@ -32,7 +32,8 @@ export const EVENT = {
   dateShort: 'Noviembre 2026',
 };
 
-export const APPLY_URL = '#aplicaciones'; // TODO: enlace al formulario de aplicación
+export const APPLY_URL = 'https://tally.so/r/WOkJoJ';
+export const SPONSOR_URL = 'https://tally.so/r/9qgPpX';
 
 export const images = {
   hero,
