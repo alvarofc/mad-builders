@@ -195,7 +195,12 @@ const showResidents = false;
 
       <div class="event-grid">
         {listedEvents.map((e) => (
-          <a class:list={['event-card', { 'is-upcoming': isUpcoming(e.date) }]} href={`/events/${e.slug}/`}>
+          <a
+            class:list={['event-card', { 'is-upcoming': isUpcoming(e.date) }]}
+            href={`/events/${e.slug}/`}
+            data-event-card
+            data-date={e.date}
+          >
             {coverFor(e.slug) && (
               <Image
                 src={coverFor(e.slug)!}
@@ -385,6 +390,32 @@ const showResidents = false;
 
 <script>
   import '../scripts/section-subnav';
+
+  const eventGrid = document.querySelector<HTMLElement>('.event-grid');
+  const eventCards = [...document.querySelectorAll<HTMLAnchorElement>('[data-event-card]')];
+
+  if (eventGrid && eventCards.length) {
+    const todayInMadrid = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' });
+    const dateFor = (card: HTMLAnchorElement) => card.dataset.date ?? '';
+    const isUpcoming = (card: HTMLAnchorElement) => dateFor(card) >= todayInMadrid;
+
+    eventCards.sort((a, b) => {
+      const aUpcoming = isUpcoming(a);
+      const bUpcoming = isUpcoming(b);
+      if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+      return aUpcoming
+        ? dateFor(a).localeCompare(dateFor(b))
+        : dateFor(b).localeCompare(dateFor(a));
+    });
+
+    eventCards.forEach((card) => {
+      const upcoming = isUpcoming(card);
+      card.classList.toggle('is-upcoming', upcoming);
+      const badge = card.querySelector<HTMLElement>('.event-status');
+      if (badge) badge.hidden = !upcoming;
+      eventGrid.append(card);
+    });
+  }
 
   const dialog = document.getElementById('hero-lightbox') as HTMLDialogElement;
   if (dialog) {
