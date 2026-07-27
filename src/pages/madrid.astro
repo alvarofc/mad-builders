@@ -182,19 +182,19 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
   );
 
   // Spots without a fixed address (lat/lng omitted) are fanned out in a circle
-  // around Puerta del Sol so they're all visible instead of stacking on one
+  // around central Madrid so they're all visible instead of stacking on one
   // point. The ring radius grows with the count to keep neighbours apart.
-  const SOL = [40.4169, -3.7038];
-  const COS_LAT = Math.cos((SOL[0] * Math.PI) / 180);
+  const FLOAT_CENTER = [40.413, -3.7038];
+  const COS_LAT = Math.cos((FLOAT_CENTER[0] * Math.PI) / 180);
   const floating = spots.filter((s) => s.lat == null || s.lng == null);
   const CHORD = 0.0038; // min spacing between neighbours, in degrees of latitude
   const posFor = (s, i) => {
     if (s.lat != null && s.lng != null) return [s.lat, s.lng];
     const n = floating.length;
-    if (n === 1) return SOL;
+    if (n === 1) return FLOAT_CENTER;
     const r = CHORD / (2 * Math.sin(Math.PI / n));
     const a = (2 * Math.PI * i) / n - Math.PI / 2;
-    return [SOL[0] + r * Math.sin(a), SOL[1] + (r / COS_LAT) * Math.cos(a)];
+    return [FLOAT_CENTER[0] + r * Math.sin(a), FLOAT_CENTER[1] + (r / COS_LAT) * Math.cos(a)];
   };
 
   spots.forEach((s) => {

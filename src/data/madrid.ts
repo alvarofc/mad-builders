@@ -153,6 +153,14 @@ export const spots: Spot[] = [
     twitter: 'https://x.com/Capchase',
   },
   {
+    name: 'Tuyo',
+    kind: 'company',
+    note: 'Self-custodial app for card payments, global transfers, crypto trading and DeFi yield',
+    logo: '/map/tuyo.svg',
+    url: 'https://tuyo.com/',
+    twitter: 'https://x.com/itstuyo',
+  },
+  {
     name: 'OpenAI',
     kind: 'company',
     note: 'Frontier AI research and the company behind ChatGPT and the API',
