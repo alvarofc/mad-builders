@@ -36,7 +36,7 @@ const fmt = new Date(Date.UTC(dy, dm - 1, dd))
       {event.blurb && <p class="lede">{event.blurb}</p>}
       <a class="btn event-luma" href={event.luma} target="_blank" rel="noopener">luma →</a>
 
-      {photos.length > 0 ? (
+      {photos.length > 0 && (
         <div class="gallery">
           {photos.map((p, i) => (
             <button class="shot" data-index={i}>
@@ -44,8 +44,6 @@ const fmt = new Date(Date.UTC(dy, dm - 1, dd))
             </button>
           ))}
         </div>
-      ) : (
-        <p class="lede no-photos">no photos yet, we were too busy building.</p>
       )}
     </div>
   </section>
@@ -108,10 +106,6 @@ const fmt = new Date(Date.UTC(dy, dm - 1, dd))
   .event-luma {
     margin-top: 30px;
   }
-  .no-photos {
-    margin-top: 56px;
-  }
-
   .gallery {
     columns: 3 300px;
     column-gap: 14px;
