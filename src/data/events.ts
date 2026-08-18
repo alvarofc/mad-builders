@@ -44,7 +44,7 @@ export const events: CommunityEvent[] = [
   },
   {
     slug: 'hermes-fde-madrid',
-    title: 'Hermes FDE Madrid (also live on X)',
+    title: 'Hermes FDE Madrid',
     date: '2026-08-25',
     time: '18:30',
     endTime: '19:30',
