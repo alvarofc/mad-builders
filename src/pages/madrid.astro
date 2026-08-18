@@ -830,6 +830,7 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     border-bottom: 1px solid var(--cal-line);
   }
   .cal-cell {
+    min-width: 0;
     min-height: 104px;
     padding: 8px;
     border-right: 1px solid var(--cal-line);
@@ -865,12 +866,15 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
   }
   .cal-chip {
     display: flex;
     align-items: baseline;
     gap: 5px;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     padding: 3px 6px;
     border: 1px solid transparent;
     border-radius: 5px;
@@ -904,9 +908,12 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     flex-shrink: 0;
   }
   .cal-chip-title {
+    display: -webkit-box;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
   .cal-chip-lock {
     display: inline-flex;

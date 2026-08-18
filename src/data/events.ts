@@ -11,10 +11,10 @@
 // src/assets/events/<slug>/cover.jpeg, so no separate image path is needed.
 //
 // Adding an event from a link: see the "Adding an event from just a link"
-// workflow in `calendar.ts`. Same inference applies here — read the event page,
-// write `blurb` as a 1–2 sentence summary in the event's own language (it
+// workflow in `calendar.ts`. Read the event page and write `blurb` as a 1-2
+// sentence summary in the event's own language (it
 // doubles as the calendar description), backfill `time`/`endTime`/`location`,
-// and set `private: true` for invite-only / approval-required events.
+// and set `private: true` only for genuinely private or invite-only events.
 export interface CommunityEvent {
   slug: string;
   title: string;
@@ -38,10 +38,20 @@ export const events: CommunityEvent[] = [
     endTime: '21:00',
     location: 'Madrid',
     luma: 'https://luma.com/h6z7na7z',
-    private: true,
     coverPosition: 'center 18%',
     blurb:
       'Una charla técnica con Alejandro Vidal sobre agentes, feedback y observabilidad en proyectos reales. Para perfiles técnicos y de producto que ya trabajan con IA.',
+  },
+  {
+    slug: 'hermes-fde-madrid',
+    title: 'Hermes FDE Madrid (also live on X)',
+    date: '2026-08-25',
+    time: '18:30',
+    endTime: '19:30',
+    location: 'Plaza del Callao, Centro',
+    luma: 'https://luma.com/ba193a1o',
+    blurb:
+      'Sesión presencial y retransmitida en X sobre cómo llevar agentes Hermes a entornos empresariales reales: conexión con herramientas existentes, experiencia de usuario para perfiles no técnicos y el papel del software abierto frente a los grandes laboratorios.',
   },
   {
     slug: 'openai-build-week',
@@ -51,7 +61,6 @@ export const events: CommunityEvent[] = [
     endTime: '21:00',
     location: 'Plaza del Callao, Centro',
     luma: 'https://luma.com/575tlio7',
-    private: true,
     coverPosition: 'center 10%',
     blurb: 'A Codex update followed by one evening to build and share what we shipped.',
   },
