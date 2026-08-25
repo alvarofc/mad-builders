@@ -47,7 +47,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
   <body>
     <header class="nav">
       <div class="wrap nav-inner">
-        <a href="/" class="wordmark">mad<span>.builders</span></a>
+        <a href="/" class="wordmark" data-brand-menu-trigger aria-haspopup="menu">mad<span>.builders</span></a>
         <nav class="links mono">
           <a href="/">Home</a>
           <a href="/madrid">Madrid</a>
@@ -63,7 +63,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     <footer class="footer">
       <div class="wrap footer-top">
         <div class="footer-brand">
-          <a href="/" class="footer-mark">mad<span>.builders</span></a>
+          <a href="/" class="footer-mark" data-brand-menu-trigger aria-haspopup="menu">mad<span>.builders</span></a>
           <a class="footer-map mono" href="https://maps.app.goo.gl/3MxVbkH5V8UQwMMu6" target="_blank" rel="noopener">pl. del callao 1<br />Madrid, Spain ↗</a>
         </div>
         <nav class="footer-nav mono" aria-label="footer">
@@ -86,7 +86,42 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
         </div>
       </div>
     </footer>
+    <div id="brand-menu" class="brand-menu mono" popover="manual" role="menu">
+      <p>media assets</p>
+      <a href="/brand#assets" role="menuitem">all assets <span>→</span></a>
+      <a href="/logo/mad-builders-cream.svg" download role="menuitem">logo · svg <span>↓</span></a>
+      <a href="/logo/mad-builders-cream.png" download role="menuitem">logo · png <span>↓</span></a>
+    </div>
     <Analytics />
+
+    <script>
+      const brandMenu = document.querySelector<HTMLElement>('#brand-menu');
+
+      document.querySelectorAll<HTMLElement>('[data-brand-menu-trigger]').forEach((wordmark) => {
+        wordmark.addEventListener('contextmenu', (event) => {
+          if (!brandMenu) return;
+
+          event.preventDefault();
+          const mark = wordmark.getBoundingClientRect();
+          const x = event.clientX || mark.left;
+          const y = event.clientY || mark.bottom;
+          brandMenu.style.left = `${Math.max(12, Math.min(x, window.innerWidth - 252))}px`;
+          brandMenu.style.top = `${Math.max(12, Math.min(y, window.innerHeight - 156))}px`;
+
+          if (!brandMenu.matches(':popover-open')) brandMenu.showPopover();
+        });
+      });
+
+      brandMenu?.addEventListener('click', () => brandMenu.hidePopover());
+      document.addEventListener('pointerdown', (event) => {
+        if (brandMenu?.matches(':popover-open') && !brandMenu.contains(event.target as Node)) {
+          brandMenu.hidePopover();
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && brandMenu?.matches(':popover-open')) brandMenu.hidePopover();
+      });
+    </script>
   </body>
 </html>
 
@@ -115,6 +150,40 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
   .wordmark span {
     color: var(--cream-dim);
     font-weight: 400;
+  }
+  .brand-menu {
+    position: fixed;
+    inset: auto;
+    width: min(240px, calc(100vw - 24px));
+    margin: 0;
+    padding: 6px;
+    color: var(--green);
+    background: var(--cream);
+    border: 1px solid color-mix(in srgb, var(--green) 22%, transparent);
+    border-radius: 8px;
+    box-shadow: 0 18px 50px rgba(20, 42, 34, 0.24);
+  }
+  .brand-menu p {
+    margin: 8px 10px 6px;
+    color: color-mix(in srgb, var(--green) 50%, transparent);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .brand-menu a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border-radius: 4px;
+    color: var(--green);
+    text-decoration: none;
+  }
+  .brand-menu a:hover,
+  .brand-menu a:focus-visible {
+    color: var(--cream);
+    background: var(--green);
+    outline: none;
   }
   .links {
     display: flex;
