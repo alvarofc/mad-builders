@@ -86,7 +86,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
         </div>
       </div>
     </footer>
-    <div id="brand-menu" class="brand-menu mono" popover="auto" role="menu">
+    <div id="brand-menu" class="brand-menu mono" popover="manual" role="menu">
       <p>media assets</p>
       <a href="/brand#assets" role="menuitem">all assets <span>→</span></a>
       <a href="/logo/mad-builders-cream.svg" download role="menuitem">logo · svg <span>↓</span></a>
@@ -113,6 +113,14 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       });
 
       brandMenu?.addEventListener('click', () => brandMenu.hidePopover());
+      document.addEventListener('pointerdown', (event) => {
+        if (brandMenu?.matches(':popover-open') && !brandMenu.contains(event.target as Node)) {
+          brandMenu.hidePopover();
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && brandMenu?.matches(':popover-open')) brandMenu.hidePopover();
+      });
     </script>
   </body>
 </html>
