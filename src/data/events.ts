@@ -31,6 +31,17 @@ export interface CommunityEvent {
 
 export const events: CommunityEvent[] = [
   {
+    slug: 'spec-kitty',
+    title: 'Spec Kitty: Structured AI Coding for Real Teams',
+    date: '2026-09-22',
+    time: '18:00',
+    endTime: '19:00',
+    location: 'Plaza del Callao, Centro',
+    luma: 'https://luma.com/homsbdzv',
+    blurb:
+      'A hands-on workshop with Spec Kitty creator Robert Douglas on giving AI coding agents a spec, plan and reviewable workflow. See how it works in an existing codebase and what adoption looks like for a real team.',
+  },
+  {
     slug: 'ingenieria-agentica-seria',
     title: 'Ingeniería agéntica seria',
     date: '2026-09-17',
@@ -41,6 +52,17 @@ export const events: CommunityEvent[] = [
     coverPosition: 'center 18%',
     blurb:
       'Una charla técnica con Alejandro Vidal sobre agentes, feedback y observabilidad en proyectos reales. Para perfiles técnicos y de producto que ya trabajan con IA.',
+  },
+  {
+    slug: 'omarchy-spain-madrid',
+    title: 'Omarchy Spain - Madrid',
+    date: '2026-09-16',
+    time: '19:00',
+    endTime: '21:30',
+    location: 'Plaza del Callao, Centro',
+    luma: 'https://luma.com/f8kpok4h',
+    blurb:
+      'The first Omarchy meetup in Madrid. Bring your laptop to compare setups, swap themes and plugins, help with installs and talk Linux, open source and whatever you are building.',
   },
   {
     slug: 'hermes-fde-madrid',
