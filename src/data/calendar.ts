@@ -162,6 +162,17 @@ export const calendarEvents: CalendarEvent[] = [
       'An informal rooftop meetup for fintech founders, banking leaders, operators, investors and ecosystem builders from across Spain and Europe. No panels or pitches, just drinks and conversation at Hotel Urban.',
   },
   {
+    title: 'Out in Tech after work',
+    date: '2026-08-27',
+    time: '20:00',
+    endTime: '22:00',
+    location: 'Doce Botellas, Chueca',
+    url: 'https://www.meetup.com/es-es/out-in-tech-madrid/events/311781958/',
+    image: '/events/out-in-tech-monthly-mixer.jpg',
+    description:
+      'Copas de final de mes para que la comunidad LGBTQ+ de tecnología en Madrid se conozca y conecte. El encuentro es en Doce Botellas, en Chueca.',
+  },
+  {
     title:
       'Beyond The Prompt | Maex Arment (Causa Prima) & Carlos Riquelme (Microsoft AI) & Alejandro Vidal (Mindmakers)',
     date: '2026-09-01',
@@ -174,6 +185,28 @@ export const calendarEvents: CalendarEvent[] = [
       "Kfund's Beyond the Prompt returns with Maex Arment (Causa Prima), Carlos Riquelme (Microsoft AI) and Alejandro Vidal (Mindmakers). Three technical talks on agent networks for finance, modern AI and the work around the prompt, followed by pizza and drinks.",
   },
   {
+    title: 'Vibe Coding & Friends',
+    date: '2026-09-02',
+    time: '19:00',
+    endTime: '21:30',
+    location: 'Hotel ICON Wipton, Salamanca',
+    url: 'https://www.meetup.com/es-es/the-vcc/events/pdggztyjcmbdb/',
+    image: '/events/vibe-coding-friends.jpg',
+    description:
+      'A casual meetup for founders and builders working with AI. Bring a project or idea to share, get feedback and meet other people building in Madrid.',
+  },
+  {
+    title: 'Madrid AI Builders: Friday Networking',
+    date: '2026-09-04',
+    time: '17:00',
+    endTime: '19:00',
+    location: 'Generator Madrid, Centro',
+    url: 'https://luma.com/dw1br936',
+    image: '/events/madrid-ai-builders.jpg',
+    description:
+      'A Friday meetup for people building with AI in Madrid. Founders, developers and creators can swap ideas and talk about projects, agents, automation and new tools.',
+  },
+  {
     title: 'Ahead x Magnific',
     date: '2026-09-09',
     time: '18:30',
@@ -183,6 +216,17 @@ export const calendarEvents: CalendarEvent[] = [
     image: '/events/ahead-magnific.png',
     description:
       'Melissa Diago, Antonio Lasaga y Alejandro Gómez cuentan cómo Magnific integra la IA en el trabajo creativo, ejecutó su cambio de marca y está cambiando la forma de trabajar de la empresa. Después habrá cóctel y networking en la Central de Diseño.',
+  },
+  {
+    title: '#CodeMeet: ¿Quién controla a los agentes?',
+    date: '2026-09-17',
+    time: '18:30',
+    endTime: '21:30',
+    location: 'Celonis Office, Tetuán',
+    url: 'https://www.meetup.com/es-es/codemotion-espana/events/316210308/',
+    image: '/events/codemeet-control-agents.jpg',
+    description:
+      'Tres charlas técnicas sobre sistemas agénticos: ahorro de tokens, construcción de MCPs y seguridad. La sesión termina con preguntas y cervezas en la oficina de Celonis.',
   },
   {
     title: 'HackSpain 2026',
@@ -214,5 +258,27 @@ export const calendarEvents: CalendarEvent[] = [
     image: '/events/fredcon-26.png',
     description:
       'La conferencia de Manfred sobre liderazgo técnico y gestión de equipos reúne a responsables técnicos y equipos de recursos humanos. Habrá sesiones sobre equilibrio salarial, gestión de personas y cómo hacer que ambos lados trabajen mejor juntos.',
+  },
+  {
+    title: 'Startup Oasis Innovation Café',
+    date: '2026-09-25',
+    time: '09:00',
+    endTime: '11:00',
+    location: 'VEIA Café & Clubhouse, Retiro',
+    url: 'https://www.meetup.com/es-es/startup-oasis/events/qsqqxtyjcmbhc/',
+    image: '/events/startup-oasis-innovation-cafe.jpg',
+    description:
+      'Morning coffee for founders, developers, designers and product people. There is no agenda, just breakfast and conversations in English and Spanish.',
+  },
+  {
+    title: 'PostgreSQL partitioning and immutable releases',
+    date: '2026-09-28',
+    time: '18:50',
+    endTime: '20:50',
+    location: 'Celonis Office, Tetuán',
+    url: 'https://www.meetup.com/es-es/madrid-devops/events/316152297/',
+    image: '/events/madrid-devops-postgresql.jpg',
+    description:
+      'Jorge Argente Ferrero comparte el post-mortem de un incidente en Clarity AI y el rediseño que siguió. La charla cubre particionado declarativo de PostgreSQL, cargas atómicas y releases inmutables.',
   },
 ];
