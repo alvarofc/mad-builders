@@ -80,8 +80,8 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
             <button type="button" class="cal-todaybtn" data-nav="today">today</button>
           </div>
           <div class="cal-views mono" role="tablist" aria-label="calendar view">
-            <button type="button" class="active" data-view="week">week</button>
-            <button type="button" data-view="month">month</button>
+            <button type="button" data-view="week">week</button>
+            <button type="button" class="active" data-view="month">month</button>
           </div>
         </div>
         <div class="cal-body" id="cal-body"></div>
@@ -263,8 +263,10 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     // Monday of the current week — the week view always starts here, regardless
     // of which weekday today is.
     const weekStart = addDays(today, -isoDow(today));
-    let view = 'week';
-    let anchor = weekStart; // week: window start (Monday); month: any day in the month
+    // The month works best with desktop space. Mobile starts with the vertical
+    // week agenda, while both layouts keep the manual view switcher.
+    let view = window.matchMedia('(max-width: 720px)').matches ? 'week' : 'month';
+    let anchor = view === 'week' ? weekStart : new Date(today.getFullYear(), today.getMonth(), 1);
 
     // Escape event fields before they go into innerHTML — the data is
     // repo-controlled today, but external titles/locations shouldn't be able to
@@ -440,6 +442,9 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
       render();
     });
 
+    cal.querySelectorAll('.cal-views button').forEach((b) =>
+      b.classList.toggle('active', b.dataset.view === view)
+    );
     render();
   })();
 </script>

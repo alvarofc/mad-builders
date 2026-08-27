@@ -281,4 +281,14 @@ export const calendarEvents: CalendarEvent[] = [
     description:
       'Jorge Argente Ferrero comparte el post-mortem de un incidente en Clarity AI y el rediseño que siguió. La charla cubre particionado declarativo de PostgreSQL, cargas atómicas y releases inmutables.',
   },
+  {
+    title: 'Madrid | 48-hour Claude Code Hackathon',
+    date: '2026-10-02',
+    time: '18:00',
+    location: 'Nova Talent office, Tetuán',
+    url: 'https://luma.com/claude-dyek',
+    image: '/events/claude-code-hackathon-madrid.png',
+    description:
+      "A 48-hour Claude Code hackathon on agent-to-agent infrastructure, run with Nova Talent and Causa Prima. Around 50 participants will build in teams from Friday evening to Sunday, with three short talks during the weekend.",
+  },
 ];
