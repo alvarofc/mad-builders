@@ -183,14 +183,14 @@ export const events: CommunityEvent[] = [
 ];
 
 // Companies we have co-hosted events with. `name` matches the logo file in
-// src/assets/logos/friends/<name>.svg
+// src/assets/logos/friends/<name>.*
 export interface Cohost {
   name: string;
   url: string;
 }
 
 export const cohosts: Cohost[] = [
-  { name: 'lovable', url: 'https://lovable.dev/' },
+  { name: 'cerebras', url: 'https://www.cerebras.ai/' },
   { name: 'cursor', url: 'https://cursor.com/' },
   { name: 'vercel', url: 'https://vercel.com/' },
   { name: 'metabase', url: 'https://www.metabase.com/' },
