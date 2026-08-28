@@ -55,8 +55,8 @@ const stripBottom = [
 // Both strips feed one lightbox; indices are top photos first, then bottom.
 const lightboxPhotos = [...stripTop, ...stripBottom];
 
-const friendLogos = import.meta.glob<{ default: ImageMetadata }>('../assets/logos/friends/*.svg', { eager: true });
-const cohostLogo = (name: string) => friendLogos[`../assets/logos/friends/${name}.svg`]?.default;
+const friendLogos = import.meta.glob<{ default: ImageMetadata }>('../assets/logos/friends/*.{svg,png}', { eager: true });
+const cohostLogo = (name: string) => friendLogos[`../assets/logos/friends/${name}.svg`]?.default ?? friendLogos[`../assets/logos/friends/${name}.png`]?.default;
 // These logos are already white/light-toned, so they skip the white-ink filter.
 const rawCohosts = new Set(['cursor']);
 
