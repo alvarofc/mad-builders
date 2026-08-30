@@ -86,7 +86,8 @@ const donts = [
       <h2 class="section-title">01 · Logo</h2>
       <p class="lede">
         Bricolage Grotesque, medium weight. The dot stays dimmed to the same tone as
-        “builders”. Two lockups only: cream on green, or green on cream.
+        “builders”. Two lockups only: cream on green, or green on cream. Exported assets
+        use a solid dimmed tone, so the background never shows through the letters.
       </p>
       <div class="logo-boards">
         <div class="board green-board">
@@ -552,14 +553,14 @@ const donts = [
     color: var(--cream);
   }
   .mark-dot {
-    color: var(--cream-dim);
+    color: var(--logo-dim-on-green);
     font-weight: 400;
   }
   .mark-ink {
     color: var(--green);
   }
   .mark-dot-ink {
-    color: rgba(26, 52, 43, 0.55);
+    color: var(--logo-dim-on-cream);
     font-weight: 400;
   }
 

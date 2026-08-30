@@ -5,6 +5,8 @@
   --cream: #f6f5f0;
   --cream-dim: rgba(246, 245, 240, 0.62);
   --cream-faint: rgba(246, 245, 240, 0.38);
+  --logo-dim-on-green: #a2aca5;
+  --logo-dim-on-cream: #7d8b84;
   --line: rgba(246, 245, 240, 0.14);
   /* /madrid map category colours (legend swatch + marker border). Tunable —
      the brand is green/cream, so these are three earthy accents picked to read
