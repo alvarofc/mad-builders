@@ -249,6 +249,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Tomás Stambulsky, Luis Rodrigo Orellana y Jesús Alberto comparten qué están construyendo, los errores que han cometido y un problema real que estén resolviendo ahora. Después, la conversación se abre a las 20 personas de la sala y termina con algo de beber, sin networking forzado.',
   },
   {
+    title: 'Beers & Reliability',
+    date: '2026-09-23',
+    time: '18:30',
+    endTime: '21:00',
+    location: 'Hispanoamérica, venue shared with guests',
+    url: 'https://luma.com/zb95bhdg',
+    image: '/events/beers-reliability.png',
+    description:
+      'Daniel Afonso from PagerDuty gives a practical talk on chaos engineering: breaking systems on purpose to make them more reliable. Food, drinks and an open bar follow the session.',
+  },
+  {
     title: "FredCon'26 by Google Cloud",
     date: '2026-09-24',
     time: '09:30',
@@ -258,6 +269,17 @@ export const calendarEvents: CalendarEvent[] = [
     image: '/events/fredcon-26.png',
     description:
       'La conferencia de Manfred sobre liderazgo técnico y gestión de equipos reúne a responsables técnicos y equipos de recursos humanos. Habrá sesiones sobre equilibrio salarial, gestión de personas y cómo hacer que ambos lados trabajen mejor juntos.',
+  },
+  {
+    title: 'AI Socratic Madrid - September',
+    date: '2026-09-24',
+    time: '17:30',
+    endTime: '20:00',
+    location: 'Experience Design Lab, Distrito Telefónica',
+    url: 'https://luma.com/42vour7p',
+    image: '/events/ai-socratic-madrid-september.png',
+    description:
+      'A monthly discussion for people working seriously with AI in Madrid. Jorge Ordovás and Alfonso de la Rocha moderate a conversation based on the latest AI Socratic post, followed by demos and short presentations.',
   },
   {
     title: 'Startup Oasis Innovation Café',
