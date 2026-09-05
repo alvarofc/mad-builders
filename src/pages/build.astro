@@ -14,7 +14,10 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 
 const currentUser = Astro.locals.user;
 const currentProfile = currentUser ? await getProfileByUserId(currentUser.id) : null;
-const buildState = currentProfile ? await getBuildState(currentProfile.userId) : null;
+const selectedWeekDate = Astro.url.searchParams.get('week');
+const buildState = currentProfile ? await getBuildState(currentProfile.userId, selectedWeekDate) : null;
+const unavailableWeek = Boolean(currentProfile && selectedWeekDate && !buildState);
+if (unavailableWeek) Astro.response.status = 404;
 const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
 const board = demo ? demoLeaderboard : await getLatestLeaderboard(currentUser?.id);
 const ref = normalizeHandle(Astro.url.searchParams.get('ref') ?? '');
@@ -45,7 +48,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
     <section class="week-section" id="this-week">
       <div class="wrap section-heading">
         <p class="work-label">accountability loop</p>
-        <h2 class="app-section-title">This week</h2>
+        <h2 class="app-section-title">{buildState?.selectedLateWeek ? 'Catch up' : 'This week'}</h2>
       </div>
       <div class="wrap update-shell">
         <div>
@@ -125,8 +128,17 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
               </div>
             </form>
           </>
+        ) : unavailableWeek ? (
+          <p class="work-copy">This update is unavailable or already published. <a href="/build#this-week">Back to this week</a></p>
         ) : (
           <>
+            {buildState?.selectedLateWeek ? (
+              <p class="work-note"><a href="/build#this-week">Back to this week</a></p>
+            ) : buildState?.unfinishedWeeks.length ? (
+              <p class="work-note">Still want to share an earlier week? {buildState.unfinishedWeeks.map((week) => (
+                <a href={`/build?week=${week.weekStartDate}#this-week`}>Finish the update for {week.weekStartDate}. </a>
+              ))}</p>
+            ) : null}
             {buildState?.currentResult && !editing ? (
               <>
                 <p class="work-label">published / week of {buildState.currentWeek?.weekStartDate}</p>
@@ -151,7 +163,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 <p class="work-label">weekly update / week of {buildState.currentWeek?.weekStartDate}</p>
                 <h2 class="work-heading">{editing ? 'Edit your weekly update.' : buildState.currentCommitment?.promise ? 'Tell us how the week went.' : 'Your first weekly update.'}</h2>
                 {buildState.currentWeek && (
-                  <p class="work-note">Ranking deadline: {madridDate(buildState.currentWeek.submissionClosesAt)}</p>
+                  <p class="work-note">{buildState.late ? 'The ranking deadline has passed. You can still publish this update, but it will not enter voting or count toward your streak.' : `Ranking deadline: ${madridDate(buildState.currentWeek.submissionClosesAt)}`}</p>
                 )}
                 <form class="work-form" method="post" action="/api/result/publish" data-api-form data-draft-key={`weekly:${currentProfile.userId}:${buildState.currentWeek?.id}`}>
                   <p class="draft-status" data-draft-status role="status">Drafts stay on this browser until you publish.</p>
@@ -185,7 +197,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                     <label><input type="radio" name="status" value="missed" checked={buildState.currentResult?.status === 'missed'} /><span>none of it</span></label>
                   </fieldset>
                   ) : <input type="hidden" name="status" value="submitted" />}
-                  {buildState.nextWeek && (
+                  {buildState.canSetNextPromise && (
                     <label class="work-field">
                       <span>What do you want to have done by the end of next week?</span>
                       <textarea name="nextPromise" minlength="5" maxlength="280" required>{buildState.nextCommitment?.promise}</textarea>
@@ -212,7 +224,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                     <input name="proofUrl" type="url" value={buildState.currentResult?.proofUrl ?? ''} placeholder="Optional: a demo, launch, commit, or post" inputmode="url" />
                     <small>A link lets other builders see what you made.</small>
                   </label>
-                  <p class="draft-status">Your update is public after publishing. You can edit until voting opens.</p>
+                  <p class="draft-status">{buildState.late ? 'Your update is public and locked after publishing.' : 'Your update is public after publishing. You can edit until voting opens.'}</p>
                   <div>
                     <button class="work-button" type="submit">{editing ? 'save changes' : 'publish update'}</button>
                     <p class="work-status" data-form-status aria-live="polite"></p>

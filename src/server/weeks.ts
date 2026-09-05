@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNull, lte, sql } from 'drizzle-orm';
 import { db, databaseConfigured } from './db';
 import { commitment, result, week } from './schema';
 
@@ -56,11 +56,20 @@ async function refreshWeeklySchedule() {
   scheduleFreshUntil = Date.now() + 60_000;
 }
 
-export async function getBuildState(userId: string) {
+export async function getBuildState(userId: string, selectedWeekDate?: string | null) {
   if (!databaseConfigured) return null;
 
   const now = await getDatabaseNow();
-  const [currentWeek] = await db
+  const unfinishedWeeks = await db.select({ week }).from(commitment)
+    .innerJoin(week, eq(commitment.weekId, week.id))
+    .leftJoin(result, eq(result.commitmentId, commitment.id))
+    .where(and(eq(commitment.userId, userId), lte(week.submissionClosesAt, now), isNull(result.id)))
+    .orderBy(desc(week.startsAt));
+  const selectedWeek = selectedWeekDate
+    ? unfinishedWeeks.find(({ week }) => week.weekStartDate === selectedWeekDate)?.week
+    : null;
+  if (selectedWeekDate && !selectedWeek) return null;
+  const [currentWeek] = selectedWeek ? [selectedWeek] : await db
     .select()
     .from(week)
     .where(and(lte(week.startsAt, now), gt(week.votingClosesAt, now)))
@@ -69,7 +78,7 @@ export async function getBuildState(userId: string) {
   const [nextWeek] = await db
     .select()
     .from(week)
-    .where(gt(week.startsAt, now))
+    .where(gt(week.startsAt, currentWeek?.startsAt ?? now))
     .orderBy(asc(week.startsAt))
     .limit(1);
 
@@ -87,6 +96,8 @@ export async function getBuildState(userId: string) {
         .where(eq(result.commitmentId, currentCommitment.id))
         .limit(1)
     : [];
+  // A publication in another tab can close this catch-up form between reads.
+  if (selectedWeekDate && (!currentCommitment || currentResult)) return null;
   const [nextCommitment] = nextWeek
     ? await db
         .select()
@@ -102,6 +113,10 @@ export async function getBuildState(userId: string) {
     currentResult: currentResult ?? null,
     nextWeek: nextWeek ?? null,
     nextCommitment: nextCommitment ?? null,
+    unfinishedWeeks: unfinishedWeeks.map(({ week }) => week),
+    selectedLateWeek: Boolean(selectedWeekDate),
+    late: Boolean(currentWeek && !currentResult && now >= currentWeek.submissionClosesAt),
+    canSetNextPromise: Boolean(nextWeek && now < nextWeek.startsAt),
     phase: currentWeek
       ? now < currentWeek.submissionClosesAt
         ? ('active' as const)

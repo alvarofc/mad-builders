@@ -103,11 +103,18 @@ export async function getReviewState(userId: string) {
       .from(week)
       .where(and(lte(week.submissionClosesAt, clock.now), gt(week.votingClosesAt, clock.now)))
       .orderBy(desc(week.startsAt))
+      .for('update')
       .limit(1);
     if (!votingWeek) {
       const [upcoming] = await tx.select().from(week)
         .where(gt(week.submissionClosesAt, clock.now)).orderBy(asc(week.submissionClosesAt)).limit(1);
       return { state: 'closed' as const, opensAt: upcoming?.submissionClosesAt };
+    }
+
+    const [lockedClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+    clock.now = new Date(lockedClock.now);
+    if (clock.now < votingWeek.submissionClosesAt || clock.now >= votingWeek.votingClosesAt) {
+      return { state: 'closed' as const };
     }
 
     const [voterResult] = await tx
@@ -429,6 +436,9 @@ async function getProvisionalLeaderboard(userId: string, now: Date) {
         isNull(profile.withdrawnAt),
       ),
     );
+  if (candidates.length < 6) {
+    return { week: { ...votingWeek, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const };
+  }
   const choices = await db
     .select()
     .from(comparison)

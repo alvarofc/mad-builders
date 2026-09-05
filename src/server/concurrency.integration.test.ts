@@ -19,7 +19,8 @@ vi.mock('./db', async () => {
 import { db } from './db';
 import { account, commitment, comparison, profile, ranking, result, user, week } from './schema';
 import { publishResult } from './results';
-import { ensureWeekFinalized, getReviewState, submitReview } from './ranking';
+import { getBuildState } from './weeks';
+import { ensureWeekFinalized, getLatestLeaderboard, getReviewState, submitReview } from './ranking';
 import { allowWrite } from './rate-limit';
 import { POST as withdraw } from '../pages/api/result/visibility';
 import { POST as moderate } from '../pages/api/moderation';
@@ -46,10 +47,10 @@ async function scheduledWeek(phase: 'building' | 'voting' | 'closed') {
 }
 const publication = (userId: string, weekId: number) => ({ userId, weekId, commitmentId: null, status: 'submitted' as const, summary: 'Shipped a working prototype', feedbackRequest: '', nextPromise: 'Interview five builders', projectSentence: 'Tools for builders', projectUrl: null, projectStage: 'building' as const, proof: { url: null, status: 'self_reported' as const, checkedAt: null } });
 
-async function votingFixture(phase: 'voting' | 'closed') {
+async function votingFixture(phase: 'voting' | 'closed', count = 6) {
   const targetWeek = await scheduledWeek(phase);
   const candidates = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < count; i++) {
     const id = `candidate-${i}`;
     await builder(id);
     const [plan] = await db.insert(commitment).values({ userId: id, weekId: targetWeek.id, promise: 'Ship a prototype' }).returning();
@@ -154,6 +155,25 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect((await db.select().from(commitment)).map((row) => row.promise).sort()).toEqual(['', 'Interview five builders']);
   });
 
+  it('keeps an owned unfinished update reachable after rollover without changing the new week goal', async () => {
+    await builder('publisher');
+    const prior = await scheduledWeek('voting');
+    const [current] = await db.insert(week).values({ weekStartDate: '2000-01-10', startsAt: new Date(prior.submissionClosesAt.getTime() + 1000), submissionClosesAt: new Date(prior.votingClosesAt.getTime() + 3600000), votingClosesAt: new Date(prior.votingClosesAt.getTime() + 7200000) }).returning();
+    const [oldGoal] = await db.insert(commitment).values({ userId: 'publisher', weekId: prior.id, promise: 'Ship the old prototype' }).returning();
+    await db.insert(commitment).values({ userId: 'publisher', weekId: current.id, promise: 'Keep the new week goal' });
+    const normal = await getBuildState('publisher');
+    expect(normal?.currentWeek?.id).toBe(current.id);
+    expect(normal?.unfinishedWeeks.map((entry) => entry.id)).toContain(prior.id);
+    const late = await getBuildState('publisher', prior.weekStartDate);
+    expect(late).toMatchObject({ currentWeek: { id: prior.id }, currentCommitment: { id: oldGoal.id }, nextWeek: { id: current.id }, selectedLateWeek: true, late: true, canSetNextPromise: false });
+    expect(await getBuildState('another-user', prior.weekStartDate)).toBeNull();
+    expect(await getBuildState('publisher', 'not-a-date')).toBeNull();
+    const published = await publishResult({ ...publication('publisher', prior.id), commitmentId: oldGoal.id, status: 'complete', nextPromise: '' });
+    expect(published.result.onTime).toBe(false);
+    expect(await getBuildState('publisher', prior.weekStartDate)).toBeNull();
+    expect((await getBuildState('publisher'))?.currentCommitment?.promise).toBe('Keep the new week goal');
+  });
+
   it('resumes one assignment under concurrent requests and saves one immutable vote', async () => {
     await votingFixture('voting');
     const pairs = await Promise.all(Array.from({ length: 8 }, () => getReviewState('candidate-0')));
@@ -221,6 +241,53 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     if (pair.state !== 'pair') throw new Error('Expected pair');
     expect(await crossDeadline(targetWeek.id, 'votingClosesAt', () => submitReview('candidate-0', pair.assignmentId, 'first'))).toBe(false);
     expect((await db.select().from(comparison))[0].choice).toBeNull();
+  });
+
+  it('does not assign a pair after waiting past voting close', async () => {
+    const { targetWeek } = await votingFixture('voting');
+    expect(await crossDeadline(targetWeek.id, 'votingClosesAt', () => getReviewState('candidate-0'))).toMatchObject({ state: 'closed' });
+    expect(await db.select().from(comparison)).toHaveLength(0);
+  });
+
+  it.each([true, false])('serializes replacement pairs and invalidation (moderation first: %s)', async (moderationFirst) => {
+    const { targetWeek } = await votingFixture('voting', 7);
+    const pair = await getReviewState('candidate-0');
+    if (pair.state !== 'pair') throw new Error('Expected pair');
+    await db.update(result).set({ hiddenAt: new Date() }).where(eq(result.id, pair.first.id));
+    await db.insert(account).values({ id: 'organizer-account', issuer: 'github', providerId: 'github', accountId: '999', userId: 'candidate-1' });
+    const invalidate = () => moderate(requestContext('candidate-1', { kind: 'voter', handle: 'candidate-0', action: 'invalidate', reason: 'Test invalidation' }));
+    const replace = () => getReviewState('candidate-0');
+    const outcomes = await orderedRace(targetWeek.id, moderationFirst ? invalidate : replace, moderationFirst ? replace : invalidate);
+    expect((outcomes[moderationFirst ? 0 : 1] as Response).status).toBe(200);
+    const replacement = outcomes[moderationFirst ? 1 : 0] as Awaited<ReturnType<typeof getReviewState>>;
+    expect(replacement.state).toBe('pair');
+    if (replacement.state === 'pair') {
+      expect(replacement.assignmentId).not.toBe(pair.assignmentId);
+      expect([replacement.first.id, replacement.second.id]).not.toContain(pair.first.id);
+    }
+    expect((await db.select().from(comparison).where(eq(comparison.id, pair.assignmentId)))[0].invalidatedAt).not.toBeNull();
+  });
+
+  it.each(['profile', 'result'] as const)('removes provisional ranks below six candidates after hiding a %s, and restores them', async (kind) => {
+    const { targetWeek, candidates } = await votingFixture('voting');
+    for (let i = 0; i < 8; i++) {
+      const voter = `extra-voter-${i}`;
+      await builder(voter);
+      await db.insert(comparison).values({ weekId: targetWeek.id, voterUserId: voter, candidateLowId: candidates[0].id, candidateHighId: candidates[1].id, presentedFirstId: candidates[0].id, choice: 'low', decidedAt: new Date() });
+    }
+    for (let i = 0; i < 10; i++) {
+      const pair = await getReviewState('candidate-0');
+      if (pair.state !== 'pair') throw new Error('Expected pair');
+      expect(await submitReview('candidate-0', pair.assignmentId, 'pass')).toBe(true);
+    }
+    expect((await getLatestLeaderboard('candidate-0'))?.entries).toHaveLength(2);
+    const table = kind === 'profile' ? profile : result;
+    await db.update(table).set({ hiddenAt: new Date() }).where(eq(table.userId, 'candidate-5'));
+    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ week: { rankingStatus: 'unranked' }, provisional: false, entries: [] });
+    expect((await db.select().from(week))[0].finalizedAt).toBeNull();
+    await db.update(table).set({ hiddenAt: null }).where(eq(table.userId, 'candidate-5'));
+    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ provisional: true });
+    expect((await getLatestLeaderboard('candidate-0'))?.entries).toHaveLength(2);
   });
 
   it('rejects a commitment that waited past the week start', async () => {
