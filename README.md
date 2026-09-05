@@ -24,7 +24,7 @@ Deploy this repository to Vercel with the build command `astro build`.
 5. Run `pnpm db:migrate` with the migration connection string.
 6. Weekly schedules are created automatically when the app receives a request. Submission closes Sunday at 18:00 Madrid time; voting runs until Monday at 18:00. The next building week starts Monday at 00:00 while voting finishes.
 
-Weekly updates keep the Pioneer questions. Known project details are prefilled. Drafts are saved locally in the browser, scoped to the builder and week, and cleared after publication. Updates can be edited until voting opens; the previous goal stays locked. First updates have no completion grade because there is no earlier goal.
+Weekly updates keep the Pioneer questions. Known project details are prefilled. Drafts are saved locally in the browser, scoped to the builder and week, and cleared after publication. Updates can be edited until voting opens; the previous goal stays locked. First updates have no completion grade because there is no earlier goal. Next week's goals remain editable until Monday at 00:00, including after publishing the current update. Catch-up links on `/build` let builders finish earlier updates after rollover; late updates do not enter ranking or extend streaks.
 
 Each vote is saved independently. Builders can pause after five comparisons and resume later; ten unlock the provisional leaderboard. Shares and referrals do not affect rank.
 
@@ -33,6 +33,8 @@ Run `pnpm test` for unit checks. The optional `src/server/results.integration.te
 Use Supabase's session pooler (port 5432) for local `DATABASE_URL` and its direct or session connection for `DATABASE_MIGRATION_URL`. Concurrent page requests can hang with Postgres.js over the transaction pooler (port 6543); verify that connection separately before using it in production. Keep `app_private` out of the Data API's exposed schemas.
 
 With the dev server running, `NAVIGATION_TEST_URL=http://localhost:4321 pnpm exec vitest run src/server/navigation.integration.test.ts` checks concurrent app-page requests.
+
+Local `/build`, `/leaderboard`, and `/vote` show demo rankings or comparisons by default. Use `?demo=0` for real data. The weekly update form on `/build` always saves real data.
 
 ### Release checks
 
@@ -66,7 +68,7 @@ Organizer moderation uses `POST /api/moderation` with form fields. Send `kind=pr
 
 ## Updating content
 
-Everything editable lives in `src/data/`:
+Marketing content lives in `src/data/`; builder profiles and weekly updates live in the database:
 
 | File | What it controls |
 | --- | --- |
@@ -76,6 +78,7 @@ Everything editable lives in `src/data/`:
 | `projects.ts` | Highlighted resident projects. |
 | `friends.ts` | Sister communities. |
 | `madrid.ts` | Madrid stats, local communities, and the map pins (`spots`). |
+| `builders-demo.ts` | Local demo projects, rankings, and voting comparisons. |
 
 ### Adding a new event
 
@@ -95,8 +98,15 @@ things.
 - `src/pages/index.astro`: home (hero, events, residents, projects, friends, madrid teaser)
 - `src/pages/madrid.astro`: builder's guide to Madrid (stats, communities, calendar, Leaflet map)
 - `src/pages/events/[slug].astro`: photo gallery per event, with lightbox
-- `src/pages/build.astro`: sign-in and profile setup
-- `src/pages/builders/`: public builder directory and profiles
+- `src/pages/build.astro`: sign-in, profile setup, weekly updates, catch-up, and next-week goals
+- `src/pages/builders/`: public builder directory, profiles, and weekly result pages
+- `src/pages/vote.astro` and `src/pages/leaderboard.astro`: peer comparisons and weekly rankings
+- `src/pages/settings.astro`: profile editing and visibility controls
+- `src/pages/api/`: authenticated writes, GitHub auth, moderation, and generated social images
 - `src/server/`: Better Auth, Drizzle, and private database queries
+- `src/layouts/ProductLayout.astro`: shared app navigation
 - `src/layouts/Layout.astro`: shared nav/footer and SEO (`src/components/SEO.astro`, `src/config/seo.ts`)
 - `src/assets/`: source images used by the site, processed at build time
+- [AGENTS.md](AGENTS.md): contributor and agent conventions; [CLAUDE.md](CLAUDE.md) points to the same guide
+- [.impeccable.md](.impeccable.md): product design context
+- [CHANGELOG.md](CHANGELOG.md): release history
