@@ -120,7 +120,7 @@ const proofLabel = (status: string) =>
                       <span class="result-summary">{published.summary}</span>
                     </span>
                     <span class="result-meta">
-                      {published.rank ? `#${published.rank}` : published.onTime ? 'awaiting rank' : 'late'}<br />
+                      {published.rank ? `#${published.rank}` : !published.onTime ? 'late' : published.weekFinalizedAt ? 'unranked' : 'awaiting rank'}<br />
                       {proofLabel(published.proofStatus)}
                     </span>
                   </a>

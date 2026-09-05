@@ -20,6 +20,7 @@ import { db } from './db';
 import { account, commitment, comparison, profile, ranking, result, user, week } from './schema';
 import { publishResult } from './results';
 import { getBuildState } from './weeks';
+import { getPublicBuilderActivity } from './profiles';
 import { ensureWeekFinalized, getLatestLeaderboard, getReviewState, submitReview } from './ranking';
 import { allowWrite } from './rate-limit';
 import { POST as withdraw } from '../pages/api/result/visibility';
@@ -172,6 +173,23 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect(published.result.onTime).toBe(false);
     expect(await getBuildState('publisher', prior.weekStartDate)).toBeNull();
     expect((await getBuildState('publisher'))?.currentCommitment?.promise).toBe('Keep the new week goal');
+  });
+
+  it('shows the current building goal during overlapping voting, then the next goal as fallback', async () => {
+    await builder('publisher');
+    const prior = await scheduledWeek('voting');
+    const [current] = await db.insert(week).values({ weekStartDate: '2000-01-10', startsAt: new Date(prior.submissionClosesAt.getTime() + 1000), submissionClosesAt: new Date(prior.votingClosesAt.getTime() + 3600000), votingClosesAt: new Date(prior.votingClosesAt.getTime() + 7200000) }).returning();
+    const [next] = await db.insert(week).values({ weekStartDate: '2000-01-17', startsAt: new Date(current.votingClosesAt.getTime() + 1000), submissionClosesAt: new Date(current.votingClosesAt.getTime() + 3600000), votingClosesAt: new Date(current.votingClosesAt.getTime() + 7200000) }).returning();
+    await db.insert(commitment).values([
+      { userId: 'publisher', weekId: prior.id, promise: 'Old goal' },
+      { userId: 'publisher', weekId: current.id, promise: 'Current goal' },
+      { userId: 'publisher', weekId: next.id, promise: 'Next goal' },
+    ]);
+    expect((await getPublicBuilderActivity('publisher')).commitment?.promise).toBe('Current goal');
+    await db.update(commitment).set({ promise: '' }).where(eq(commitment.weekId, current.id));
+    expect((await getPublicBuilderActivity('publisher')).commitment?.promise).toBe('Next goal');
+    await db.delete(commitment).where(eq(commitment.weekId, next.id));
+    expect((await getPublicBuilderActivity('publisher')).commitment).toBeNull();
   });
 
   it('resumes one assignment under concurrent requests and saves one immutable vote', async () => {

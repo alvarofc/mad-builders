@@ -95,6 +95,7 @@ const publicResultColumns = {
   publishedAt: result.publishedAt,
   onTime: result.onTime,
   submissionClosesAt: week.submissionClosesAt,
+  weekFinalizedAt: week.finalizedAt,
   nextPromise: sql<string | null>`(select c.promise from app_private.commitment c join app_private.week w on w.id = c.week_id where c.user_id = ${result.userId} and w.week_start_date = ${week.weekStartDate} + 7 limit 1)`,
   rank: ranking.rank,
 };
@@ -179,7 +180,13 @@ export async function getPublicBuilderActivity(userId: string) {
     })
     .from(commitment)
     .innerJoin(week, eq(commitment.weekId, week.id))
-    .where(and(eq(commitment.userId, userId), gt(week.votingClosesAt, now), sql`length(${commitment.promise}) > 0`))
+    .where(and(
+      eq(commitment.userId, userId),
+      gt(week.votingClosesAt, now),
+      // Voting can overlap a newer building week; never label that older goal current.
+      sql`${week.startsAt} >= coalesce((select max(w.starts_at) from app_private.week w where w.starts_at <= ${now.toISOString()}), ${now.toISOString()}::timestamptz)`,
+      sql`length(${commitment.promise}) > 0`,
+    ))
     .orderBy(asc(week.startsAt))
     .limit(1);
   const closedWeeks = await db

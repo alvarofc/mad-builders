@@ -76,6 +76,17 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
       expect(await png(`/api/og${profilePath}.png`)).not.toEqual(fallback);
       expect(await png(`/api/og${resultPath}.png`)).not.toEqual(fallback);
 
+      expect(await html(profilePath)).toContain('awaiting rank');
+      await sql`update app_private.week set starts_at = now() - interval '3 hours',
+        submission_closes_at = now() - interval '2 hours', voting_closes_at = now() - interval '1 hour'
+        where id = ${weekId!}`;
+      const finalizedProfile = await html(profilePath);
+      expect(finalizedProfile).toContain('unranked');
+      expect(finalizedProfile).not.toContain('awaiting rank');
+      await sql`update app_private.result set on_time = false where user_id = ${id}`;
+      expect((await html(profilePath)).match(/class="result-meta"[^>]*>([^<]*)/)?.[1].trim()).toBe('late');
+      await sql`update app_private.result set on_time = true where user_id = ${id}`;
+
       // There is no server-side result draft: drafts are localStorage only. is_public=false is the unpublished profile state.
       for (const state of ['draft', 'hidden', 'withdrawn']) {
         await sql`update app_private.profile set is_public = ${state !== 'draft'},
