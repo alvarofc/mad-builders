@@ -25,9 +25,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (databaseConfigured) await ensureWeeklySchedule();
   if (!authConfigured) return next();
 
-  const session = await auth.api.getSession({ headers: context.request.headers });
+  const { response: session, headers } = await auth.api.getSession({
+    headers: context.request.headers,
+    returnHeaders: true,
+  });
   context.locals.user = session?.user ?? null;
   context.locals.session = session?.session ?? null;
 
-  return next();
+  const response = await next();
+  const cookies = headers.getSetCookie();
+  if (!cookies.length) return response;
+  // Redirect responses can have immutable headers; preserve their status and body.
+  const refreshed = new Response(response.body, response);
+  for (const cookie of cookies) refreshed.headers.append('set-cookie', cookie);
+  return refreshed;
 });
