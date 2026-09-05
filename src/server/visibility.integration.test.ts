@@ -14,6 +14,7 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
     const sql = postgres(database.toString(), { max: 1, prepare: false });
     const id = crypto.randomUUID();
     const handle = `privacy-${id.slice(0, 12)}`;
+    const directoryPeers = Array.from({ length: 48 }, (_, index) => ({ id: `${id}-peer-${index}`, handle: `peer-${id.slice(0, 8)}-${index}` }));
     const project = `SecretProject${id.slice(0, 8)}`;
     const summary = `PrivateProgress${id.slice(0, 8)}`;
     const weekDate = '1901-01-07';
@@ -50,6 +51,8 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
     try {
       await sql`insert into app_private.user (id, name, email) values (${id}, 'Privacy test', ${`${id}@example.invalid`})`;
       await sql`insert into app_private.profile (user_id, handle, display_name, project_name) values (${id}, ${handle}, 'Privacy test', ${project})`;
+      await sql`insert into app_private.user ${sql(directoryPeers.map((peer) => ({ id: peer.id, name: peer.handle, email: `${peer.id}@example.invalid` })))}`;
+      await sql`insert into app_private.profile ${sql(directoryPeers.map((peer) => ({ user_id: peer.id, handle: peer.handle, display_name: peer.handle, project_name: peer.handle })))}`;
       const [week] = await sql`insert into app_private.week (week_start_date, starts_at, submission_closes_at, voting_closes_at)
         values (${weekDate}, now() - interval '1 hour', now() + interval '1 hour', now() + interval '2 hours') returning id`;
       weekId = week.id;
@@ -65,7 +68,10 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
       const visibleResult = await html(resultPath);
       expect(visibleResult).toContain(summary);
       expect(visibleResult.match(/<head[\s\S]*?<\/head>/)?.[0]).toContain(summary);
-      expect(await html('/builders')).toContain(project);
+      const directory = await html('/builders');
+      expect(directory).toContain(project);
+      // The 49th public project must be discoverable; later assertions still exclude hidden profiles.
+      for (const entry of [{ handle }, ...directoryPeers]) expect(directory).toContain(`href="/builders/${entry.handle}"`);
       expect(await html('/leaderboard?demo=0')).toContain(summary);
       expect(await png(`/api/og${profilePath}.png`)).not.toEqual(fallback);
       expect(await png(`/api/og${resultPath}.png`)).not.toEqual(fallback);
@@ -104,6 +110,7 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
       await sql`delete from app_private.result where user_id = ${id}`;
       await sql`delete from app_private.commitment where user_id = ${id}`;
       await sql`delete from app_private.user where id = ${id}`;
+      await sql`delete from app_private.user where id in ${sql(directoryPeers.map((peer) => peer.id))}`;
       if (weekId !== undefined) await sql`delete from app_private.week where id = ${weekId}`;
       await sql.end();
     }

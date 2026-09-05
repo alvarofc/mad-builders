@@ -96,7 +96,7 @@ export async function getReviewState(userId: string) {
 
   return db.transaction(async (tx) => {
     await tx.select({ id: user.id }).from(user).where(eq(user.id, userId)).for('update');
-    const [databaseClock] = await tx.execute<{ now: string }>(sql`select now() as now`);
+    const [databaseClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     const clock = { now: new Date(databaseClock.now) };
     const [votingWeek] = await tx
       .select()
@@ -249,6 +249,11 @@ export async function getReviewState(userId: string) {
 export async function submitReview(userId: string, assignmentId: number, selected: string) {
   return db.transaction(async (tx) => {
     await tx.select({ id: user.id }).from(user).where(eq(user.id, userId)).for('update');
+    const [owned] = await tx.select({ weekId: comparison.weekId }).from(comparison)
+      .where(and(eq(comparison.id, assignmentId), eq(comparison.voterUserId, userId))).limit(1);
+    if (!owned) return false;
+    // Moderation and finalization also lock the week before touching its comparisons.
+    await tx.select({ id: week.id }).from(week).where(eq(week.id, owned.weekId)).for('update');
     const [assignment] = await tx
       .select({ comparison, week })
       .from(comparison)
@@ -264,7 +269,7 @@ export async function submitReview(userId: string, assignmentId: number, selecte
       .limit(1);
     if (!assignment) return false;
 
-    const [databaseClock] = await tx.execute<{ now: string }>(sql`select now() as now`);
+    const [databaseClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     const clock = { now: new Date(databaseClock.now) };
     if (clock.now < assignment.week.submissionClosesAt || clock.now >= assignment.week.votingClosesAt) {
       return false;
@@ -308,7 +313,7 @@ export async function ensureWeekFinalized(weekId: number) {
     const [targetWeek] = await tx.select().from(week).where(eq(week.id, weekId)).for('update').limit(1);
     if (!targetWeek || targetWeek.finalizedAt) return targetWeek ?? null;
 
-    const [databaseClock] = await tx.execute<{ now: string }>(sql`select now() as now`);
+    const [databaseClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     const clock = { now: new Date(databaseClock.now) };
     if (clock.now < targetWeek.votingClosesAt) return targetWeek;
 

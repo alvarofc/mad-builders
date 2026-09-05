@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, lte, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import { auth } from './auth';
 import { db } from './db';
 import { account, commitment, profile, result, week } from './schema';
@@ -100,8 +100,12 @@ export async function publishResult(input: {
   proof: ProofCheck;
 }) {
   return db.transaction(async (tx) => {
-    const [databaseClock] = await tx.execute<{ now: string }>(sql`select now() as now`);
-    const clock = { now: new Date(databaseClock.now) };
+    if (input.commitmentId) {
+      const [owned] = await tx.select({ weekId: commitment.weekId }).from(commitment)
+        .where(and(eq(commitment.id, input.commitmentId), eq(commitment.userId, input.userId))).limit(1);
+      if (!owned) throw new Error('commitment_not_found');
+      await tx.select({ id: week.id }).from(week).where(eq(week.id, owned.weekId)).for('update');
+    }
     let [record] = input.commitmentId
       ? await tx
           .select({ commitment, week })
@@ -116,13 +120,7 @@ export async function publishResult(input: {
       const [openWeek] = await tx
         .select()
         .from(week)
-        .where(
-          and(
-            eq(week.id, input.weekId),
-            lte(week.startsAt, clock.now),
-            gt(week.submissionClosesAt, clock.now),
-          ),
-        )
+        .where(eq(week.id, input.weekId))
         .for('update')
         .limit(1);
       if (openWeek) {
@@ -138,14 +136,12 @@ export async function publishResult(input: {
       }
     }
     if (!record) throw new Error('commitment_not_found');
-    if (clock.now < record.week.startsAt) throw new Error('week_not_started');
 
     const [existing] = await tx
       .select()
       .from(result)
       .where(eq(result.commitmentId, record.commitment.id))
       .limit(1);
-    if (existing && clock.now >= record.week.submissionClosesAt) throw new Error('update_locked');
     const status = record.commitment.promise ? input.status : 'submitted';
     if (record.commitment.promise && status === 'submitted') throw new Error('status_required');
 
@@ -154,6 +150,7 @@ export async function publishResult(input: {
       .from(week)
       .where(gt(week.startsAt, record.week.startsAt))
       .orderBy(asc(week.startsAt))
+      .for('update')
       .limit(1);
     const [existingNextCommitment] = nextWeek
       ? await tx
@@ -162,6 +159,12 @@ export async function publishResult(input: {
           .where(and(eq(commitment.userId, input.userId), eq(commitment.weekId, nextWeek.id)))
           .limit(1)
       : [];
+    // Read wall time after the week locks, including any wait for the next goal's week.
+    const [databaseClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+    const clock = { now: new Date(databaseClock.now) };
+    if (clock.now < record.week.startsAt) throw new Error('week_not_started');
+    if (existing && clock.now >= record.week.submissionClosesAt) throw new Error('update_locked');
+    if (!input.commitmentId && clock.now >= record.week.submissionClosesAt) throw new Error('commitment_not_found');
     if (
       nextWeek &&
       clock.now < nextWeek.startsAt &&

@@ -23,6 +23,7 @@ import { ensureWeekFinalized, getReviewState, submitReview } from './ranking';
 import { allowWrite } from './rate-limit';
 import { POST as withdraw } from '../pages/api/result/visibility';
 import { POST as moderate } from '../pages/api/moderation';
+import { POST as saveCommitment } from '../pages/api/commitment';
 
 async function resetFixtures() {
   const [target] = await db.execute<{ name: string }>(sql`select current_database() as name`);
@@ -95,6 +96,22 @@ async function orderedRace(weekId: number, first: () => Promise<unknown>, second
     await blocker;
   }
   return Promise.all(operations);
+}
+
+async function crossDeadline(weekId: number, field: 'startsAt' | 'submissionClosesAt' | 'votingClosesAt', operation: () => Promise<unknown>) {
+  let outcome!: Promise<unknown>;
+  await db.transaction(async (tx) => {
+    await tx.select().from(week).where(eq(week.id, weekId)).for('update');
+    outcome = operation().catch((error) => error);
+    await vi.waitFor(async () => {
+      const [waiting] = await db.execute<{ count: number }>(sql`select count(*)::int as count from pg_stat_activity where application_name = 'mad-builders-concurrency-test' and wait_event_type = 'Lock'`);
+      expect(waiting.count).toBeGreaterThan(0);
+    }, { timeout: 5000, interval: 20 });
+    // The operation has started; move its deadline just ahead, then hold the lock past it.
+    await tx.update(week).set({ [field]: sql`clock_timestamp() + interval '100 milliseconds'` }).where(eq(week.id, weekId));
+    await tx.execute(sql`select pg_sleep(0.15)`);
+  });
+  return outcome;
 }
 
 describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', () => {
@@ -180,6 +197,53 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect(ranks.map(({ rank, scoreNumerator, scoreDenominator }) => ({ rank, scoreNumerator, scoreDenominator }))).toEqual([{ rank: 1, scoreNumerator: 16, scoreDenominator: 16 }, { rank: 2, scoreNumerator: 0, scoreDenominator: 16 }]);
     await ensureWeekFinalized(targetWeek.id);
     expect(await db.select().from(ranking).orderBy(ranking.rank)).toEqual(ranks);
+  });
+
+  it.each(['edit', 'late', 'first'] as const)('uses post-lock wall time for %s publication', async (mode) => {
+    await builder('publisher');
+    const current = await scheduledWeek('building');
+    const original = mode === 'edit' ? await publishResult(publication('publisher', current.id)) : null;
+    const [plan] = mode === 'late' ? await db.insert(commitment).values({ userId: 'publisher', weekId: current.id, promise: 'Ship a prototype' }).returning() : [];
+    const input = { ...publication('publisher', current.id), commitmentId: original?.result.commitmentId ?? plan?.id ?? null, status: mode === 'late' ? 'complete' as const : 'submitted' as const };
+    const outcome = await crossDeadline(current.id, 'submissionClosesAt', () => publishResult(input));
+    if (mode === 'late') {
+      expect(outcome).toMatchObject({ result: { onTime: false } });
+    } else {
+      expect(outcome).toBeInstanceOf(Error);
+      expect((outcome as Error).message).toBe(mode === 'edit' ? 'update_locked' : 'commitment_not_found');
+      expect(await db.select().from(result)).toEqual(original ? [original.result] : []);
+    }
+  });
+
+  it('rejects a vote that waited past voting close', async () => {
+    const { targetWeek } = await votingFixture('voting');
+    const pair = await getReviewState('candidate-0');
+    if (pair.state !== 'pair') throw new Error('Expected pair');
+    expect(await crossDeadline(targetWeek.id, 'votingClosesAt', () => submitReview('candidate-0', pair.assignmentId, 'first'))).toBe(false);
+    expect((await db.select().from(comparison))[0].choice).toBeNull();
+  });
+
+  it('rejects a commitment that waited past the week start', async () => {
+    await builder('publisher');
+    const current = await scheduledWeek('building');
+    await db.update(week).set({ startsAt: sql`clock_timestamp() + interval '10 minutes'` }).where(eq(week.id, current.id));
+    const outcome = await crossDeadline(current.id, 'startsAt', () => saveCommitment(requestContext('publisher', { weekId: String(current.id), promise: 'Ship a prototype' })));
+    expect(outcome).toBeInstanceOf(Response);
+    expect((outcome as Response).status).toBe(409);
+    expect(await db.select().from(commitment)).toHaveLength(0);
+  });
+
+  it.each([true, false])('serializes voter invalidation and submission without deadlock (moderation first: %s)', async (moderationFirst) => {
+    const { targetWeek } = await votingFixture('voting');
+    await db.insert(account).values({ id: 'organizer-account', issuer: 'github', providerId: 'github', accountId: '999', userId: 'candidate-1' });
+    const pair = await getReviewState('candidate-0');
+    if (pair.state !== 'pair') throw new Error('Expected pair');
+    const invalidate = () => moderate(requestContext('candidate-1', { kind: 'voter', handle: 'candidate-0', action: 'invalidate', reason: 'Test invalidation' }));
+    const vote = () => submitReview('candidate-0', pair.assignmentId, 'first');
+    const outcomes = await orderedRace(targetWeek.id, moderationFirst ? invalidate : vote, moderationFirst ? vote : invalidate);
+    expect(outcomes[moderationFirst ? 1 : 0]).toBe(!moderationFirst);
+    expect((outcomes[moderationFirst ? 0 : 1] as Response).status).toBe(200);
+    expect((await db.select().from(comparison))[0].invalidatedAt).not.toBeNull();
   });
 
   it('excludes a withdrawal queued before finalization without a torn snapshot', async () => {

@@ -25,11 +25,12 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   }
 
   const saved = await db.transaction(async (tx) => {
+    await tx.execute(sql`select id from app_private.week where id = ${weekId} for update`);
     const rows = await tx.execute<{ id: number }>(sql`
       insert into app_private.commitment (user_id, week_id, promise)
       select ${locals.user!.id}, id, ${promise}
       from app_private.week
-      where id = ${weekId} and starts_at > now()
+      where id = ${weekId} and starts_at > clock_timestamp()
       on conflict (user_id, week_id)
       do update set promise = excluded.promise, updated_at = now()
       returning id

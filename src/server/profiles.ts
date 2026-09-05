@@ -65,8 +65,9 @@ export async function getPublicProfileByHandle(handle: string) {
   return result ?? null;
 }
 
-export async function listPublicProfiles(limit = 48) {
+export async function listPublicProfiles() {
   if (!databaseConfigured) return [];
+  // ponytail: load the full pilot directory; paginate when response size becomes a problem.
   return db
     .select(publicColumns)
     .from(profile)
@@ -74,8 +75,7 @@ export async function listPublicProfiles(limit = 48) {
     .where(
       and(eq(profile.isPublic, true), isNull(profile.hiddenAt), isNull(profile.withdrawnAt)),
     )
-    .orderBy(asc(profile.createdAt))
-    .limit(limit);
+    .orderBy(asc(profile.createdAt));
 }
 
 const publicResultColumns = {

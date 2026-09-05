@@ -34,6 +34,14 @@ function mockTransaction(reads: unknown[][], clock = now) {
   return writes;
 }
 
+function mockReview(reads: unknown[][], clock: Date) {
+  return mockTransaction([[{ weekId: currentWeek.id }], ...reads], clock);
+}
+
+function mockPublication(reads: unknown[][], clock = now) {
+  return mockTransaction([[{ weekId: currentWeek.id }], ...reads], clock);
+}
+
 describe('Pioneer update fields', () => {
   it('accepts only supported project stages', () => {
     expect(validProjectStage('launched')).toBe(true);
@@ -49,20 +57,20 @@ describe('Pioneer update fields', () => {
   });
 
   it('preserves an existing plan when a stale first-update form is submitted', async () => {
-    mockTransaction([[{ commitment: { id: 77, promise: 'Ship the demo' }, week: currentWeek }]]);
+    mockPublication([[{ commitment: { id: 77, promise: 'Ship the demo' }, week: currentWeek }]]);
     await expect(publishResult({ ...input, commitmentId: 77 })).rejects.toThrow('status_required');
   });
 
   it('allows edits before voting and preserves the publication time', async () => {
     const publishedAt = new Date('2026-09-04T10:00:00Z');
-    const writes = mockTransaction([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [{ id: 99, publishedAt }], [nextWeek], [{ id: 88 }]]);
+    const writes = mockPublication([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [{ id: 99, publishedAt }], [nextWeek], [{ id: 88 }]]);
     await publishResult({ ...input, commitmentId: 77 });
     expect(writes.find((write) => write.table === result)?.values.publishedAt).toEqual(publishedAt);
     expect(writes.find((write) => write.table === commitment)?.values.promise).toBe(input.nextPromise);
   });
 
   it('rejects edits exactly when voting opens without writing anything', async () => {
-    const writes = mockTransaction([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [{ id: 99 }]], currentWeek.submissionClosesAt);
+    const writes = mockPublication([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [{ id: 99 }]], currentWeek.submissionClosesAt);
     await expect(publishResult({ ...input, commitmentId: 77 })).rejects.toThrow('update_locked');
     expect(writes).toEqual([]);
   });
@@ -74,25 +82,25 @@ describe('Pioneer update fields', () => {
   });
 
   it('accepts a repeated vote after a lost response without counting it twice', async () => {
-    const writes = mockTransaction([[{ comparison: { choice: 'low', presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
+    const writes = mockReview([[{ comparison: { choice: 'low', presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
     expect(await submitReview('builder', 1, 'first')).toBe(true);
     expect(writes).toEqual([]);
   });
 
   it('does not publish a future week', async () => {
-    const writes = mockTransaction([[{ commitment: { id: 77, promise: '' }, week: nextWeek }]]);
+    const writes = mockPublication([[{ commitment: { id: 77, promise: '' }, week: nextWeek }]]);
     await expect(publishResult({ ...input, commitmentId: 77 })).rejects.toThrow('week_not_started');
     expect(writes).toEqual([]);
   });
 
   it('requires a next goal when the next week has no commitment', async () => {
-    const writes = mockTransaction([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [], [nextWeek], []]);
+    const writes = mockPublication([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [], [nextWeek], []]);
     await expect(publishResult({ ...input, commitmentId: 77, nextPromise: '' })).rejects.toThrow('next_commitment_required');
     expect(writes).toEqual([]);
   });
 
   it('retains a late first result without marking it on time', async () => {
-    const writes = mockTransaction([[{ commitment: { id: 77, promise: 'Ship a demo' }, week: currentWeek }], [], [], []], currentWeek.submissionClosesAt);
+    const writes = mockPublication([[{ commitment: { id: 77, promise: 'Ship a demo' }, week: currentWeek }], [], [], []], currentWeek.submissionClosesAt);
     await publishResult({ ...input, commitmentId: 77, status: 'partial' });
     expect(writes.find((write) => write.table === result)?.values).toMatchObject({ status: 'partial', onTime: false });
   });
@@ -100,7 +108,7 @@ describe('Pioneer update fields', () => {
   it('publishes late without requiring or creating a goal once the following week starts', async () => {
     for (const clock of [nextWeek.startsAt, new Date(nextWeek.startsAt.getTime() + 1)]) {
       for (const nextPromise of ['', input.nextPromise]) {
-        const writes = mockTransaction([[{ commitment: { id: 77, promise: 'Ship a demo' }, week: currentWeek }], [], [nextWeek], []], clock);
+        const writes = mockPublication([[{ commitment: { id: 77, promise: 'Ship a demo' }, week: currentWeek }], [], [nextWeek], []], clock);
         await publishResult({ ...input, commitmentId: 77, status: 'partial', nextPromise });
         expect(writes.find((write) => write.table === result)?.values.onTime).toBe(false);
         expect(writes.filter((write) => write.table === commitment)).toEqual([]);
@@ -116,33 +124,33 @@ describe('Pioneer update fields', () => {
 
   it('rejects voting before opening and exactly at closing', async () => {
     for (const clock of [now, currentWeek.votingClosesAt]) {
-      const writes = mockTransaction([[{ comparison: { choice: null }, week: currentWeek }]], clock);
+      const writes = mockReview([[{ comparison: { choice: null }, week: currentWeek }]], clock);
       expect(await submitReview('builder', 1, 'first')).toBe(false);
       expect(writes).toEqual([]);
     }
   });
 
   it('does not change a previously saved choice', async () => {
-    const writes = mockTransaction([[{ comparison: { choice: 'low', presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
+    const writes = mockReview([[{ comparison: { choice: 'low', presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
     expect(await submitReview('builder', 1, 'second')).toBe(false);
     expect(writes).toEqual([]);
   });
 
   it('rejects invalid choices without writing', async () => {
-    const writes = mockTransaction([[{ comparison: { choice: null }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
+    const writes = mockReview([[{ comparison: { choice: null }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
     expect(await submitReview('builder', 1, 'invalid')).toBe(false);
     expect(writes).toEqual([]);
   });
 
   it('rejects a pending vote without a qualifying weekly result', async () => {
-    const writes = mockTransaction([[{ comparison: { choice: null, presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], []], new Date('2026-09-06T17:00:00Z'));
+    const writes = mockReview([[{ comparison: { choice: null, presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], []], new Date('2026-09-06T17:00:00Z'));
     expect(await submitReview('builder', 1, 'first')).toBe(false);
     expect(writes).toEqual([]);
   });
 
   it('maps presented order to stored choices including ties and skips', async () => {
     for (const [first, selected, choice] of [[1, 'first', 'low'], [2, 'first', 'high'], [1, 'second', 'high'], [2, 'second', 'low'], [1, 'tie', 'tie'], [1, 'pass', 'pass']] as const) {
-      const writes = mockTransaction([[{ comparison: { choice: null, presentedFirstId: first, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
+      const writes = mockReview([[{ comparison: { choice: null, presentedFirstId: first, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
       expect(await submitReview('builder', 1, selected)).toBe(true);
       expect(writes).toHaveLength(1);
       expect(writes[0].values.choice).toBe(choice);
