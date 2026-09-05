@@ -138,6 +138,9 @@ export async function listResultsForOwner(userId: string) {
 }
 
 export async function getPublicResult(handle: string, weekStartDate: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStartDate)) return null;
+  const date = new Date(`${weekStartDate}T00:00:00Z`);
+  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== weekStartDate || weekStartDate.startsWith('0000')) return null;
   if (!databaseConfigured) return null;
   const [published] = await db
     .select({

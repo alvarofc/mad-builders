@@ -8,6 +8,24 @@ const page = readFileSync(new URL('../pages/build.astro', import.meta.url), 'utf
 const script = stripTypeScriptTypes(page.split('<script>')[1].split('</script>')[0]
   .replace(/^\s*import .*;$/gm, ''));
 
+it('lets builders retry sign-in after returned HTTP errors or network failures', async () => {
+  for (const failure of ['returned', 'thrown', 'none']) {
+    let click!: () => Promise<void>;
+    const button = { disabled: false, dataset: {}, addEventListener: (_: string, listener: typeof click) => { click = listener; } };
+    const status = { textContent: '' };
+    runInNewContext(script, {
+      document: { querySelector: (selector: string) => selector === '[data-github-sign-in]' ? button : status, querySelectorAll: () => [] },
+      createAuthClient: () => ({ signIn: { social: async () => {
+        if (failure === 'thrown') throw new Error('offline');
+        return { error: failure === 'returned' ? { status: 429 } : null };
+      } } }),
+    });
+    await click();
+    expect(button.disabled).toBe(failure === 'none');
+    expect(status.textContent).toBe(failure === 'none' ? 'Opening GitHub...' : 'GitHub sign-in failed. Try again.');
+  }
+});
+
 it('hides only the update being edited from recently published', async () => {
   const panel = readFileSync(new URL('../components/LeaderboardPanel.astro', import.meta.url), 'utf8');
   const setup = stripTypeScriptTypes(panel.split('---')[1].replace(/^\s*import .*;$/gm, ''));

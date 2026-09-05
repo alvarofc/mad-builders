@@ -7,7 +7,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.user = null;
   context.locals.session = null;
 
-  const path = context.url.pathname;
+  const path = context.url.pathname.replace(/\/+$/, '') || '/';
   if (import.meta.env.DEV && context.url.searchParams.get('demo') !== '0' && ['/vote', '/leaderboard'].includes(path)) return next();
   const needsSession =
     path === '/build' ||

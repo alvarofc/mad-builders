@@ -273,10 +273,11 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
 
     try {
       const authClient = createAuthClient();
-      await authClient.signIn.social({
+      const { error } = await authClient.signIn.social({
         provider: 'github',
         callbackURL: signInButton.dataset.callback || '/build',
       });
+      if (error) throw error;
     } catch {
       signInButton.disabled = false;
       if (authStatus) authStatus.textContent = 'GitHub sign-in failed. Try again.';
