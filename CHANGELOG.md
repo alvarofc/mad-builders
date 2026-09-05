@@ -1,0 +1,39 @@
+# Changelog
+
+Changes to mad.builders.
+
+## [0.1.0.0] - 2026-09-05
+
+### Added
+
+- Create a public project profile, sign in with GitHub, and share your project or weekly progress.
+- Publish weekly updates using the Pioneer questions, carry a goal into the next week, and keep unfinished drafts in your browser.
+- Compare updates in pairs, pause and resume voting, and see provisional and final weekly rankings.
+- Link supporting proof, including GitHub commits matched to your account.
+- Hide or withdraw profiles and updates, with public pages and share images respecting visibility.
+- Weekly schedules follow Madrid time automatically, including daylight-saving changes.
+
+### Changed
+
+- App pages lead with the leaderboard and use compact navigation, project favicons, and smaller headings.
+- Weekly updates remain editable until voting opens. First updates do not ask builders to grade a goal they never set.
+
+### Fixed
+
+- Preserve drafts after an expired session and clear them after a successful publication.
+- Keep saved votes consistent across retries and avoid reassigning invalidated pairs.
+- Prevent late updates from creating goals for weeks already underway.
+- Keep unpublished update text out of error logs and handle simultaneous rate-limit requests safely.
+- Keep sessions on trailing-slash URLs, allow retries after GitHub sign-in errors, and return not-found pages for invalid week dates.
+- Reject pending votes when the builder's update is no longer eligible.
+- Show a useful message for taken handles and treat saves of hidden updates as successful.
+- Keep local real-data voting separate from the demo through voting and leaderboard links.
+- Enforce deadlines even when a save waits for the database, and prevent voting and moderation from blocking each other through conflicting locks.
+- Show every public project in the directory, including projects beyond the first 48.
+- Finish an unpublished earlier update after Monday rollover without changing the new week's goal.
+- Only show provisional ranks when at least six projects are eligible.
+- Open or submit voting while publishing without conflicting database locks.
+- Keep active builders signed in by forwarding renewed session cookies to their browser.
+- Show this week's goal on profiles during Monday voting, and label finalized results without a rank as unranked.
+- Edit next week's goals until that week starts, even after the weekly update locks for voting.
+- Make small labels, handles, dates, and scores easier to read with darker text.
