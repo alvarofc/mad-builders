@@ -30,8 +30,7 @@ the single source of agent conventions for the repo; CLAUDE.md points here.
 - Design tokens live in `src/styles/global.css` (`:root`). Reuse them; never hardcode colours.
 - Marketing content lives in `src/data/*`; app data lives in Supabase Postgres. Keep the `/brand` page in sync with the real tokens.
 - Builder profile and weekly result routes generate OG images on the server.
-  Marketing pages fall back to `public/og.png`. When creating a new marketing page,
-  ask the user whether it should have
+  Marketing pages fall back to `public/og.png`. When creating a new page, ask the user whether it should have
   a custom OG image. If so, drop a 1200×630 PNG in `public/` and pass it to the
   layout: `<Layout title="..." image="/og-yourpage.png">`.
 
