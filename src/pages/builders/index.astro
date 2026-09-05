@@ -1,0 +1,52 @@
+---
+import ProductLayout from '../../layouts/ProductLayout.astro';
+import ProjectMark from '../../components/ProjectMark.astro';
+import { getProfileByUserId, listPublicProfiles } from '../../server/profiles';
+
+export const prerender = false;
+
+const profiles = await listPublicProfiles();
+const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<ProductLayout
+  title="Projects - mad.builders"
+  description="Projects building in public, one week at a time."
+  active="builders"
+  profileHandle={currentProfile?.handle}
+  signedIn={Boolean(Astro.locals.user)}
+>
+  <div class="work-page">
+    <header class="work-hero">
+      <div class="wrap">
+        <p class="work-kicker">building in public</p>
+        <h1 class="work-title">Projects</h1>
+        <p class="work-intro">The work is ranked. The people behind it stay visible.</p>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="wrap">
+        {profiles.length ? (
+          <div class="profile-list">
+            {profiles.map((profile) => (
+              <a class="profile-row" href={`/builders/${profile.handle}`}>
+                <ProjectMark name={profile.projectName} url={profile.projectUrl} />
+                <span class="profile-name">{profile.projectName}</span>
+                <span class="profile-project">by {profile.displayName} · @{profile.handle}</span>
+                <span class="profile-arrow" aria-hidden="true">→</span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="empty-ledger">
+            <h2 class="work-heading">The first page is still blank.</h2>
+            <p class="work-copy">Put your project on it.</p>
+            <a class="work-button" href="/build">add your project</a>
+          </div>
+        )}
+      </div>
+    </section>
+  </div>
+</ProductLayout>

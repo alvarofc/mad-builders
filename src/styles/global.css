@@ -8,6 +8,9 @@
   --logo-dim-on-green: #a2aca5;
   --logo-dim-on-cream: #7d8b84;
   --line: rgba(246, 245, 240, 0.14);
+  --green-dim: rgba(26, 52, 43, 0.7);
+  --green-faint: rgba(26, 52, 43, 0.46);
+  --green-line: rgba(26, 52, 43, 0.16);
   /* /madrid map category colours (legend swatch + marker border). Tunable —
      the brand is green/cream, so these are three earthy accents picked to read
      both on the dark-green legend and on the light map. */
@@ -71,6 +74,11 @@ h1, h2, h3 {
 
 a {
   color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
 }
 
 img {

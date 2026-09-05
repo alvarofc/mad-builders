@@ -1,0 +1,122 @@
+---
+import type { getLatestLeaderboard } from '../server/ranking';
+import { madridDate } from '../server/weeks';
+import ProjectMark from './ProjectMark.astro';
+import { listRecentUpdates } from '../server/profiles';
+
+interface Props {
+  board: Awaited<ReturnType<typeof getLatestLeaderboard>>;
+  signedIn?: boolean;
+  demo?: boolean;
+  excludeResultId?: number;
+}
+
+const { board, signedIn = false, demo = false, excludeResultId } = Astro.props;
+const ranked = board?.week && (board.week.rankingStatus === 'final' || board.provisional);
+const recent = (!ranked || !board?.entries.length ? await listRecentUpdates() : [])
+  .filter((entry) => entry.id !== excludeResultId);
+const status = !board
+  ? 'not scheduled'
+  : board.provisional
+    ? 'provisional'
+    : board.week.rankingStatus === 'final'
+      ? 'final'
+      : board.week.rankingStatus === 'unranked'
+        ? 'unranked'
+        : board.now < board.week.startsAt
+          ? 'opens soon'
+          : board.now < board.week.submissionClosesAt
+            ? 'shipping'
+            : 'voting';
+---
+
+<section class="leaderboard-panel" aria-labelledby="leaderboard-title">
+  <header class="leaderboard-head">
+    <div>
+      <p class="work-label">weekly peer rank</p>
+      <h1 class="app-title" id="leaderboard-title">Leaderboard</h1>
+    </div>
+    <div class="leaderboard-status mono">
+      {board?.week && <span>week of {board.week.weekStartDate}</span>}
+      <strong>{status}</strong>
+    </div>
+  </header>
+
+  {!board ? (
+    <div class="leaderboard-empty">
+      <p class="app-empty-title">The first week has not been scheduled.</p>
+      <p>Projects will appear here once the first results are published and reviewed.</p>
+    </div>
+  ) : ranked ? (
+    board.entries.length ? (
+      <>
+        <div class="leaderboard-columns mono" aria-hidden="true">
+          <span>rank</span><span>project</span><span>shipped</span><span>score</span>
+        </div>
+        <ol class="leaderboard-list">
+          {board.entries.map((entry) => (
+            <li class="leaderboard-row">
+              <span class="leaderboard-rank">#{entry.rank}</span>
+              <a class="leaderboard-project" href={demo ? `/leaderboard?demo=1#${entry.handle}` : `/builders/${entry.handle}`}>
+                <ProjectMark name={entry.projectName} url={entry.projectUrl} />
+                <span class="leaderboard-project-copy">
+                  <strong>{entry.projectName}</strong>
+                  <span>by {entry.displayName} · @{entry.handle}</span>
+                </span>
+              </a>
+              <a class="leaderboard-update" href={demo ? `/leaderboard?demo=1#${entry.handle}` : `/builders/${entry.handle}/weeks/${entry.weekStartDate}`}>
+                {entry.summary}
+              </a>
+              <span class="leaderboard-score">
+                {Math.round((entry.scoreNumerator / entry.scoreDenominator) * 100)}%<br />
+                {entry.decisions} votes
+              </span>
+            </li>
+          ))}
+        </ol>
+      </>
+    ) : (
+      <div class="leaderboard-empty">
+        <p class="app-empty-title">No project has enough decisions yet.</p>
+        <p>Ranks appear after each result has eight peer decisions.</p>
+      </div>
+    )
+  ) : board.week.rankingStatus === 'unranked' ? (
+    <div class="leaderboard-empty">
+      <p class="app-empty-title">No rank this week.</p>
+      <p>There were fewer than six eligible results or too few peer decisions.</p>
+    </div>
+  ) : (
+    <div class="leaderboard-empty leaderboard-empty-action">
+      <div>
+        <p class="app-empty-title">
+          {board.now < board.week.startsAt
+            ? 'The next week is ready.'
+            : board.now < board.week.submissionClosesAt
+              ? 'Projects are shipping.'
+              : 'Voting is open.'}
+        </p>
+        <p>
+          {board.now < board.week.startsAt
+            ? `Commitments lock at ${madridDate(board.week.startsAt)}.`
+            : `Final ranks appear after ${madridDate(board.week.votingClosesAt)}.`}
+        </p>
+      </div>
+      {board.now >= board.week.submissionClosesAt && board.now < board.week.votingClosesAt && signedIn && (
+        <a class="work-button" href="/vote">review pairs</a>
+      )}
+    </div>
+  )}
+  {recent.length > 0 && (
+    <div class="recent-updates">
+      <p class="work-label">Recently published</p>
+      {recent.map((entry) => (
+        <a class="recent-update" href={`/builders/${entry.handle}/weeks/${entry.weekStartDate}`}>
+          <ProjectMark name={entry.projectName} url={entry.projectUrl} />
+          <span><strong>{entry.projectName}</strong><span>{entry.summary}</span></span>
+          <span aria-hidden="true">→</span>
+        </a>
+      ))}
+    </div>
+  )}
+</section>

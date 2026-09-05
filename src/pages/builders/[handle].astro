@@ -1,0 +1,144 @@
+---
+import ProductLayout from '../../layouts/ProductLayout.astro';
+import ShareButton from '../../components/ShareButton.astro';
+import ProjectMark from '../../components/ProjectMark.astro';
+import { absoluteUrl } from '../../config/seo';
+import {
+  getProfileByUserId,
+  getPublicBuilderActivity,
+  getPublicProfileByHandle,
+  listPublicResultsByUserId,
+} from '../../server/profiles';
+import { finalizeLatestClosedWeek } from '../../server/ranking';
+
+export const prerender = false;
+
+const handle = Astro.params.handle ?? '';
+const abuseEmail = import.meta.env.ABUSE_REPORT_EMAIL;
+const builder = await getPublicProfileByHandle(handle);
+await finalizeLatestClosedWeek();
+const results = builder ? await listPublicResultsByUserId(builder.userId) : [];
+const activity = builder ? await getPublicBuilderActivity(builder.userId) : null;
+const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+if (!builder) Astro.response.status = 404;
+
+const title = builder ? `${builder.projectName.slice(0, 34)} - mad.builders` : 'Project not found - mad.builders';
+const description = builder
+  ? `${builder.projectName}, built by ${builder.displayName}. Follow its public proof of work.`
+  : 'This project page does not exist.';
+const profileUrl = builder ? absoluteUrl(`/builders/${builder.handle}`) : undefined;
+const structuredData = builder
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: builder.displayName,
+      url: profileUrl,
+      image: builder.image ?? undefined,
+      description: builder.bio || description,
+      sameAs: builder.projectUrl ? [builder.projectUrl] : undefined,
+    }
+  : undefined;
+const proofLabel = (status: string) =>
+  status === 'github_account_matched'
+    ? 'GitHub matched'
+    : status === 'proof_linked'
+      ? 'proof linked'
+      : 'self-reported';
+---
+
+<ProductLayout
+  title={title}
+  description={description}
+  image={builder ? `/api/og/builders/${builder.handle}.png` : undefined}
+  noindex={!builder}
+  active={currentProfile?.handle === builder?.handle ? 'profile' : undefined}
+  profileHandle={currentProfile?.handle}
+  signedIn={Boolean(Astro.locals.user)}
+  structuredData={structuredData}
+>
+  <div class="work-page">
+    {builder ? (
+      <>
+        <header class="work-hero">
+          <div class="wrap builder-head">
+            <ProjectMark name={builder.projectName} url={builder.projectUrl} />
+            <div>
+              <p class="work-kicker">project / weekly proof of work</p>
+              <h1 class="builder-title">{builder.projectName}</h1>
+              <p class="builder-handle mono">by {builder.displayName} · @{builder.handle}{builder.location ? ` · ${builder.location}` : ''}</p>
+              {builder.bio && <p class="builder-bio">{builder.bio}</p>}
+              {builder.projectUrl && <p class="project-link"><a href={builder.projectUrl} target="_blank" rel="noopener noreferrer nofollow">visit project ↗</a></p>}
+            </div>
+          </div>
+        </header>
+
+        <section class="wrap work-grid">
+          <aside class="work-aside">
+            <p class="work-label">builder</p>
+            <p class="profile-name">{builder.displayName}</p>
+            <p class="builder-handle mono">@{builder.handle}</p>
+            <p class="work-label">shipping streak</p>
+            <p class="profile-name">{activity?.streak ?? 0} {(activity?.streak ?? 0) === 1 ? 'week' : 'weeks'}</p>
+            <p class="work-label">public record</p>
+            <p class="work-note">Complete or partial results published on time keep the streak alive.</p>
+            {abuseEmail && <p class="work-note"><a href={`mailto:${abuseEmail}?subject=Report%20builder%20%40${builder.handle}`}>report abuse</a></p>}
+          </aside>
+          <div class="work-main">
+            <p class="work-label">weekly ledger</p>
+            <h2 class="work-heading">{results.length ? `${results.length} public ${results.length === 1 ? 'result' : 'results'}.` : 'No results yet.'}</h2>
+            <p class="work-copy">Each result stays attached to the promise that came before it.</p>
+            {activity?.commitment?.promise && (
+              <div class="result-block">
+                <p class="work-label">
+                  {activity.commitment.startsAt > activity.now ? 'next commitment' : 'current commitment'} / week of {activity.commitment.weekStartDate}
+                </p>
+                <p class="builder-bio">{activity.commitment.promise}</p>
+              </div>
+            )}
+            <div class="work-actions">
+              <ShareButton
+                path={`/builders/${builder.handle}?ref=${builder.handle}`}
+                title={`${builder.projectName} on mad.builders`}
+                eventName="builder_profile_shared"
+                handle={builder.handle}
+              />
+              {currentProfile?.handle === builder.handle ? (
+                <a class="work-button secondary" href="/settings">edit project</a>
+              ) : (
+                <a class="work-button secondary" href={currentProfile ? '/build#this-week' : `/build?ref=${builder.handle}#this-week`}>{currentProfile ? 'write your update' : `build alongside ${builder.projectName}`}</a>
+              )}
+            </div>
+            {results.length ? (
+              <div class="result-list">
+                {results.map((published) => (
+                  <a class="result-row" href={`/builders/${builder.handle}/weeks/${published.weekStartDate}`}>
+                    <span class="result-week">week of {published.weekStartDate}</span>
+                    <span>
+                      {published.promise && <span class="result-promise">{published.promise}</span>}
+                      <span class="result-summary">{published.summary}</span>
+                    </span>
+                    <span class="result-meta">
+                      {published.rank ? `#${published.rank}` : published.onTime ? 'awaiting rank' : 'late'}<br />
+                      {proofLabel(published.proofStatus)}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      </>
+    ) : (
+      <section class="work-hero">
+        <div class="wrap">
+          <p class="work-kicker">404 / project not found</p>
+          <h1 class="work-title">Nothing here yet.</h1>
+          <p class="work-intro">The handle may be wrong, or the project has been taken down.</p>
+          <p><a class="work-button" href="/builders">see all projects</a></p>
+        </div>
+      </section>
+    )}
+  </div>
+</ProductLayout>
