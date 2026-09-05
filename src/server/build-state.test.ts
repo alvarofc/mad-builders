@@ -58,3 +58,11 @@ it('rejects a week that another tab published after the unfinished list was load
   reads([[{ week: previous }], [current], [{ id: 44, userId: 'owner' }], [{ id: 66 }]]);
   expect(await getBuildState('owner', previous.weekStartDate)).toBeNull();
 });
+
+it.each([-1, 0, 1])('allows next-goal edits only before its start (%i ms from Monday)', async (offset) => {
+  execute.mockResolvedValue([{ now: new Date(current.startsAt.getTime() + offset).toISOString() }]);
+  reads([[], [previous], [current], [{ id: 44 }], [{ id: 66 }], [{ id: 55, promise: 'Next goal' }]]);
+  expect(await getBuildState('owner')).toMatchObject({
+    phase: 'voting', currentResult: { id: 66 }, canSetNextPromise: offset < 0,
+  });
+});

@@ -157,6 +157,23 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                     open the result
                   </a>
                 </div>
+                {buildState.canSetNextPromise && buildState.nextWeek && (
+                  <details class="result-block" data-next-commitment-editor>
+                    <summary>Edit next week's goals</summary>
+                    <p class="work-note">Goals lock {madridDate(buildState.nextWeek.startsAt)}. Your published update stays unchanged.</p>
+                    <form class="work-form" method="post" action="/api/commitment" data-api-form>
+                      <input type="hidden" name="weekId" value={buildState.nextWeek.id} />
+                      <label class="work-field">
+                        <span>What do you want to have done by the end of next week?</span>
+                        <textarea name="promise" minlength="5" maxlength="280" required>{buildState.nextCommitment?.promise}</textarea>
+                      </label>
+                      <div>
+                        <button class="work-button" type="submit">save my commitment</button>
+                        <p class="work-status" data-form-status aria-live="polite"></p>
+                      </div>
+                    </form>
+                  </details>
+                )}
               </>
             ) : buildState?.currentCommitment || (buildState?.currentWeek && buildState.phase === 'active') ? (
               <>

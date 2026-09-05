@@ -8,6 +8,31 @@ const page = readFileSync(new URL('../pages/build.astro', import.meta.url), 'utf
 const script = stripTypeScriptTypes(page.split('<script>')[1].split('</script>')[0]
   .replace(/^\s*import .*;$/gm, ''));
 
+it('provides an independent next-goal form after publication, gated by its own deadline', () => {
+  const published = page.split('buildState?.currentResult && !editing ? (')[1].split(') : buildState?.currentCommitment')[0];
+  expect(published).toContain('buildState.canSetNextPromise && buildState.nextWeek && (');
+  const editor = published.split('data-next-commitment-editor>')[1].split('</details>')[0];
+  expect(editor).toContain('action="/api/commitment" data-api-form');
+  expect(editor).toContain('name="weekId" value={buildState.nextWeek.id}');
+  expect(editor).toContain('name="promise"');
+  expect(editor).not.toContain('/api/result/publish');
+});
+
+it('keeps small product text above 4.5:1 contrast on cream', () => {
+  const css = readFileSync(new URL('../styles/global.css', import.meta.url), 'utf8');
+  const token = (name: string): string => {
+    const value = css.match(new RegExp(`--${name}:\\s*([^;]+);`))![1];
+    return value.startsWith('var(') ? token(value.slice(6, -1)) : value;
+  };
+  const background = token('cream').slice(1).match(/../g)!.map((part) => parseInt(part, 16));
+  const [r, g, b, alpha] = token('green-faint').match(/[\d.]+/g)!.map(Number);
+  const foreground = [r, g, b].map((value, i) => value * alpha + background[i] * (1 - alpha));
+  const luminance = (color: number[]) => color.map((value) => value / 255)
+    .map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+    .reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
+  expect((luminance(background) + 0.05) / (luminance(foreground) + 0.05)).toBeGreaterThanOrEqual(4.5);
+});
+
 it('lets builders retry sign-in after returned HTTP errors or network failures', async () => {
   for (const failure of ['returned', 'thrown', 'none']) {
     let click!: () => Promise<void>;
