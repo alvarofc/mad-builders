@@ -64,7 +64,7 @@ const proofLabel = (status: string) =>
             <p class="work-label">5 of 10 saved</p>
             <h2 class="work-heading">Halfway there. Take a breather.</h2>
             <p class="work-copy">Your votes are saved. Finish the next five now or come back before {madridDate(review.week.votingClosesAt)}. All ten unlock the early leaderboard.</p>
-            <div class="work-actions"><a class="work-button" href={demo ? '/vote?demo=1&round=5&continue=1#review-content' : '/vote?continue=1#review-content'}>next five</a><a class="work-button secondary" href={demo ? '/leaderboard?demo=1' : '/build#this-week'}>come back later</a></div>
+            <div class="work-actions"><a class="work-button" href={demo ? '/vote?demo=1&round=5&continue=1#review-content' : '/vote?demo=0&continue=1#review-content'}>next five</a><a class="work-button secondary" href={demo ? '/leaderboard?demo=1' : '/build?demo=0#this-week'}>come back later</a></div>
           </div>
         ) : review.state === 'pair' ? (
           <>
@@ -118,7 +118,7 @@ const proofLabel = (status: string) =>
             <p class="work-label">10 of 10 reviewed</p>
             <h2 class="work-heading">Thanks for giving other builders your time.</h2>
             <p class="work-copy">All ten choices are saved. Your early leaderboard is ready; final ranks arrive after voting closes.</p>
-            <a class="work-button" href={demo ? '/leaderboard?demo=1' : '/leaderboard'}>open leaderboard</a>
+            <a class="work-button" href={demo ? '/leaderboard?demo=1' : '/leaderboard?demo=0'}>open leaderboard</a>
           </>
         ) : review.state === 'exhausted' ? (
           <>

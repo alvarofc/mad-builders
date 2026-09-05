@@ -1,14 +1,15 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
-const { allowWrite, submitReview, getProfileByUserId, publishResult, checkProof } = vi.hoisted(() => ({
-  allowWrite: vi.fn(), submitReview: vi.fn(), getProfileByUserId: vi.fn(), publishResult: vi.fn(), checkProof: vi.fn(),
+const { allowWrite, submitReview, getProfileByUserId, getPublicResult, createProfile, publishResult, checkProof } = vi.hoisted(() => ({
+  allowWrite: vi.fn(), submitReview: vi.fn(), getProfileByUserId: vi.fn(), getPublicResult: vi.fn(), createProfile: vi.fn(), publishResult: vi.fn(), checkProof: vi.fn(),
 }));
 vi.mock('../server/rate-limit', () => ({ allowWrite }));
 vi.mock('../server/ranking', () => ({ submitReview }));
-vi.mock('../server/profiles', () => ({ getProfileByUserId, normalizeUrl: (value: string) => value || null }));
+vi.mock('../server/profiles', () => ({ getProfileByUserId, getPublicResult, createProfile, getPublicProfileByHandle: vi.fn(), updateProfile: vi.fn(), normalizeHandle: (value: string) => value.trim().toLowerCase(), validHandle: () => true, normalizeUrl: (value: string) => value || null }));
 vi.mock('../server/results', () => ({ publishResult, checkProof, validProjectStage: (value: string) => value === 'building' }));
 import { POST as review } from '../pages/api/review';
 import { POST as publish } from '../pages/api/result/publish';
+import { POST as profile } from '../pages/api/profile';
 
 const origin = 'https://www.mad.builders';
 const validUpdate = { weekId: '1', status: 'submitted', summary: 'Shipped a demo', projectStage: 'building' };
@@ -24,6 +25,7 @@ beforeEach(() => {
   allowWrite.mockResolvedValue(true);
   submitReview.mockResolvedValue(true);
   getProfileByUserId.mockResolvedValue({ handle: 'ana', bio: 'Tools for builders' });
+  getPublicResult.mockResolvedValue({ id: 1 });
   checkProof.mockResolvedValue({ url: null, status: 'self_reported', checkedAt: null });
   publishResult.mockResolvedValue({ weekStartDate: '2026-08-31' });
 });
@@ -63,7 +65,9 @@ it('saves only the authenticated voter and redirects to the next pair', async ()
   const response = await review(context({ assignmentId: '12', selected: 'tie', userId: 'another-user' }));
   expect(submitReview).toHaveBeenCalledWith('builder', 12, 'tie');
   expect(response.status).toBe(303);
-  expect(response.headers.get('location')).toBe('/vote');
+  expect(response.headers.get('location')).toBe('/vote?demo=0');
+  const retried = await review(context({ assignmentId: '12', selected: 'tie' }));
+  expect(retried.headers.get('location')).toBe(response.headers.get('location'));
 });
 
 it('returns an actionable conflict when the pair is no longer open', async () => {
@@ -101,6 +105,28 @@ it('rejects invalid update fields without publishing', async () => {
     expect((await publish(context({ ...validUpdate, ...invalid }))).status).toBe(400);
   }
   expect(publishResult).not.toHaveBeenCalled();
+});
+
+it('sends a saved nonpublic update to owner settings without changing visibility', async () => {
+  getPublicResult.mockResolvedValue(null);
+  const response = await publish(context(validUpdate));
+  expect(response.status).toBe(303);
+  expect(response.headers.get('location')).toBe('/settings');
+  expect(getPublicResult).toHaveBeenCalledWith('ana', '2026-08-31');
+  expect(publishResult).toHaveBeenCalledOnce();
+  expect(publishResult.mock.calls[0][0]).not.toHaveProperty('withdrawnAt');
+  expect(publishResult.mock.calls[0][0]).not.toHaveProperty('hiddenAt');
+});
+
+it('returns a handle conflict for direct and Drizzle-wrapped unique violations', async () => {
+  getProfileByUserId.mockResolvedValue(null);
+  const duplicate = Object.assign(new Error('duplicate'), { code: '23505' });
+  for (const error of [duplicate, new Error('query failed', { cause: duplicate })]) {
+    createProfile.mockRejectedValueOnce(error);
+    const response = await profile(context({ handle: 'ana', displayName: 'Ana', projectName: 'Tools', bio: 'Tools for builders' }));
+    expect(response.status).toBe(409);
+    expect(await response.text()).toBe('That handle is already taken.');
+  }
 });
 
 it('maps known publication failures to recoverable responses', async () => {

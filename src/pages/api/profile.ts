@@ -79,7 +79,8 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
       referredByUserId,
     });
   } catch (error) {
-    if (typeof error === 'object' && error && 'code' in error && error.code === '23505') {
+    const cause = error instanceof Error && error.cause ? error.cause : error;
+    if (typeof cause === 'object' && cause && 'code' in cause && cause.code === '23505') {
       return fail('That handle is already taken.', 409);
     }
     throw error;

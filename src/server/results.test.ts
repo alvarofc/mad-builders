@@ -74,7 +74,7 @@ describe('Pioneer update fields', () => {
   });
 
   it('accepts a repeated vote after a lost response without counting it twice', async () => {
-    const writes = mockTransaction([[{ comparison: { choice: 'low', presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }]], new Date('2026-09-06T17:00:00Z'));
+    const writes = mockTransaction([[{ comparison: { choice: 'low', presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
     expect(await submitReview('builder', 1, 'first')).toBe(true);
     expect(writes).toEqual([]);
   });
@@ -123,20 +123,26 @@ describe('Pioneer update fields', () => {
   });
 
   it('does not change a previously saved choice', async () => {
-    const writes = mockTransaction([[{ comparison: { choice: 'low', presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }]], new Date('2026-09-06T17:00:00Z'));
+    const writes = mockTransaction([[{ comparison: { choice: 'low', presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
     expect(await submitReview('builder', 1, 'second')).toBe(false);
     expect(writes).toEqual([]);
   });
 
   it('rejects invalid choices without writing', async () => {
-    const writes = mockTransaction([[{ comparison: { choice: null }, week: currentWeek }]], new Date('2026-09-06T17:00:00Z'));
+    const writes = mockTransaction([[{ comparison: { choice: null }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
     expect(await submitReview('builder', 1, 'invalid')).toBe(false);
+    expect(writes).toEqual([]);
+  });
+
+  it('rejects a pending vote without a qualifying weekly result', async () => {
+    const writes = mockTransaction([[{ comparison: { choice: null, presentedFirstId: 1, candidateLowId: 1 }, week: currentWeek }], []], new Date('2026-09-06T17:00:00Z'));
+    expect(await submitReview('builder', 1, 'first')).toBe(false);
     expect(writes).toEqual([]);
   });
 
   it('maps presented order to stored choices including ties and skips', async () => {
     for (const [first, selected, choice] of [[1, 'first', 'low'], [2, 'first', 'high'], [1, 'second', 'high'], [2, 'second', 'low'], [1, 'tie', 'tie'], [1, 'pass', 'pass']] as const) {
-      const writes = mockTransaction([[{ comparison: { choice: null, presentedFirstId: first, candidateLowId: 1 }, week: currentWeek }]], new Date('2026-09-06T17:00:00Z'));
+      const writes = mockTransaction([[{ comparison: { choice: null, presentedFirstId: first, candidateLowId: 1 }, week: currentWeek }], [{ id: 99 }]], new Date('2026-09-06T17:00:00Z'));
       expect(await submitReview('builder', 1, selected)).toBe(true);
       expect(writes).toHaveLength(1);
       expect(writes[0].values.choice).toBe(choice);

@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getProfileByUserId, normalizeUrl } from '../../../server/profiles';
+import { getProfileByUserId, getPublicResult, normalizeUrl } from '../../../server/profiles';
 import { checkProof, publishResult, validProjectStage } from '../../../server/results';
 import { allowWrite } from '../../../server/rate-limit';
 
@@ -69,7 +69,8 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
       projectStage,
       proof,
     });
-    return redirect(`/builders/${builder.handle}/weeks/${published.weekStartDate}`, 303);
+    const visible = await getPublicResult(builder.handle, published.weekStartDate);
+    return redirect(visible ? `/builders/${builder.handle}/weeks/${published.weekStartDate}` : '/settings', 303);
   } catch (error) {
     const code = error instanceof Error ? error.message : '';
     if (code === 'update_locked') return fail('Voting has opened. This update is now locked.', 409);

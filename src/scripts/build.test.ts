@@ -40,6 +40,7 @@ it('hides only the update being edited from recently published', async () => {
 
 it.each([
   ['https://mad.builders/builders/ana/weeks/2026-08-31', false],
+  ['https://mad.builders/settings', false],
   ['https://mad.builders/build', true],
   ['https://mad.builders/build/?ref=ana', true],
 ])('handles publication redirect %s without losing an expired-session draft', async (url, expired) => {

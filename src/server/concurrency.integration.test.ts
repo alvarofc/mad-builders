@@ -155,6 +155,22 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     if (resumed.state === 'pair') expect(resumed.assignmentId).not.toBe(ids[0]);
   });
 
+  it.each(['withdraw', 'hide'] as const)('rejects a pending vote after the voter result is %s', async (action) => {
+    const { targetWeek, candidates } = await votingFixture('voting');
+    const pair = await getReviewState('candidate-0');
+    if (pair.state !== 'pair') throw new Error('Expected a voting pair');
+    await db.insert(account).values({ id: 'organizer-account', issuer: 'github', providerId: 'github', accountId: '999', userId: 'candidate-0' });
+    const responses = await orderedRace(targetWeek.id,
+      () => action === 'withdraw'
+        ? withdraw(requestContext('candidate-0', { resultId: String(candidates[0].id), action }))
+        : moderate(requestContext('candidate-0', { kind: 'result', handle: 'candidate-0', week: targetWeek.weekStartDate, action, reason: 'Test hide' })),
+      () => submitReview('candidate-0', pair.assignmentId, 'first'));
+    expect((responses[0] as Response).status).toBe(action === 'withdraw' ? 303 : 200);
+    expect(responses[1]).toBe(false);
+    expect((await db.select().from(comparison).where(eq(comparison.id, pair.assignmentId)))[0].choice).toBeNull();
+    expect(await getReviewState('candidate-0')).toMatchObject({ state: 'ineligible' });
+  });
+
   it('finalizes once under simultaneous finalizers with exact immutable scores', async () => {
     const { targetWeek } = await votingFixture('closed');
     const finals = await Promise.all(Array.from({ length: 8 }, () => ensureWeekFinalized(targetWeek.id)));

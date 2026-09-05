@@ -21,7 +21,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   try {
     const saved = await submitReview(locals.user.id, assignmentId, selected);
     if (!saved) return fail('That pair is no longer open. Refresh to see the current voting state.', 409);
-    return redirect('/vote', 303);
+    return redirect('/vote?demo=0', 303);
   } catch {
     console.error('Could not save vote');
     return fail('Could not save this choice. Please try again.', 500);

@@ -270,6 +270,15 @@ export async function submitReview(userId: string, assignmentId: number, selecte
       return false;
     }
 
+    const [voterResult] = await tx.select({ id: result.id }).from(result).where(and(
+      eq(result.weekId, assignment.week.id),
+      eq(result.userId, userId),
+      eq(result.onTime, true),
+      isNull(result.hiddenAt),
+      isNull(result.withdrawnAt),
+    )).limit(1);
+    if (!voterResult) return false;
+
     const firstIsLow = assignment.comparison.presentedFirstId === assignment.comparison.candidateLowId;
     const choice =
       selected === 'first'
