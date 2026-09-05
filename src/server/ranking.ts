@@ -11,7 +11,7 @@ import {
   sql,
 } from 'drizzle-orm';
 import { db, databaseConfigured } from './db';
-import { commitment, comparison, profile, ranking, result, user, week } from './schema';
+import { commitment, comparison, profile, ranking, result, week } from './schema';
 import { getDatabaseNow } from './weeks';
 
 export type CandidateScore = {
@@ -95,7 +95,7 @@ export async function getReviewState(userId: string) {
   if (!databaseConfigured) return { state: 'closed' as const };
 
   return db.transaction(async (tx) => {
-    await tx.select({ id: user.id }).from(user).where(eq(user.id, userId)).for('update');
+    // The week lock serializes reviews; a user lock would conflict with publication FKs.
     const [databaseClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     const clock = { now: new Date(databaseClock.now) };
     const [votingWeek] = await tx
@@ -255,7 +255,6 @@ export async function getReviewState(userId: string) {
 
 export async function submitReview(userId: string, assignmentId: number, selected: string) {
   return db.transaction(async (tx) => {
-    await tx.select({ id: user.id }).from(user).where(eq(user.id, userId)).for('update');
     const [owned] = await tx.select({ weekId: comparison.weekId }).from(comparison)
       .where(and(eq(comparison.id, assignmentId), eq(comparison.voterUserId, userId))).limit(1);
     if (!owned) return false;

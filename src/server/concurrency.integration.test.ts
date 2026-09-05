@@ -192,6 +192,29 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     if (resumed.state === 'pair') expect(resumed.assignmentId).not.toBe(ids[0]);
   });
 
+  it.each(['open', 'submit'] as const)('does not deadlock publication FK locks while waiting to %s voting', async (action) => {
+    const { targetWeek } = await votingFixture('voting');
+    const pair = await getReviewState('candidate-0');
+    if (pair.state !== 'pair') throw new Error('Expected pair');
+    let pending!: Promise<unknown>;
+    await db.transaction(async (tx) => {
+      await tx.select().from(week).where(eq(week.id, targetWeek.id)).for('update');
+      pending = (action === 'open'
+        ? getReviewState('candidate-0')
+        : submitReview('candidate-0', pair.assignmentId, 'first')).catch((error) => error);
+      await vi.waitFor(async () => {
+        const [waiting] = await db.execute<{ count: number }>(sql`select count(*)::int as count from pg_stat_activity where application_name = 'mad-builders-concurrency-test' and wait_event_type = 'Lock'`);
+        expect(waiting.count).toBeGreaterThan(0);
+      }, { timeout: 5000, interval: 20 });
+      // Publication inserts request this same FK lock after acquiring the week.
+      // A waiting review must not hold a conflicting user FOR UPDATE lock.
+      await tx.select().from(user).where(eq(user.id, 'candidate-0')).for('key share');
+    });
+    const outcome = await pending;
+    if (action === 'open') expect(outcome).toMatchObject({ state: 'pair', assignmentId: pair.assignmentId });
+    else expect(outcome).toBe(true);
+  });
+
   it.each(['withdraw', 'hide'] as const)('rejects a pending vote after the voter result is %s', async (action) => {
     const { targetWeek, candidates } = await votingFixture('voting');
     const pair = await getReviewState('candidate-0');
