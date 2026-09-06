@@ -1,0 +1,121 @@
+---
+import ShareButton from '../../../../components/ShareButton.astro';
+import ProductLayout from '../../../../layouts/ProductLayout.astro';
+import { getProfileByUserId, getPublicResult } from '../../../../server/profiles';
+import { finalizeLatestClosedWeek } from '../../../../server/ranking';
+import { projectStageLabel } from '../../../../server/results';
+import { getDatabaseNow } from '../../../../server/weeks';
+
+export const prerender = false;
+
+const handle = Astro.params.handle ?? '';
+const abuseEmail = import.meta.env.ABUSE_REPORT_EMAIL;
+const weekStartDate = Astro.params.week ?? '';
+await finalizeLatestClosedWeek();
+const published = await getPublicResult(handle, weekStartDate);
+const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
+const canEdit = published && currentProfile?.handle === published.handle && (await getDatabaseNow()) < published.submissionClosesAt;
+Astro.response.headers.set('Cache-Control', 'no-store');
+if (!published) Astro.response.status = 404;
+
+const proofLabel = published
+  ? published.proofStatus === 'github_account_matched'
+    ? 'GitHub account matched'
+    : published.proofStatus === 'proof_linked'
+      ? 'Proof linked'
+      : 'Self-reported'
+  : '';
+const title = published
+  ? `${published.projectName.slice(0, 26)} this week - mad.builders`
+  : 'Result not found - mad.builders';
+const description = published
+  ? `${published.projectName}: ${published.summary}`.slice(0, 155)
+  : 'This weekly result does not exist.';
+---
+
+<ProductLayout
+  title={title}
+  description={description}
+  image={published ? `/api/og/builders/${published.handle}/weeks/${published.weekStartDate}.png` : undefined}
+  noindex={!published}
+  profileHandle={currentProfile?.handle}
+  signedIn={Boolean(Astro.locals.user)}
+>
+  <div class="work-page">
+    {published ? (
+      <>
+        <header class="work-hero">
+          <div class="wrap">
+            <p class="work-kicker">week of {published.weekStartDate} / {published.onTime ? 'on time' : 'published late'}</p>
+            <h1 class="work-title">{published.projectName}</h1>
+            <p class="work-intro update-copy">{published.summary}</p>
+            <p class="work-copy">Built by <a href={`/builders/${published.handle}`}>{published.displayName}</a>{published.rank ? ` · #${published.rank} this week` : ''}</p>
+            {published.nextPromise && <p class="work-copy update-copy">Next week: {published.nextPromise}</p>}
+            <div class="work-actions">
+              <ShareButton path={`/builders/${published.handle}/weeks/${published.weekStartDate}?ref=${published.handle}`} title={`${published.projectName}${published.rank ? ` · #${published.rank} this week` : ''}: ${published.summary.slice(0, 180)}`} eventName="weekly_result_shared" handle={published.handle} />
+              {canEdit && <a class="work-button secondary" href="/build?edit#this-week">edit update</a>}
+              {currentProfile?.handle !== published.handle && <a class="work-button secondary" href={currentProfile ? '/build#this-week' : `/build?ref=${published.handle}#this-week`}>build alongside {published.projectName}</a>}
+            </div>
+          </div>
+        </header>
+        <section class="wrap work-grid">
+          <aside class="work-aside">
+            <p class="work-label">builder</p>
+            <p class="work-note"><a href={`/builders/${published.handle}`}>{published.displayName}</a></p>
+            <p class="work-label">proof</p>
+            <p class="work-note">{proofLabel}</p>
+            {abuseEmail && <p class="work-note"><a href={`mailto:${abuseEmail}?subject=Report%20result%20%40${published.handle}%20${published.weekStartDate}`}>report abuse</a></p>}
+            {published.rank && (
+              <>
+                <p class="work-label">weekly rank</p>
+                <p class="profile-name">#{published.rank}</p>
+              </>
+            )}
+          </aside>
+          <div class="work-main result-detail">
+            <div class="result-block">
+              <p class="work-label">{projectStageLabel(published.projectStage)}</p>
+              <p class="builder-bio">{published.projectSentence}</p>
+              {published.projectUrlAtPublish && (
+                <p class="project-link"><a href={published.projectUrlAtPublish} target="_blank" rel="noopener noreferrer nofollow">visit project ↗</a></p>
+              )}
+            </div>
+            {published.promise && (
+              <div class="result-block">
+                <p class="work-label">what they planned to do</p>
+                <h2 class="work-heading">{published.promise}</h2>
+              </div>
+            )}
+            {published.feedbackRequest && (
+              <div class="result-block">
+                <p class="work-label">feedback wanted</p>
+                <p class="builder-bio">{published.feedbackRequest}</p>
+              </div>
+            )}
+            {published.proofUrl && (
+              <div class="result-block">
+                <p class="work-label">supporting link</p>
+                <p><a href={published.proofUrl} target="_blank" rel="noopener noreferrer nofollow">open proof ↗</a></p>
+                {published.proofStatus === 'github_account_matched' && (
+                  <p class="work-note">The commit author or committer account matches the GitHub account used to sign in. This does not judge the quality of the work.</p>
+                )}
+                {published.proofCheckedAt && (
+                  <p class="work-note">Checked {published.proofCheckedAt.toISOString().slice(0, 16).replace('T', ' ')} UTC.</p>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      </>
+    ) : (
+      <section class="work-hero">
+        <div class="wrap">
+          <p class="work-kicker">404 / result not found</p>
+          <h1 class="work-title">Nothing here.</h1>
+          <p class="work-intro">The link may be wrong, or the builder has taken this result down.</p>
+          <p><a class="work-button" href="/builders">see all builders</a></p>
+        </div>
+      </section>
+    )}
+  </div>
+</ProductLayout>

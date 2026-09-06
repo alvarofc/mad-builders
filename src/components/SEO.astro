@@ -32,6 +32,7 @@ const finalDescription = description || DEFAULT_DESCRIPTION
 const finalImage = absoluteUrl(image || OG_IMAGE)
 const finalCanonical = canonical ? absoluteUrl(canonical) : absoluteUrl(Astro.url?.pathname || '/')
 const robotsContent = noindex ? 'noindex, nofollow' : 'index, follow'
+const structuredJson = structuredData ? JSON.stringify(structuredData).replace(/</g, '\\u003c') : ''
 
 // Search console verification (only in production)
 const isProduction = import.meta.env.PROD
@@ -84,5 +85,5 @@ const bingToken = import.meta.env.PUBLIC_BING_TOKEN
 
 <!-- Structured Data -->
 {structuredData && (
-  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <script type="application/ld+json" set:html={structuredJson} />
 )}

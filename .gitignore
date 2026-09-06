@@ -1,5 +1,6 @@
 # build output
 dist/
+.vercel/
 
 # generated types
 .astro/
@@ -28,3 +29,4 @@ pnpm-debug.log*
 
 # OG image generation scratch
 .ogtmp/
+.gstack/

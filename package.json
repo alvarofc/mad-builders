@@ -1,21 +1,32 @@
 {
   "name": "mad-builders",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0.0",
   "packageManager": "pnpm@11.1.1",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.5.1",
+    "@astrojs/vercel": "^9.0.5",
     "@fontsource-variable/bricolage-grotesque": "^5.2.10",
     "@fontsource/archivo": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@vercel/analytics": "^2.0.1",
     "astro": "^5.13.3",
+    "better-auth": "1.7.2",
+    "drizzle-orm": "^0.45.2",
+    "postgres": "^3.4.9",
     "sharp": "^0.34.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10",
+    "vitest": "^4.0.17"
   }
 }
