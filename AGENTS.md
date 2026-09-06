@@ -1,6 +1,6 @@
 # mad.builders agent guide
 
-Static marketing site for the mad.builders community, built with Astro. This is
+Astro marketing site and weekly accountability app for mad.builders. This is
 the single source of agent conventions for the repo; CLAUDE.md points here.
 
 ## Brand & voice
@@ -14,7 +14,7 @@ the single source of agent conventions for the repo; CLAUDE.md points here.
 
 ## Stack & commands
 
-- Astro static site. Package manager: pnpm.
+- Astro with static marketing pages and server-rendered app routes on Vercel. Package manager: pnpm.
 - `pnpm dev` for local work (HMR), `pnpm build` to build, `pnpm preview` to serve the build.
 - Don't run `pnpm approve-builds`. esbuild and sharp build scripts are
   intentionally declined in `pnpm-workspace.yaml` (rationale in the file).
@@ -28,9 +28,9 @@ the single source of agent conventions for the repo; CLAUDE.md points here.
 ## Conventions
 
 - Design tokens live in `src/styles/global.css` (`:root`). Reuse them; never hardcode colours.
-- Content and data live in `src/data/*`. Keep the `/brand` page in sync with the real tokens.
-- OG/social preview images are not auto-generated; pages fall back to
-  `public/og.png`. When creating a new page, ask the user whether it should have
+- Marketing content lives in `src/data/*`; app data lives in Supabase Postgres. Keep the `/brand` page in sync with the real tokens.
+- Builder profile and weekly result routes generate OG images on the server.
+  Marketing pages fall back to `public/og.png`. When creating a new page, ask the user whether it should have
   a custom OG image. If so, drop a 1200×630 PNG in `public/` and pass it to the
   layout: `<Layout title="..." image="/og-yourpage.png">`.
 

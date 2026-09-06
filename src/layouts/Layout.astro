@@ -21,6 +21,8 @@ interface Props {
   description?: string;
   image?: string;
   noindex?: boolean;
+  signedIn?: boolean;
+  product?: boolean;
   structuredData?: Record<string, any> | Array<Record<string, any>>;
 }
 
@@ -29,6 +31,8 @@ const {
   description = site.description,
   image,
   noindex,
+  signedIn = false,
+  product = false,
   structuredData,
 } = Astro.props;
 
@@ -45,16 +49,18 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     <SEO title={title} description={description} image={image} noindex={noindex} structuredData={structuredData} />
   </head>
   <body>
-    <header class="nav">
+    {!product && <header class="nav">
       <div class="wrap nav-inner">
         <a href="/" class="wordmark" data-brand-menu-trigger aria-haspopup="menu">mad<span>.builders</span></a>
         <nav class="links mono">
-          <a href="/">Home</a>
-          <a href="/madrid">Madrid</a>
-          <a href={site.whatsapp} class="cta">whatsapp →</a>
+          <a href="/madrid" class="nav-secondary">Madrid</a>
+          <a href="/builders" class="nav-projects">Projects</a>
+          <a href={site.whatsapp} class="nav-secondary">WhatsApp</a>
+          <a href="/leaderboard" class="cta">rankings →</a>
+          {!signedIn && <a href="/build#this-week" class="login-button">log in</a>}
         </nav>
       </div>
-    </header>
+    </header>}
 
     <main class="site-main">
       <slot />
@@ -191,6 +197,9 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     align-items: center;
   }
   .links a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
     text-decoration: none;
     color: var(--cream-dim);
     transition: color 0.15s;
@@ -208,16 +217,35 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     background: var(--cream);
     color: var(--green);
   }
+  .links .login-button {
+    padding: 8px 16px;
+    border: 1px solid var(--cream);
+    border-radius: 999px;
+    color: var(--green);
+    background: var(--cream);
+  }
+  .links .login-button:hover {
+    color: var(--cream);
+    background: transparent;
+  }
   @media (max-width: 640px) {
     .links {
-      gap: 16px;
+      gap: 12px;
       font-size: 12px;
     }
     .wordmark {
       white-space: nowrap;
     }
-    /* mobile: keep the page links (home, madrid), drop the whatsapp CTA */
-    .links .cta {
+    .links .nav-secondary {
+      display: none;
+    }
+    .links .cta,
+    .links .login-button {
+      padding: 7px 10px;
+    }
+  }
+  @media (max-width: 460px) {
+    .links .nav-projects {
       display: none;
     }
   }

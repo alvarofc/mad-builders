@@ -1,0 +1,70 @@
+---
+import Layout from './Layout.astro';
+import '../styles/product.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  active?: 'build' | 'vote' | 'leaderboard' | 'builders' | 'profile';
+  profileHandle?: string;
+  signedIn?: boolean;
+  structuredData?: Record<string, unknown>;
+}
+
+const {
+  title,
+  description,
+  image,
+  noindex,
+  active,
+  profileHandle,
+  signedIn = false,
+  structuredData,
+} = Astro.props;
+---
+
+<Layout
+  title={title}
+  description={description}
+  image={image}
+  noindex={noindex}
+  signedIn={signedIn}
+  structuredData={structuredData}
+  product
+>
+  <nav class="product-nav mono" aria-label="proof of work">
+    <div class="wrap product-nav-inner">
+      <a href="/" class="wordmark">mad.builders</a>
+      <a href="/leaderboard" aria-current={active === 'leaderboard' ? 'page' : undefined}>leaderboard</a>
+      <a href="/build#this-week" aria-current={active === 'build' ? 'page' : undefined}>this week</a>
+      <a href="/vote" aria-current={active === 'vote' ? 'page' : undefined}>vote</a>
+      <a href="/builders" aria-current={active === 'builders' ? 'page' : undefined}>projects</a>
+      {profileHandle && (
+        <a
+          href={`/builders/${profileHandle}`}
+          aria-current={active === 'profile' ? 'page' : undefined}
+        >
+          my project
+        </a>
+      )}
+      {signedIn && <a href="/settings">settings</a>}
+      {signedIn && <button type="button" data-sign-out>sign out</button>}
+      {!signedIn && <a href="/build#this-week">log in</a>}
+    </div>
+  </nav>
+  <slot />
+</Layout>
+
+{signedIn && (
+  <script>
+    import { createAuthClient } from 'better-auth/client';
+
+    const authClient = createAuthClient();
+    document.querySelector('[data-sign-out]')?.addEventListener('click', async () => {
+      await authClient.signOut();
+      window.location.assign('/build');
+    });
+  </script>
+)}

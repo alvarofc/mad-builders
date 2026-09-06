@@ -1,0 +1,22 @@
+---
+interface Props {
+  name: string;
+  url?: string | null;
+}
+
+const { name, url } = Astro.props;
+const initials = name
+  .split(/\s+/)
+  .slice(0, 2)
+  .map((part) => part[0])
+  .join('')
+  .toUpperCase();
+const favicon = url
+  ? `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(url)}&sz=128`
+  : null;
+---
+
+<span class="project-mark" aria-hidden="true">
+  <span>{initials}</span>
+  {favicon && <img src={favicon} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()" />}
+</span>

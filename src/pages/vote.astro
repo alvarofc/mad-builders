@@ -1,0 +1,191 @@
+---
+import ProductLayout from '../layouts/ProductLayout.astro';
+import { getProfileByUserId } from '../server/profiles';
+import { getReviewState } from '../server/ranking';
+import { projectStageLabel } from '../server/results';
+import { madridDate } from '../server/weeks';
+import { demoReview } from '../data/builders-demo';
+
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const currentUser = Astro.locals.user;
+const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
+const currentProfile = currentUser ? await getProfileByUserId(currentUser.id) : null;
+const review = demo ? demoReview(Astro.url.searchParams.get('round')) : !currentUser
+  ? { state: 'signed_out' as const }
+  : !currentProfile
+    ? { state: 'profile_required' as const }
+    : await getReviewState(currentUser.id);
+
+const proofLabel = (status: string) =>
+  status === 'github_account_matched'
+    ? 'GitHub account matched'
+    : status === 'proof_linked'
+      ? 'Proof linked'
+      : 'Self-reported';
+---
+
+<ProductLayout
+  title="Weekly vote - mad.builders"
+  description="Compare this week's work from mad.builders."
+  active="vote"
+  profileHandle={currentProfile?.handle}
+  signedIn={Boolean(currentUser)}
+  noindex
+>
+  <div class="work-page">
+    <header class="work-hero">
+      <div class="wrap">
+        {demo && <p class="work-note">Local demo. Choices advance the preview only; they do not save votes or change scores. <a href="/leaderboard?demo=1">See sample leaderboard →</a> · <a href="/vote?demo=1">Restart</a> · <a href="/vote?demo=0">Show real data</a></p>}
+        <p class="work-kicker">weekly peer review</p>
+        <h1 class="work-title">Discover this week's progress.</h1>
+        <p class="work-intro">Which project made more meaningful progress? Look at what changed, how ambitious the goal was, and the evidence.</p>
+      </div>
+    </header>
+    <section class="section" id="review-content" tabindex="-1">
+      <div class="wrap">
+        {review.state === 'signed_out' ? (
+          <>
+            <p class="work-label">sign in required</p>
+            <h2 class="work-heading">Builders vote.</h2>
+            <p class="work-copy">Sign in with GitHub, make your page, and publish on time to review this week's work.</p>
+            <a class="work-button" href="/build">continue with GitHub</a>
+          </>
+        ) : review.state === 'profile_required' ? (
+          <>
+            <p class="work-label">finish your profile</p>
+            <h2 class="work-heading">Make your builder page first.</h2>
+            <p class="work-copy">Voting opens to builders who publish an eligible result for the week.</p>
+            <a class="work-button" href="/build">make my page</a>
+          </>
+        ) : review.state === 'pair' && review.reviewed === 5 && !Astro.url.searchParams.has('continue') ? (
+          <div class="review-checkpoint">
+            <p class="work-label">5 of 10 saved</p>
+            <h2 class="work-heading">Halfway there. Take a breather.</h2>
+            <p class="work-copy">Your votes are saved. Finish the next five now or come back before {madridDate(review.week.votingClosesAt)}. All ten unlock the early leaderboard.</p>
+            <div class="work-actions"><a class="work-button" href={demo ? '/vote?demo=1&round=5&continue=1#review-content' : '/vote?demo=0&continue=1#review-content'}>next five</a><a class="work-button secondary" href={demo ? '/leaderboard?demo=1' : '/build?demo=0#this-week'}>come back later</a></div>
+          </div>
+        ) : review.state === 'pair' ? (
+          <>
+            <p class="work-label">{review.reviewed} of 10 reviewed / closes {madridDate(review.week.votingClosesAt)}</p>
+            <progress value={review.reviewed} max="10" aria-label="Comparisons saved"></progress>
+            <p class="draft-status">Every choice is saved. You can leave and resume here.</p>
+            <div class="pair-grid">
+              {[review.first, review.second].map((candidate, index) => (
+                <>
+                  {index === 1 && <div class="pair-divider" aria-hidden="true"></div>}
+                  <article class="pair-card">
+                    <p class="work-label">result {index === 0 ? 'a' : 'b'} / {projectStageLabel(candidate.projectStage)}</p>
+                    <h2 class="work-heading">What changed</h2>
+                    {candidate.summary.length > 260 ? (
+                      <details class="pair-context"><summary class="summary-preview">{candidate.summary.slice(0, 260)}… <span>Read full update</span></summary><p class="work-copy update-copy">{candidate.summary}</p></details>
+                    ) : <p class="work-copy update-copy">{candidate.summary}</p>}
+                    <p class="work-copy">{candidate.projectSentence}</p>
+                    {candidate.promise && (
+                      <details class="pair-context"><summary>Previous goal · {candidate.status === 'complete' ? 'completed' : 'partly completed'}</summary><p class="update-copy">{candidate.promise}</p></details>
+                    )}
+                    {candidate.feedbackRequest && (
+                      <details class="pair-context">
+                        <summary>Feedback wanted</summary>
+                        <p class="work-copy">{candidate.feedbackRequest}</p>
+                      </details>
+                    )}
+                    <details class="pair-proof">
+                      <summary>{proofLabel(candidate.proofStatus)}</summary>
+                      {candidate.proofUrl ? (
+                        <p>Opening proof may reveal the builder's identity. <a href={candidate.proofUrl} target="_blank" rel="noopener noreferrer nofollow">Open it ↗</a></p>
+                      ) : (
+                        <p>No supporting link.</p>
+                      )}
+                    </details>
+                  </article>
+                </>
+              ))}
+            </div>
+            <form class="pair-form" method={demo ? 'get' : 'post'} action={demo ? '/vote' : '/api/review'} data-review-form data-demo-next={demo ? `/vote?demo=1&round=${review.reviewed + 1}` : undefined}>
+              {demo && <><input type="hidden" name="demo" value="1" /><input type="hidden" name="round" value={review.reviewed + 1} /></>}
+              <input type="hidden" name="assignmentId" value={review.assignmentId} />
+              <button class="work-button" name="selected" value="first">Choose A</button>
+              <button class="work-button" name="selected" value="second">Choose B</button>
+              <button class="work-button secondary" name="selected" value="tie">About equal</button>
+              <button class="work-button secondary" name="selected" value="pass">Skip</button>
+            </form>
+            <p class="work-status" data-review-status aria-live="polite"></p>
+          </>
+        ) : review.state === 'complete' ? (
+          <>
+            <p class="work-label">10 of 10 reviewed</p>
+            <h2 class="work-heading">Thanks for giving other builders your time.</h2>
+            <p class="work-copy">All ten choices are saved. Your early leaderboard is ready; final ranks arrive after voting closes.</p>
+            <a class="work-button" href={demo ? '/leaderboard?demo=1' : '/leaderboard?demo=0'}>open leaderboard</a>
+          </>
+        ) : review.state === 'exhausted' ? (
+          <>
+            <p class="work-label">{review.reviewed} of 10 reviewed</p>
+            <h2 class="work-heading">No more pairs available.</h2>
+            <p class="work-copy">Some comparisons are no longer eligible. Your remaining votes are saved. Final ranks appear after voting closes.</p>
+            <a class="work-button" href="/builders">discover projects</a>
+          </>
+        ) : review.state === 'unranked' ? (
+          <>
+            <p class="work-label">unranked week</p>
+            <h2 class="work-heading">Not enough results yet.</h2>
+            <p class="work-copy">Six published updates are needed for fair comparisons. Discover the projects taking part while more arrive.</p>
+            <a class="work-button" href="/builders">meet the builders</a>
+          </>
+        ) : review.state === 'ineligible' ? (
+          <>
+            <p class="work-label">voting is open</p>
+            <h2 class="work-heading">Publish on time to vote.</h2>
+            <p class="work-copy">Late results stay public, but they do not enter this week's review.</p>
+          </>
+        ) : (
+          <>
+            <p class="work-label">voting closed</p>
+            <h2 class="work-heading">No pairs right now.</h2>
+            <p class="work-copy">{'opensAt' in review && review.opensAt ? `Voting opens ${madridDate(review.opensAt)} and stays open for 24 hours.` : 'The next voting window will appear here once scheduled.'}</p>
+            <a class="work-button" href="/builders">discover projects</a>
+          </>
+        )}
+      </div>
+    </section>
+  </div>
+</ProductLayout>
+
+<script>
+  import { track } from '@vercel/analytics';
+
+  document.addEventListener('submit', async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches('[data-review-form]')) return;
+    const status = document.querySelector<HTMLElement>('[data-review-status]');
+    event.preventDefault();
+    const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
+    if (!submitter) return;
+    form.querySelectorAll<HTMLButtonElement>('button').forEach((button) => (button.disabled = true));
+    if (status) status.textContent = 'Saving...';
+
+    const data = new FormData(form);
+    data.set('selected', submitter.value);
+    try {
+      const response = form.dataset.demoNext
+        ? await fetch(form.dataset.demoNext)
+        : await fetch(form.action, { method: 'POST', body: data });
+      if (response.ok) {
+        const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+        const next = page.querySelector<HTMLElement>('#review-content');
+        if (!next) throw new Error('missing_review');
+        document.querySelector('#review-content')?.replaceWith(next);
+        next.focus({ preventScroll: true });
+        next.scrollIntoView({ block: 'start' });
+        if (!form.dataset.demoNext) track('weekly_vote_saved', { choice: submitter.value });
+      }
+      else if (status) status.textContent = await response.text();
+    } catch {
+      if (status) status.textContent = 'Could not save. Try again.';
+    } finally {
+      form.querySelectorAll<HTMLButtonElement>('button').forEach((button) => (button.disabled = false));
+    }
+  });
+</script>

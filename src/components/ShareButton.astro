@@ -1,0 +1,52 @@
+---
+interface Props {
+  path: string;
+  title: string;
+  eventName: 'builder_profile_shared' | 'weekly_result_shared';
+  handle: string;
+}
+
+const { path, title, eventName, handle } = Astro.props;
+---
+
+<div>
+  <button
+    class="work-button"
+    type="button"
+    data-share
+    data-path={path}
+    data-title={title}
+    data-event={eventName}
+    data-handle={handle}
+  >
+    {eventName === 'weekly_result_shared' ? "share this week's progress" : 'share project'}
+  </button>
+  <p class="work-status" data-share-status aria-live="polite"></p>
+</div>
+
+<script>
+  import { track } from '@vercel/analytics';
+
+  document.querySelectorAll<HTMLButtonElement>('[data-share]').forEach((button) => {
+    if (button.dataset.ready) return;
+    button.dataset.ready = 'true';
+
+    button.addEventListener('click', async () => {
+      const status = button.parentElement?.querySelector<HTMLElement>('[data-share-status]');
+      const url = new URL(button.dataset.path || '/', window.location.origin).toString();
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: button.dataset.title, text: button.dataset.title, url });
+        } else {
+          await navigator.clipboard.writeText(url);
+          if (status) status.textContent = 'Link copied.';
+        }
+        track(button.dataset.event || 'page_shared', { handle: button.dataset.handle || '' });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        if (status) status.textContent = 'Could not share. Copy the page URL instead.';
+      }
+    });
+  });
+</script>

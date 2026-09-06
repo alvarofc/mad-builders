@@ -1,0 +1,97 @@
+---
+import ProductLayout from '../layouts/ProductLayout.astro';
+import { getProfileByUserId, listResultsForOwner } from '../server/profiles';
+
+export const prerender = false;
+
+if (!Astro.locals.user) return Astro.redirect('/build');
+const currentProfile = await getProfileByUserId(Astro.locals.user.id);
+if (!currentProfile) return Astro.redirect('/build');
+const results = await listResultsForOwner(Astro.locals.user.id);
+---
+
+<ProductLayout
+  title="Settings - mad.builders"
+  description="Manage your public mad.builders project and weekly results."
+  profileHandle={currentProfile.handle}
+  signedIn
+  noindex
+>
+  <div class="work-page">
+    <header class="work-hero">
+      <div class="wrap">
+        <p class="work-kicker">@{currentProfile.handle}</p>
+        <h1 class="work-title">Settings</h1>
+        <p class="work-intro">You control whether your project and weekly results stay public.</p>
+      </div>
+    </header>
+    <section class="wrap work-grid">
+      <aside class="work-aside">
+        <p class="work-label">project page</p>
+        <p class="work-note">
+          Taking your project offline also hides its metadata and social preview. Your account and history stay in the database.
+        </p>
+        <form method="post" action="/api/profile/visibility">
+          <button
+            class="work-button secondary"
+            name="action"
+            value={currentProfile.withdrawnAt ? 'restore' : 'withdraw'}
+          >
+            {currentProfile.withdrawnAt ? 'put project back online' : 'take project offline'}
+          </button>
+        </form>
+      </aside>
+      <div class="work-main">
+        <p class="work-label">project and builder</p>
+        <h2 class="work-heading">What people see.</h2>
+        <form class="work-form" method="post" action="/api/profile">
+          <label class="work-field">
+            <span>your name</span>
+            <input name="displayName" value={currentProfile.displayName} minlength="2" maxlength="80" autocomplete="name" required />
+          </label>
+          <label class="work-field">
+            <span>location</span>
+            <input name="location" value={currentProfile.location} maxlength="80" autocomplete="address-level2" />
+          </label>
+          <label class="work-field">
+            <span>project</span>
+            <input name="projectName" value={currentProfile.projectName} minlength="2" maxlength="100" required />
+          </label>
+          <label class="work-field">
+            <span>project URL</span>
+            <input name="projectUrl" type="url" value={currentProfile.projectUrl ?? ''} placeholder="https://" inputmode="url" />
+          </label>
+          <label class="work-field">
+            <span>What are you building in a sentence?</span>
+            <textarea name="bio" minlength="5" maxlength="280" required>{currentProfile.bio}</textarea>
+          </label>
+          <button class="work-button" type="submit">save profile</button>
+        </form>
+        <hr class="work-rule" />
+        <p class="work-label">weekly results</p>
+        <h2 class="work-heading">Choose what stays public.</h2>
+        {results.length ? (
+          <div class="result-list">
+            {results.map((published) => (
+              <div class="result-row">
+                <span class="result-week">{published.weekStartDate}</span>
+                <span>
+                  <span class="result-promise">{published.promise}</span>
+                  <span class="result-summary">{published.summary}</span>
+                </span>
+                <form method="post" action="/api/result/visibility">
+                  <input type="hidden" name="resultId" value={published.id} />
+                  <button class="work-button secondary" name="action" value={published.withdrawnAt ? 'restore' : 'withdraw'}>
+                    {published.withdrawnAt ? 'restore' : 'hide'}
+                  </button>
+                </form>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p class="work-copy">No results yet.</p>
+        )}
+      </div>
+    </section>
+  </div>
+</ProductLayout>

@@ -1,0 +1,387 @@
+---
+import ProductLayout from '../layouts/ProductLayout.astro';
+import LeaderboardPanel from '../components/LeaderboardPanel.astro';
+import ShareButton from '../components/ShareButton.astro';
+import { authConfigured } from '../server/auth';
+import { getProfileByUserId, normalizeHandle, validHandle } from '../server/profiles';
+import { getLatestLeaderboard } from '../server/ranking';
+import { projectStages } from '../server/results';
+import { getBuildState, madridDate } from '../server/weeks';
+import { demoLeaderboard } from '../data/builders-demo';
+
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const currentUser = Astro.locals.user;
+const currentProfile = currentUser ? await getProfileByUserId(currentUser.id) : null;
+const selectedWeekDate = Astro.url.searchParams.get('week');
+const buildState = currentProfile ? await getBuildState(currentProfile.userId, selectedWeekDate) : null;
+const unavailableWeek = Boolean(currentProfile && selectedWeekDate && !buildState);
+if (unavailableWeek) Astro.response.status = 404;
+const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
+const board = demo ? demoLeaderboard : await getLatestLeaderboard(currentUser?.id);
+const ref = normalizeHandle(Astro.url.searchParams.get('ref') ?? '');
+const safeRef = validHandle(ref) ? ref : '';
+const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'active';
+---
+
+<ProductLayout
+  title="Proof of work - mad.builders"
+  description="Make a weekly promise, publish what shipped, and build a public record of your work."
+  active="build"
+  profileHandle={currentProfile?.handle}
+  signedIn={Boolean(currentUser)}
+>
+  <div class="work-page">
+    <div class="wrap app-shell">
+      <div class="app-context mono">
+        <span>mad builders / weekly proof of work</span>
+        <div class="app-context-actions">
+          {currentProfile && <a href={`/builders/${currentProfile.handle}`}>{currentProfile.projectName} →</a>}
+          <a class="work-button" href="#this-week">{buildState?.currentResult ? 'your update' : 'write update'}</a>
+        </div>
+      </div>
+      {demo && <p class="work-note">Local demo leaderboard. Your weekly update below is real. <a href="/vote?demo=1">Try voting →</a> · <a href="/build?demo=0">Show real leaderboard</a></p>}
+      <LeaderboardPanel board={board} signedIn={Boolean(currentUser)} demo={demo} excludeResultId={editing ? buildState?.currentResult?.id : undefined} />
+    </div>
+
+    <section class="week-section" id="this-week">
+      <div class="wrap section-heading">
+        <p class="work-label">accountability loop</p>
+        <h2 class="app-section-title">{buildState?.selectedLateWeek ? 'Catch up' : 'This week'}</h2>
+      </div>
+      <div class="wrap update-shell">
+        <div>
+        {!authConfigured ? (
+          <>
+            <h2 class="work-heading">The build log is offline.</h2>
+            <p class="work-copy">The database and GitHub sign-in still need their deployment credentials.</p>
+          </>
+        ) : !currentUser ? (
+          <>
+            <p class="work-label">step 01</p>
+            <h2 class="work-heading">Start with GitHub.</h2>
+            <p class="work-copy">
+              GitHub gives each builder one identity and lets us match public commit links to the account that signed in.
+            </p>
+            <button
+              class="work-button"
+              type="button"
+              data-github-sign-in
+              data-callback={safeRef ? `/build?ref=${safeRef}` : '/build'}
+            >
+              continue with GitHub
+            </button>
+            <p class="work-status" data-auth-status aria-live="polite"></p>
+          </>
+        ) : !currentProfile ? (
+          <>
+            <p class="work-label">step 02 / add your project</p>
+            <h2 class="work-heading">What are you building?</h2>
+            <p class="work-copy">Keep it plain. You can make it prettier after you've shipped something.</p>
+            <form class="work-form" method="post" action="/api/profile" data-api-form>
+              <input type="hidden" name="ref" value={safeRef} />
+              <label class="work-field">
+                <span>your name</span>
+                <input
+                  name="displayName"
+                  value={currentUser.name}
+                  minlength="2"
+                  maxlength="80"
+                  autocomplete="name"
+                  required
+                />
+              </label>
+              <label class="work-field">
+                <span>public handle</span>
+                <input
+                  name="handle"
+                  placeholder="ana-builds"
+                  minlength="3"
+                  maxlength="30"
+                  pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]"
+                  autocapitalize="none"
+                  autocomplete="off"
+                  required
+                />
+                <small>mad.builders/builders/your-handle</small>
+              </label>
+              <label class="work-field">
+                <span>location</span>
+                <input name="location" placeholder="Madrid" maxlength="80" autocomplete="address-level2" />
+              </label>
+              <label class="work-field">
+                <span>project</span>
+                <input name="projectName" placeholder="What has your attention?" minlength="2" maxlength="100" required />
+              </label>
+              <label class="work-field">
+                <span>project URL</span>
+                <input name="projectUrl" type="url" placeholder="https://" inputmode="url" />
+              </label>
+              <label class="work-field">
+                <span>What are you building in a sentence?</span>
+                <textarea name="bio" minlength="5" maxlength="280" required></textarea>
+              </label>
+              <div>
+                <button class="work-button" type="submit">publish project</button>
+                <p class="work-status" data-form-status aria-live="polite"></p>
+              </div>
+            </form>
+          </>
+        ) : unavailableWeek ? (
+          <p class="work-copy">This update is unavailable or already published. <a href="/build#this-week">Back to this week</a></p>
+        ) : (
+          <>
+            {buildState?.selectedLateWeek ? (
+              <p class="work-note"><a href="/build#this-week">Back to this week</a></p>
+            ) : buildState?.unfinishedWeeks.length ? (
+              <p class="work-note">Still want to share an earlier week? {buildState.unfinishedWeeks.map((week) => (
+                <a href={`/build?week=${week.weekStartDate}#this-week`}>Finish the update for {week.weekStartDate}. </a>
+              ))}</p>
+            ) : null}
+            {buildState?.currentResult && !editing ? (
+              <>
+                <p class="work-label">published / week of {buildState.currentWeek?.weekStartDate}</p>
+                <h2 class="work-heading">Your week is published.</h2>
+                <p class="work-copy update-copy">{buildState.currentResult.summary}</p>
+                {buildState.nextCommitment && <p class="work-copy">Next week: {buildState.nextCommitment.promise}</p>}
+                <p class="work-note">{buildState.phase === 'active' ? `You can edit until voting opens ${madridDate(buildState.currentWeek!.submissionClosesAt)}.` : 'Voting is open. Your update is locked for fair comparisons.'}</p>
+                <div class="work-actions">
+                  <ShareButton path={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}?ref=${currentProfile.handle}`} title={`${currentProfile.projectName}: ${buildState.currentResult.summary.slice(0, 180)}`} eventName="weekly_result_shared" handle={currentProfile.handle} />
+                  {buildState.phase === 'active' && <a class="work-button secondary" href="/build?edit#this-week">edit update</a>}
+                  {buildState.phase === 'voting' && <a class="work-button" href="/vote">review ten pairs</a>}
+                  <a
+                    class={`work-button ${buildState.phase === 'voting' ? 'secondary' : ''}`}
+                    href={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}`}
+                  >
+                    open the result
+                  </a>
+                </div>
+                {buildState.canSetNextPromise && buildState.nextWeek && (
+                  <details class="result-block" data-next-commitment-editor>
+                    <summary>Edit next week's goals</summary>
+                    <p class="work-note">Goals lock {madridDate(buildState.nextWeek.startsAt)}. Your published update stays unchanged.</p>
+                    <form class="work-form" method="post" action="/api/commitment" data-api-form>
+                      <input type="hidden" name="weekId" value={buildState.nextWeek.id} />
+                      <label class="work-field">
+                        <span>What do you want to have done by the end of next week?</span>
+                        <textarea name="promise" minlength="5" maxlength="280" required>{buildState.nextCommitment?.promise}</textarea>
+                      </label>
+                      <div>
+                        <button class="work-button" type="submit">save my commitment</button>
+                        <p class="work-status" data-form-status aria-live="polite"></p>
+                      </div>
+                    </form>
+                  </details>
+                )}
+              </>
+            ) : buildState?.currentCommitment || (buildState?.currentWeek && buildState.phase === 'active') ? (
+              <>
+                <p class="work-label">weekly update / week of {buildState.currentWeek?.weekStartDate}</p>
+                <h2 class="work-heading">{editing ? 'Edit your weekly update.' : buildState.currentCommitment?.promise ? 'Tell us how the week went.' : 'Your first weekly update.'}</h2>
+                {buildState.currentWeek && (
+                  <p class="work-note">{buildState.late ? 'The ranking deadline has passed. You can still publish this update, but it will not enter voting or count toward your streak.' : `Ranking deadline: ${madridDate(buildState.currentWeek.submissionClosesAt)}`}</p>
+                )}
+                <form class="work-form" method="post" action="/api/result/publish" data-api-form data-draft-key={`weekly:${currentProfile.userId}:${buildState.currentWeek?.id}`}>
+                  <p class="draft-status" data-draft-status role="status">Drafts stay on this browser until you publish.</p>
+                  {buildState.currentCommitment ? (
+                    <input type="hidden" name="commitmentId" value={buildState.currentCommitment.id} />
+                  ) : (
+                    <input type="hidden" name="weekId" value={buildState.currentWeek?.id} />
+                  )}
+                  <details class="project-context" open={!currentProfile.bio}>
+                    <summary>What are you building in a sentence? <span>{currentProfile.bio}</span></summary>
+                    <label class="work-field">
+                      <span>Project description</span>
+                      <textarea name="projectSentence" minlength="5" maxlength="280" required>{buildState.currentResult?.projectSentence ?? currentProfile.bio}</textarea>
+                    </label>
+                  </details>
+                  {buildState.currentCommitment?.promise ? (
+                    <div class="result-block">
+                      <p class="work-label">Here's what you planned to do this week:</p>
+                      <p class="builder-bio">{buildState.currentCommitment.promise}</p>
+                    </div>
+                  ) : null}
+                  <label class="work-field">
+                    <span>What did you accomplish this week?</span>
+                    <textarea name="summary" minlength="5" maxlength="1000" placeholder="A few concrete lines are enough." required>{buildState.currentResult?.summary}</textarea>
+                  </label>
+                  {buildState.currentCommitment?.promise ? (
+                  <fieldset class="work-options">
+                    <legend>Did you do everything you planned?</legend>
+                    <label><input type="radio" name="status" value="complete" checked={buildState.currentResult?.status === 'complete'} required /><span>all of it</span></label>
+                    <label><input type="radio" name="status" value="partial" checked={buildState.currentResult?.status === 'partial'} /><span>some of it</span></label>
+                    <label><input type="radio" name="status" value="missed" checked={buildState.currentResult?.status === 'missed'} /><span>none of it</span></label>
+                  </fieldset>
+                  ) : <input type="hidden" name="status" value="submitted" />}
+                  {buildState.canSetNextPromise && (
+                    <label class="work-field">
+                      <span>What do you want to have done by the end of next week?</span>
+                      <textarea name="nextPromise" minlength="5" maxlength="280" required>{buildState.nextCommitment?.promise}</textarea>
+                    </label>
+                  )}
+                  <label class="work-field">
+                    <span>What would you like feedback on from the community?</span>
+                    <textarea name="feedbackRequest" maxlength="500" placeholder="Optional. A specific question helps people help you.">{buildState.currentResult?.feedbackRequest}</textarea>
+                  </label>
+                  <label class="work-field">
+                    <span>Project website</span>
+                    <input name="projectUrl" type="url" value={currentProfile.projectUrl ?? ''} placeholder="https://" inputmode="url" />
+                  </label>
+                  <label class="work-field">
+                    <span>Which of these best describes the stage of your project?</span>
+                    <select name="projectStage" required>
+                      {projectStages.map((stage) => (
+                        <option value={stage.value} selected={currentProfile.projectStage === stage.value}>{stage.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label class="work-field">
+                    <span>Proof URL</span>
+                    <input name="proofUrl" type="url" value={buildState.currentResult?.proofUrl ?? ''} placeholder="Optional: a demo, launch, commit, or post" inputmode="url" />
+                    <small>A link lets other builders see what you made.</small>
+                  </label>
+                  <p class="draft-status">{buildState.late ? 'Your update is public and locked after publishing.' : 'Your update is public after publishing. You can edit until voting opens.'}</p>
+                  <div>
+                    <button class="work-button" type="submit">{editing ? 'save changes' : 'publish update'}</button>
+                    <p class="work-status" data-form-status aria-live="polite"></p>
+                  </div>
+                </form>
+              </>
+            ) : buildState?.nextWeek ? (
+              <>
+                <p class="work-label">next week / starts {madridDate(buildState.nextWeek.startsAt)}</p>
+                <h2 class="work-heading">What do you want to have done by the end of next week?</h2>
+                <p class="work-copy">Set clear goals that another builder can judge as complete or incomplete.</p>
+                <form class="work-form" method="post" action="/api/commitment" data-api-form>
+                  <input type="hidden" name="weekId" value={buildState.nextWeek.id} />
+                  <label class="work-field">
+                    <span>next week's goals</span>
+                    <textarea
+                      name="promise"
+                      minlength="5"
+                      maxlength="280"
+                      required
+                    >{buildState.nextCommitment?.promise}</textarea>
+                  </label>
+                  <div>
+                    <button class="work-button" type="submit">save my commitment</button>
+                    <p class="work-status" data-form-status aria-live="polite"></p>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <p class="work-label">your project is live</p>
+                <h2 class="work-heading">Good. Now there's somewhere to put the work.</h2>
+                <p class="work-copy">The next weekly cycle has not been scheduled yet. Your project page is ready to share.</p>
+                <div class="work-actions">
+                  <a class="work-button" href={`/builders/${currentProfile.handle}`}>open my project</a>
+                  <a class="work-button secondary" href="/builders">see the projects</a>
+                </div>
+              </>
+            )}
+          </>
+        )}
+        </div>
+      </div>
+    </section>
+  </div>
+</ProductLayout>
+
+<script>
+  import { createAuthClient } from 'better-auth/client';
+  import { track } from '@vercel/analytics';
+
+  const signInButton = document.querySelector<HTMLButtonElement>('[data-github-sign-in]');
+  const authStatus = document.querySelector<HTMLElement>('[data-auth-status]');
+
+  signInButton?.addEventListener('click', async () => {
+    signInButton.disabled = true;
+    if (authStatus) authStatus.textContent = 'Opening GitHub...';
+
+    try {
+      const authClient = createAuthClient();
+      const { error } = await authClient.signIn.social({
+        provider: 'github',
+        callbackURL: signInButton.dataset.callback || '/build',
+      });
+      if (error) throw error;
+    } catch {
+      signInButton.disabled = false;
+      if (authStatus) authStatus.textContent = 'GitHub sign-in failed. Try again.';
+    }
+  });
+
+  document.querySelectorAll<HTMLFormElement>('[data-api-form]').forEach((form) => {
+    const draftKey = form.dataset.draftKey;
+    const draftStatus = form.querySelector<HTMLElement>('[data-draft-status]');
+    const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('input:not([type="hidden"]), textarea, select')];
+    const startedAt = Date.now();
+    if (draftKey) {
+      try {
+        const draft = JSON.parse(localStorage.getItem(draftKey) || 'null');
+        if (draft && typeof draft === 'object') {
+          fields.forEach((field) => {
+            if (typeof draft[field.name] !== 'string') return;
+            if (field instanceof HTMLInputElement && field.type === 'radio') field.checked = field.value === draft[field.name];
+            else field.value = draft[field.name];
+          });
+          if (draftStatus) draftStatus.textContent = 'Your draft is restored.';
+        }
+      } catch { if (draftStatus) draftStatus.textContent = 'Draft saving is unavailable. Keep this tab open.'; }
+      let tracked = false;
+      form.addEventListener('input', () => {
+        if (!tracked) { track('weekly_update_started'); tracked = true; }
+        try {
+          const values: Record<string, string> = {};
+          fields.forEach((field) => {
+            if (field instanceof HTMLInputElement && field.type === 'radio' && !field.checked) return;
+            values[field.name] = field.value;
+          });
+          localStorage.setItem(draftKey, JSON.stringify(values));
+          if (draftStatus) draftStatus.textContent = 'Draft saved on this browser.';
+        } catch { if (draftStatus) draftStatus.textContent = 'Draft could not be saved. Keep this tab open.'; }
+      });
+      form.addEventListener('invalid', (event) => {
+        const field = event.target as HTMLElement;
+        const details = field.closest('details');
+        if (details) details.open = true;
+      }, true);
+    }
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const formStatus = form.querySelector<HTMLElement>('[data-form-status]');
+      if (submit) submit.disabled = true;
+      if (formStatus) formStatus.textContent = 'Saving...';
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+        });
+
+        if (response.ok) {
+          const sessionExpired = new URL(response.url, window.location.origin).pathname.replace(/\/$/, '') === '/build';
+          if (draftKey && !sessionExpired) {
+            try { localStorage.removeItem(draftKey); } catch {}
+            track('weekly_update_published', { seconds: Math.round((Date.now() - startedAt) / 1000) });
+          }
+          if (draftKey && sessionExpired) {
+            if (formStatus) formStatus.textContent = 'Your session expired. Sign in in another tab, then retry. Your draft is saved here.';
+            return;
+          }
+          window.location.assign(response.url || '/build');
+          return;
+        }
+
+        if (formStatus) formStatus.textContent = await response.text();
+      } catch {
+        if (formStatus) formStatus.textContent = 'Could not save. Try again.';
+      } finally {
+        if (submit) submit.disabled = false;
+      }
+    });
+  });
+</script>
