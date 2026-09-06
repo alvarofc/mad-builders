@@ -546,6 +546,7 @@
 .app-context {
   display: flex;
   min-height: 44px;
+  padding-block: 12px;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
@@ -848,8 +849,8 @@
     align-items: flex-start;
     flex-direction: column;
     justify-content: center;
-    gap: 4px;
-    padding: 10px 0;
+    gap: 12px;
+    padding-block: 12px;
   }
 
   .app-context-actions {
