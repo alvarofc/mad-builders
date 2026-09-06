@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.1.0.1] - 2026-09-06
+
+### Fixed
+
+- Opening the leaderboard or weekly build page no longer locks the database week when its rankings are already finalized.
+
 ## [0.1.0.0] - 2026-09-05
 
 ### Added
