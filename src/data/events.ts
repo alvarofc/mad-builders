@@ -42,6 +42,17 @@ export const events: CommunityEvent[] = [
       'A hands-on workshop with Spec Kitty creator Robert Douglas on giving AI coding agents a spec, plan and reviewable workflow. See how it works in an existing codebase and what adoption looks like for a real team.',
   },
   {
+    slug: 'cafe-compute-madrid',
+    title: 'Cafe Compute: Madrid',
+    date: '2026-09-19',
+    time: '10:30',
+    endTime: '18:00',
+    location: 'Madrid',
+    luma: 'https://luma.com/stmnfvqi',
+    blurb:
+      'A day of coworking in a Madrid coffee shop, with AI talks and demos from Cerebras, OpenAI, Mastra and local builders. Bring your laptop to work on a project, share what you are building and try things out with OpenAI credits for attendees.',
+  },
+  {
     slug: 'ingenieria-agentica-seria',
     title: 'Ingeniería agéntica seria',
     date: '2026-09-17',

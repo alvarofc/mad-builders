@@ -1,7 +1,8 @@
 ---
 import type { ImageMetadata } from 'astro';
+import { calendarThumbnail } from '../lib/calendar-covers';
 import Layout from '../layouts/Layout.astro';
-import { spotlights, spots, stats } from '../data/madrid';
+import { spots, stats } from '../data/madrid';
 import { calendarEvents as externalEvents } from '../data/calendar';
 import { events as communityEvents } from '../data/events';
 
@@ -33,12 +34,16 @@ const madbuildersEvents = communityEvents.map((e) => ({
   location: e.location,
   url: e.luma,
   image: coverFor(e.slug),
+  thumbnail: calendarThumbnail(`community:${e.slug}`),
   description: e.blurb,
   madbuilders: true,
   private: e.private,
 }));
 
-const calendarEvents = [...madbuildersEvents, ...externalEvents];
+const calendarEvents = [...madbuildersEvents, ...externalEvents.map((e) => ({
+  ...e,
+  thumbnail: calendarThumbnail(e.image),
+}))];
 ---
 
 <Layout title="Madrid for builders - mad.builders" image="/og-madrid.png">
@@ -47,7 +52,6 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     <div class="wrap subnav-inner">
       <a href="#calendar">calendar</a>
       <a href="#spots">map</a>
-      <a href="#communities">communities</a>
     </div>
   </nav>
 
@@ -125,27 +129,6 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     </div>
   </section>
 
-  <section class="section light" id="communities">
-    <div class="wrap">
-      <h2 class="section-title">Communities</h2>
-      <p class="lede">Meetups, communities and builders.</p>
-
-      <div class="spot-list">
-        {spotlights.map((s) => (
-          <a class={`spot-row spot-${s.kind}`} href={s.url} target="_blank" rel="noopener">
-            <span class={`spot-thumb${s.logo ? ' is-logo' : ''}`}>
-              <img src={s.image} alt={s.name} loading="lazy" decoding="async" />
-            </span>
-            <span class="spot-main">
-              <h3 class="spot-name">{s.name}</h3>
-              <span class="spot-what">{s.what}</span>
-            </span>
-            <span class="spot-link mono">Visit →</span>
-          </a>
-        ))}
-      </div>
-    </div>
-  </section>
 </Layout>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
@@ -251,7 +234,13 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     // Group events by date key for O(1) lookups.
     const byDay = {};
     for (const e of calendarEvents) (byDay[e.date] ||= []).push(e);
-    for (const k in byDay) byDay[k].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    // Show our events first each day, then sort each group by time.
+    for (const k in byDay) {
+      byDay[k].sort((a, b) =>
+        Number(Boolean(b.madbuilders)) - Number(Boolean(a.madbuilders)) ||
+        (a.time || '').localeCompare(b.time || '')
+      );
+    }
 
     // "Today" must be the Madrid-local date, not the visitor's: events are stored
     // as Madrid-local 'YYYY-MM-DD', so a visitor in another timezone would
@@ -408,9 +397,12 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
           evs.forEach((e) => {
             const chip = el('button', 'cal-chip' + (e.madbuilders ? ' is-mad' : ' is-ext'));
             chip.type = 'button';
+            chip.setAttribute('aria-label', `${e.title}${e.time ? ', ' + e.time : ''}`);
             chip.addEventListener('click', () => openModal(e));
             const chipLock = e.private ? `<span class="cal-chip-lock">${LOCK}</span>` : '';
-            chip.innerHTML = `${chipLock}${e.time ? `<span class="cal-chip-time mono">${esc(e.time)}</span>` : ''}<span class="cal-chip-title">${esc(e.title)}</span>`;
+            const chipImage = e.image ? `<img class="cal-chip-image" src="${esc(e.thumbnail?.src || e.image)}"${e.thumbnail ? ` srcset="${esc(e.thumbnail.srcset)}"` : ''} alt="" loading="lazy" decoding="async" />` : '';
+            const chipMeta = chipLock || e.time ? `<span class="cal-chip-meta">${chipLock}${e.time ? `<span class="cal-chip-time mono">${esc(e.time)}</span>` : ''}</span>` : '';
+            chip.innerHTML = `${chipImage}${chipMeta}<span class="cal-chip-title">${esc(e.title)}</span>`;
             list.appendChild(chip);
           });
           cell.appendChild(list);
@@ -457,8 +449,11 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
 
 <style>
   .madrid-head {
-    padding-top: 64px;
-    padding-bottom: 56px;
+    padding-top: 32px;
+    padding-bottom: 28px;
+  }
+  #calendar {
+    padding-top: 32px;
   }
   .madrid-title {
     color: var(--cream-dim);
@@ -469,21 +464,20 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
   .stat-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 28px;
-    margin-top: 40px;
+    gap: 12px;
+    margin-top: 20px;
   }
   .stat {
     border: 1px solid rgba(26, 52, 43, 0.14);
     border-radius: 10px;
-    padding: 28px;
-    background: #fff;
+    padding: 14px 18px;
+    background: var(--cream);
   }
   .stat-heading {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 600;
     letter-spacing: 0;
-    line-height: 1.05;
-    max-width: 280px;
+    line-height: 1.2;
     margin: 0;
   }
   .stat-number {
@@ -495,98 +489,9 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
   .stat-detail {
     display: block;
     color: rgba(26, 52, 43, 0.72);
-    margin-top: 18px;
-    font-size: 15px;
-    line-height: 1.45;
-  }
-  /* featured spotlights as a list of lines: hubs, communities and events */
-  .spot-list {
-    margin-top: 44px;
-    border-top: 1px solid rgba(26, 52, 43, 0.14);
-  }
-  .spot-row {
-    --accent: var(--green);
-    display: flex;
-    align-items: center;
-    gap: 22px;
-    padding: 22px 8px;
-    border-bottom: 1px solid rgba(26, 52, 43, 0.14);
-    color: var(--green);
-    text-decoration: none;
-    transition: background 0.15s ease, padding-left 0.15s ease;
-  }
-  .spot-row:hover {
-    background: color-mix(in srgb, var(--accent) 6%, transparent);
-    padding-left: 16px;
-  }
-  .spot-hub {
-    --accent: var(--map-hub);
-  }
-  .spot-thumb {
-    flex-shrink: 0;
-    width: 96px;
-    height: 64px;
-    border-radius: 8px;
-    overflow: hidden;
-    background: color-mix(in srgb, var(--accent) 8%, #fff);
-    box-shadow: inset 0 0 0 1px rgba(26, 52, 43, 0.1);
-  }
-  .spot-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .spot-thumb.is-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--accent) 12%, var(--cream));
-  }
-  .spot-thumb.is-logo img {
-    width: auto;
-    max-width: 64%;
-    max-height: 60%;
-    object-fit: contain;
-  }
-  .spot-main {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .spot-name {
-    font-size: 19px;
-    margin: 0;
-    line-height: 1.1;
-  }
-  .spot-what {
-    color: rgba(26, 52, 43, 0.66);
-    font-size: 14px;
-    line-height: 1.45;
-    max-width: 60ch;
-  }
-  .spot-link {
-    flex-shrink: 0;
-    align-self: center;
-    font-size: 12px;
-    color: var(--accent);
-    white-space: nowrap;
-  }
-  .spot-row:hover .spot-link {
-    text-decoration: underline;
-  }
-  @media (max-width: 720px) {
-    .spot-row {
-      align-items: flex-start;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .spot-link {
-      align-self: flex-start;
-      padding-left: 112px;
-    }
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.35;
   }
 </style>
 
@@ -598,7 +503,7 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     --cal-line: rgba(26, 52, 43, 0.14);
     --cal-ink: rgba(26, 52, 43, 0.72);
     --cal-faint: rgba(26, 52, 43, 0.45);
-    margin-top: 40px;
+    margin-top: 20px;
     border: 1px solid var(--cal-line);
     border-radius: 12px;
     background: color-mix(in srgb, var(--cream) 92%, white);
@@ -826,7 +731,7 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
   /* month view */
   .cal-month {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
   .cal-month-dow {
     padding: 10px 12px;
@@ -877,12 +782,13 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
   }
   .cal-chip {
     display: flex;
-    align-items: baseline;
-    gap: 5px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    padding: 3px 6px;
+    padding: 6px;
     border: 1px solid transparent;
     border-radius: 5px;
     background: var(--green);
@@ -893,6 +799,24 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     font-size: 11px;
     line-height: 1.25;
     transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .cal-chip-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 80px;
+    object-fit: cover;
+    border-radius: 3px;
+  }
+  .cal-chip-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .cal-chip:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
   }
   .cal-chip.is-mad:hover {
     background: var(--green-soft);
@@ -1076,6 +1000,10 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
     }
     .cal-chip {
       padding: 3px;
+      gap: 3px;
+    }
+    .cal-chip-image {
+      aspect-ratio: 1;
     }
     .cal-chip-time {
       font-size: 8px;

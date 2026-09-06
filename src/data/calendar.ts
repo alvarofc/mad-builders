@@ -218,6 +218,61 @@ export const calendarEvents: CalendarEvent[] = [
       'Melissa Diago, Antonio Lasaga y Alejandro Gómez cuentan cómo Magnific integra la IA en el trabajo creativo, ejecutó su cambio de marca y está cambiando la forma de trabajar de la empresa. Después habrá cóctel y networking en la Central de Diseño.',
   },
   {
+    title: 'Port of Call: Madrid Shipaton - High Score Night',
+    date: '2026-09-10',
+    time: '19:00',
+    endTime: '22:00',
+    location: 'Rockade Malasaña, Centro',
+    url: 'https://luma.com/h4c3y7ed',
+    image: '/events/port-of-call-madrid-shipaton.png',
+    description:
+      'An evening with creabuilders and RevenueCat for people building apps during Shipaton. Bring your work in progress for demos and an open mic, with arcade games, drinks and RevenueCat co-founder Miguel Carranza.',
+  },
+  {
+    title: 'Port of Call: Madrid Shipaton - Engine Room',
+    date: '2026-09-11',
+    time: '17:00',
+    endTime: '20:00',
+    location: 'Pacífico, Madrid',
+    url: 'https://luma.com/h4c3y7ed',
+    image: '/events/port-of-call-madrid-shipaton.png',
+    description:
+      'The second Shipaton session starts with a guided visit to the engines that once powered the Madrid metro. Afterwards, the group moves to a nearby workspace to build together; bring a charged laptop.',
+  },
+  {
+    title: 'FinTech Madrid - The New EU Crypto Rulebook',
+    date: '2026-09-11',
+    time: '18:30',
+    endTime: '21:30',
+    location: 'Casa Luna, Malasaña',
+    url: 'https://luma.com/tkuta85q',
+    image: '/events/fintech-madrid-eu-crypto-rulebook.png',
+    description:
+      'Ilona Limonta-Volkova and Miguel Sánchez Monjo discuss what MiCA means in practice for crypto companies in Europe, from authorisation to enforcement and investment. The conversation is in English, with audience questions, wine and cheese, and drinks afterwards.',
+  },
+  {
+    title: 'Activos digitales 2026: innovación virtual, impacto real',
+    date: '2026-09-15',
+    time: '09:00',
+    endTime: '14:15',
+    location: 'Espacio KOI, Juan Hurtado de Mendoza 4 / online',
+    url: 'https://activosdigitales2026.tufabricadeventos.com/',
+    image: '/events/activos-digitales-2026.jpg',
+    description:
+      'Novena edición del encuentro de El Confidencial sobre activos digitales, con sesiones sobre el euro digital, tokenización y el papel de la IA en las finanzas. La recepción empieza a las 08:45; el aforo presencial está completo, pero la inscripción online sigue abierta.',
+  },
+  {
+    title: 'Claude Community Madrid Launch Meetup',
+    date: '2026-09-16',
+    time: '18:30',
+    endTime: '22:00',
+    location: 'ISDI, Viriato 20, Chamberí',
+    url: 'https://luma.com/claudemadrid-sept16',
+    image: '/events/claude-community-madrid-launch.png',
+    description:
+      'Primer encuentro oficial de Claude Community Madrid para conocer a sus embajadores, las áreas en las que trabajan y los próximos eventos de la comunidad. Tras la presentación habrá preguntas y tiempo para conversar con los asistentes y los organizadores.',
+  },
+  {
     title: '#CodeMeet: ¿Quién controla a los agentes?',
     date: '2026-09-17',
     time: '18:30',
@@ -247,6 +302,28 @@ export const calendarEvents: CalendarEvent[] = [
     image: '/events/3-founders-3-problemas.png',
     description:
       'Tomás Stambulsky, Luis Rodrigo Orellana y Jesús Alberto comparten qué están construyendo, los errores que han cometido y un problema real que estén resolviendo ahora. Después, la conversación se abre a las 20 personas de la sala y termina con algo de beber, sin networking forzado.',
+  },
+  {
+    title: 'Café Helmcode Madrid',
+    date: '2026-09-22',
+    time: '17:00',
+    endTime: '21:00',
+    location: 'Mad Tech Campus, Matadero',
+    url: 'https://luma.com/gh5vx0wk',
+    image: '/events/cafe-helmcode-madrid.png',
+    description:
+      'Afterwork de Helmcode para gente que construye con modelos abiertos, con tres charlas cortas sobre diseño de fármacos, monitorización de bloqueos del fútbol y datos para fine-tuning. Después habrá tiempo para compartir proyectos y dudas sobre IA, con café, refrescos y picoteo.',
+  },
+  {
+    title: 'Liderazgo, equipos y desarrollo con IA',
+    date: '2026-09-22',
+    time: '18:45',
+    endTime: '21:00',
+    location: 'The Bridge, Plaza Pablo Ruiz Picasso 1',
+    url: 'https://gdg.community.dev/events/details/google-gdg-madrid-presents-liderazgo-equipos-y-desarrollo-con-ia/',
+    image: '/events/gdg-liderazgo-equipos-ia.png',
+    description:
+      'Rubén Aguilera presenta L.U.C.I.A., una metodología para integrar la IA en el desarrollo de producto, con una demo en directo. Ana Gil Amor y Elena Guidi hablan de cómo coordinar múltiples equipos y cuidar las relaciones profesionales, con networking al terminar.',
   },
   {
     title: 'Beers & Reliability',

@@ -81,12 +81,7 @@ const fmt = (iso: string) => {
 
 const todayInMadrid = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' });
 const isUpcoming = (date: string) => date >= todayInMadrid;
-const listedEvents = [...events].sort((a, b) => {
-  const aUpcoming = isUpcoming(a.date);
-  const bUpcoming = isUpcoming(b.date);
-  if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-  return aUpcoming ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date);
-});
+const listedEvents = [...events].sort((a, b) => b.date.localeCompare(a.date));
 
 // Repeat the focus words enough times that one "reel" overflows even ultra-wide
 // screens; two identical reels animated by exactly -50% give a seamless loop.
@@ -213,9 +208,7 @@ const showResidents = false;
             <div class="event-meta">
               <div class="event-date-row">
                 <span class="mono event-date">{fmt(e.date)}</span>
-                {isUpcoming(e.date) && (
-                  <span class="mono event-status"><span>upcoming ///</span></span>
-                )}
+                <span class="mono event-status" hidden={!isUpcoming(e.date)}><span>upcoming ///</span></span>
               </div>
               <h3>{e.title}</h3>
             </div>
@@ -399,14 +392,7 @@ const showResidents = false;
     const dateFor = (card: HTMLAnchorElement) => card.dataset.date ?? '';
     const isUpcoming = (card: HTMLAnchorElement) => dateFor(card) >= todayInMadrid;
 
-    eventCards.sort((a, b) => {
-      const aUpcoming = isUpcoming(a);
-      const bUpcoming = isUpcoming(b);
-      if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-      return aUpcoming
-        ? dateFor(a).localeCompare(dateFor(b))
-        : dateFor(b).localeCompare(dateFor(a));
-    });
+    eventCards.sort((a, b) => dateFor(b).localeCompare(dateFor(a)));
 
     eventCards.forEach((card) => {
       const upcoming = isUpcoming(card);

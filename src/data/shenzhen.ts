@@ -5,7 +5,7 @@ import type { ImageMetadata } from 'astro';
 import weekAi from '../assets/shenzhen/week-ai.jpeg';
 import weekBiotech from '../assets/shenzhen/week-biotech.jpeg';
 import weekRobotics from '../assets/shenzhen/week-robotics.jpeg';
-import weekCulture from '../assets/shenzhen/week-culture-fans.jpeg';
+import weekMobility from '../assets/shenzhen/week-mobility-space.png';
 import hero from '../assets/shenzhen/hero.jpeg';
 import hackathon from '../assets/shenzhen/hackathon-prize.jpeg';
 import chinaPanel from '../assets/shenzhen/china-panel.jpeg';
@@ -33,7 +33,6 @@ export const EVENT = {
 };
 
 export const APPLY_URL = 'https://tally.so/r/WOkJoJ';
-export const SPONSOR_URL = 'https://tally.so/r/9qgPpX';
 
 export const images = {
   hero,
@@ -55,7 +54,7 @@ export const weeks: { n: string; name: string; color: string; img: ImageMetadata
   { n: '02', name: 'Biotech & Longevity', color: '#8fa11d', img: weekBiotech, alt: 'Charla sobre biología cuantitativa' },
   { n: '03', name: 'Robotics & Hardware', color: '#5b4bc4', img: weekRobotics, alt: 'Un robot cuadrúpedo repartiendo refrescos en muShanghai' },
   // zoom: optional scale applied to the card photo (crops in via the 4:3 frame)
-  { n: '04', name: 'Culture', color: '#e0669d', img: weekCulture, alt: 'Grupo posando con abanicos rojos en el escenario de muShanghai', zoom: 1.25 },
+  { n: '04', name: 'Mobility & Space', color: '#e0669d', img: weekMobility, alt: 'Cohete de LandSpace sobre una plataforma en el desierto' },
 ];
 
 export const companies = ['z.ai', 'Alibaba', 'Kimi', 'NIO', 'Unitree', 'BYD', 'Xiaomi'];
@@ -67,7 +66,7 @@ export const faqs = [
   },
   {
     q: '¿Cuál es el coste?',
-    a: 'Los vuelos están alrededor de los 800 € y la estancia del mes completo, entre los 1.000 € y los 2.000 € según el tipo de alojamiento.',
+    a: 'Los vuelos están alrededor de los 800 € y la estancia del mes completo, entre los 1.500 € y los 2.500 € según el tipo de alojamiento.',
   },
   {
     q: '¿Tengo que asistir el mes entero?',
@@ -80,9 +79,5 @@ export const faqs = [
   {
     q: '¿Se puede trabajar desde allí?',
     a: 'Sí. the-mu ha conseguido que este sea uno de los primeros eventos en China con acceso a internet abierto. Así que desde el venue tendrás acceso a todas las redes y servicios de forma abierta y sin necesidad de vpn.',
-  },
-  {
-    q: '¿Quieres apoyar muShenzhen?',
-    a: 'Si tu empresa quiere apoyar la iniciativa o ayudar a que más builders puedan asistir, estaremos encantados de hablar.',
   },
 ];

@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import Layout from '../layouts/ShenzhenLayout.astro';
-import { EVENT, APPLY_URL, SPONSOR_URL, images, weeks, companies, faqs, marqueePhotos } from '../data/shenzhen';
+import { EVENT, APPLY_URL, images, weeks, companies, faqs, marqueePhotos } from '../data/shenzhen';
 // the-mu logo for the hero lockup. the-mu = "The Mu" popup-city organiser; its
 // logo ships cream-on-transparent, so both marks get a mono ink treatment via CSS.
 // mad.builders wordmark is referenced from /public by URL below.
@@ -233,7 +233,6 @@ const zoomPhotos = [
       <p>Cuatro semanas en el corazón de la tecnología en China.</p>
       <div class="po-apply-cta">
         <a href={APPLY_URL} class="po-btn po-btn-light" target="_blank" rel="noopener" data-i18n="applyBtn">Aplicar ahora →</a>
-        <a href={SPONSOR_URL} class="po-btn po-btn-ghost-light" target="_blank" rel="noopener" data-i18n="sponsorBtn">Info para sponsors</a>
       </div>
     </section>
   </main>
@@ -319,7 +318,6 @@ const zoomPhotos = [
     const applyH = $('.po-apply h2');
     const applyP = $('.po-apply > p');
     const applyBtn = $('[data-i18n="applyBtn"]');
-    const sponsorBtn = $('[data-i18n="sponsorBtn"]');
     const footer = $('.po-footer p');
     const weekNames = $$('.po-week-body h3');
     const weekLabels = $$('.po-week-n');
@@ -347,18 +345,17 @@ const zoomPhotos = [
         themuP1: `Our friends at ${MU} have spent years running popup cities around the world. Their last event, <mark>muShanghai</mark>, was a hit, with companies like z.ai, Unitree and NIO taking part.`,
         themuP2: `At ${MADM}, we want more builders in Spain to discover muShenzhen, connect with companies in the ecosystem and explore job opportunities in China.`,
         faqH: 'faq',
-        faqQ: ['Who is it for?', 'What does it cost?', 'Do I have to attend the whole month?', `What's day-to-day like?`, 'Can I work from there?', 'Would you like to support muShenzhen?'],
+        faqQ: ['Who is it for?', 'What does it cost?', 'Do I have to attend the whole month?', `What's day-to-day like?`, 'Can I work from there?'],
         faqA: [
           'Anyone eager to build and share.',
-          `Flights are around €800, and the full month's stay runs from €1,000 to €2,000 depending on the accommodation.`,
+          `Flights are around €800, and the full month's stay runs from €1,500 to €2,500 depending on the accommodation.`,
           `No. You can attend for just part of the month.`,
           `Mostly we'll share a space, but the format is open: everyone sets their own agenda, joining whichever of each day's scheduled events interest them.`,
           `Yes. the-mu has made this one of the first events in China with open internet access. So from the venue you'll reach every network and service openly, no VPN needed.`,
-          `If your company would like to support the initiative or help more builders attend, we'd be happy to talk.`,
         ],
         applyH: `Coming to<br />Shenzhen<em>?</em>`,
         applyP: `Four weeks at the heart of China's tech scene.`,
-        applyBtn: 'Apply now →', sponsorBtn: 'Sponsor info',
+        applyBtn: 'Apply now →',
         footer: `${MAD} × ${MU}`,
         weekLabel: ['week 01', 'week 02', 'week 03', 'week 04'],
       },
@@ -378,20 +375,19 @@ const zoomPhotos = [
         themuP1: `我们的朋友 ${MU} 多年来在世界各地举办城市快闪。上一场活动 <mark>muShanghai</mark> 大获成功，z.ai、Unitree、NIO 等企业均有参与。`,
         themuP2: `${MADM} 希望让更多西班牙的 builders 了解 muShenzhen，与生态内的企业建立联系，并探索在中国的工作机会。`,
         faqH: '问答',
-        faqQ: ['适合谁参加？', '费用是多少？', '必须参加整个月吗？', '日常是怎样的？', '可以在那里工作吗？', '想支持 muShenzhen 吗？'],
+        faqQ: ['适合谁参加？', '费用是多少？', '必须参加整个月吗？', '日常是怎样的？', '可以在那里工作吗？'],
         faqA: [
           '任何想创造和分享的人。',
-          '机票约 800 欧元，整月住宿视住宿类型而定，约 1000 至 2000 欧元。',
+          '机票约 800 欧元，整月住宿视住宿类型而定，约 1500 至 2500 欧元。',
           '不必。你可以只参加其中一部分时间。',
           '我们主要会共享同一个空间，但形式自由：每个人自行安排日程，参加当天感兴趣的活动。',
           '可以。the-mu 让这成为中国最早提供开放互联网访问的活动之一。因此在场地内你无需 VPN 即可自由访问所有网络与服务。',
-          '如果你的公司希望支持这项活动，或帮助更多 builders 参与，我们很乐意聊聊。',
         ],
         applyH: `要来<br />深圳<em>吗？</em>`,
         applyP: '四周时间，置身中国科技的核心。',
-        applyBtn: '立即申请 →', sponsorBtn: '赞助信息',
+        applyBtn: '立即申请 →',
         footer: `${MAD} × ${MU}`,
-        weekNames: ['AI', '生物科技与长寿', '机器人与硬件', '文化'],
+        weekNames: ['AI', '生物科技与长寿', '机器人与硬件', '出行与航天'],
         weekLabel: ['第 01 周', '第 02 周', '第 03 周', '第 04 周'],
       },
     };
@@ -409,7 +405,7 @@ const zoomPhotos = [
       faqQ: faqSummaries.map((s) => s.childNodes[0]?.nodeValue ?? ''),
       faqA: faqAnswers.map((p) => p.innerHTML),
       applyH: applyH?.innerHTML, applyP: applyP?.innerHTML,
-      applyBtn: applyBtn?.innerHTML, sponsorBtn: sponsorBtn?.innerHTML, footer: footer?.innerHTML,
+      applyBtn: applyBtn?.innerHTML, footer: footer?.innerHTML,
       weekNames: weekNames.map((h) => h.innerHTML), weekLabel: weekLabels.map((l) => l.innerHTML),
     };
 
@@ -428,7 +424,7 @@ const zoomPhotos = [
       faqSummaries.forEach((s, i) => { if (s.childNodes[0]) s.childNodes[0].nodeValue = d.faqQ[i]; });
       faqAnswers.forEach((p, i) => setHTML(p, d.faqA[i]));
       setHTML(applyH, d.applyH); setHTML(applyP, d.applyP);
-      setHTML(applyBtn, d.applyBtn); setHTML(sponsorBtn, d.sponsorBtn); setHTML(footer, d.footer);
+      setHTML(applyBtn, d.applyBtn); setHTML(footer, d.footer);
       weekNames.forEach((h, i) => setHTML(h, d.weekNames[i]));
       weekLabels.forEach((l, i) => setHTML(l, d.weekLabel[i]));
       document.documentElement.lang = lang;
@@ -1291,11 +1287,6 @@ const zoomPhotos = [
   .po-btn-light {
     background: var(--pink);
     color: #fff;
-  }
-
-  .po-btn-ghost-light {
-    background: #fff;
-    color: var(--ink);
   }
 
   /* footer */
