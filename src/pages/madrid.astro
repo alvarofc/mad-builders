@@ -5,6 +5,8 @@ import { spotlights, spots, stats } from '../data/madrid';
 import { calendarEvents as externalEvents } from '../data/calendar';
 import { events as communityEvents } from '../data/events';
 
+const cartoBasemapKey = import.meta.env.CARTO_BASEMAP_KEY;
+
 const kinds = [
   { key: 'company', label: 'Companies', color: 'var(--map-company)' },
   { key: 'vc', label: 'VCs', color: 'var(--map-vc)' },
@@ -148,10 +150,10 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents];
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script is:inline define:vars={{ spots, kinds }}>
+<script is:inline define:vars={{ spots, kinds, cartoBasemapKey }}>
   const CENTER = [40.4254, -3.6986];
   const map = L.map('map', { scrollWheelZoom: false }).setView(CENTER, 13.5);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoBasemapKey)}`, {
     attribution: '&copy; OpenStreetMap &copy; CARTO',
     maxZoom: 18,
   }).addTo(map);
