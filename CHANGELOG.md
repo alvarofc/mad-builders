@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.1.2.1] - 2026-09-07
+
+### Changed
+
+- Replace the 404 page's siesta and tapas jokes with a clear page-not-found message.
+- Ground the brand voice in entrepreneurs working to build businesses in Madrid.
+
 ## [0.1.1.0] - 2026-09-07
 
 ### Fixed
