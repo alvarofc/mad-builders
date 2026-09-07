@@ -98,17 +98,17 @@ const proofLabel = (status: string) =>
               </div>
             )}
             <div class="work-actions">
-              <ShareButton
-                path={`/builders/${builder.handle}?ref=${builder.handle}`}
-                title={`${builder.projectName} on mad.builders`}
-                eventName="builder_profile_shared"
-                handle={builder.handle}
-              />
               {currentProfile?.handle === builder.handle ? (
                 <a class="work-button secondary" href="/settings">edit project</a>
               ) : (
-                <a class="work-button secondary" href={currentProfile ? '/build#this-week' : `/build?ref=${builder.handle}#this-week`}>{currentProfile ? 'write your update' : `build alongside ${builder.projectName}`}</a>
+                <a class="work-button" href={currentProfile ? '/build#this-week' : `/build?ref=${builder.handle}#this-week`}>{currentProfile ? 'write your update' : 'what are you building?'}</a>
               )}
+              <ShareButton
+                path={`/builders/${builder.handle}${results[0] ? `/weeks/${results[0].weekStartDate}` : ""}?ref=${builder.handle}`}
+                title={[results[0] ? `Weekly update · week of ${results[0].weekStartDate}\n\n${currentProfile?.handle === builder.handle ? "Here’s what I’ve been working on" : `${builder.displayName} shared progress on`} ${builder.projectName}:\n${results[0].summary}` : `${builder.projectName}, built by ${builder.displayName}.\n${builder.bio || ""}`, results[0]?.feedbackRequest].filter(Boolean).join("\n\n")}
+                eventName={results[0] ? "weekly_result_shared" : "builder_profile_shared"}
+                handle={builder.handle}
+              />
             </div>
             {results.length ? (
               <div class="result-list">

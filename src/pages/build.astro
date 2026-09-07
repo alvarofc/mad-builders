@@ -147,7 +147,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 {buildState.nextCommitment && <p class="work-copy">Next week: {buildState.nextCommitment.promise}</p>}
                 <p class="work-note">{buildState.phase === 'active' ? `You can edit until voting opens ${madridDate(buildState.currentWeek!.submissionClosesAt)}.` : 'Voting is open. Your update is locked for fair comparisons.'}</p>
                 <div class="work-actions">
-                  <ShareButton path={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}?ref=${currentProfile.handle}`} title={`${currentProfile.projectName}: ${buildState.currentResult.summary.slice(0, 180)}`} eventName="weekly_result_shared" handle={currentProfile.handle} />
+                  <ShareButton path={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}?ref=${currentProfile.handle}`} title={[`Weekly update · week of ${buildState.currentWeek?.weekStartDate}\n\nThis week I worked on ${currentProfile.projectName}:\n${buildState.currentResult.summary}`, buildState.currentResult.feedbackRequest].filter(Boolean).join("\n\n")} expanded eventName="weekly_result_shared" handle={currentProfile.handle} />
                   {buildState.phase === 'active' && <a class="work-button secondary" href="/build?edit#this-week">edit update</a>}
                   {buildState.phase === 'voting' && <a class="work-button" href="/vote">review ten pairs</a>}
                   <a

@@ -48,13 +48,16 @@ const description = published
           <div class="wrap">
             <p class="work-kicker">week of {published.weekStartDate} / {published.onTime ? 'on time' : 'published late'}</p>
             <h1 class="work-title">{published.projectName}</h1>
+            <p class="work-copy">{published.projectSentence}</p>
             <p class="work-intro update-copy">{published.summary}</p>
             <p class="work-copy">Built by <a href={`/builders/${published.handle}`}>{published.displayName}</a>{published.rank ? ` · #${published.rank} this week` : ''}</p>
             {published.nextPromise && <p class="work-copy update-copy">Next week: {published.nextPromise}</p>}
+            {published.feedbackRequest && <p class="work-copy update-copy">Feedback wanted: {published.feedbackRequest}</p>}
             <div class="work-actions">
-              <ShareButton path={`/builders/${published.handle}/weeks/${published.weekStartDate}?ref=${published.handle}`} title={`${published.projectName}${published.rank ? ` · #${published.rank} this week` : ''}: ${published.summary.slice(0, 180)}`} eventName="weekly_result_shared" handle={published.handle} />
+              {published.projectUrlAtPublish && <a class="work-button secondary" href={published.projectUrlAtPublish} target="_blank" rel="noopener noreferrer nofollow">try the project ↗</a>}
+              {currentProfile?.handle !== published.handle && <a class="work-button" href={currentProfile ? '/build#this-week' : `/build?ref=${published.handle}#this-week`}>what are you building?</a>}
               {canEdit && <a class="work-button secondary" href="/build?edit#this-week">edit update</a>}
-              {currentProfile?.handle !== published.handle && <a class="work-button secondary" href={currentProfile ? '/build#this-week' : `/build?ref=${published.handle}#this-week`}>build alongside {published.projectName}</a>}
+              <ShareButton path={`/builders/${published.handle}/weeks/${published.weekStartDate}?ref=${published.handle}`} title={[`Weekly update · week of ${published.weekStartDate}\n\n${currentProfile?.handle === published.handle ? "This week I worked on" : `${published.displayName} shared progress on`} ${published.projectName}:\n${published.summary}`, published.feedbackRequest].filter(Boolean).join("\n\n")} eventName="weekly_result_shared" handle={published.handle} />
             </div>
           </div>
         </header>
@@ -62,6 +65,8 @@ const description = published
           <aside class="work-aside">
             <p class="work-label">builder</p>
             <p class="work-note"><a href={`/builders/${published.handle}`}>{published.displayName}</a></p>
+            <p class="work-label">project stage</p>
+            <p class="work-note">{projectStageLabel(published.projectStage)}</p>
             <p class="work-label">proof</p>
             <p class="work-note">{proofLabel}</p>
             {abuseEmail && <p class="work-note"><a href={`mailto:${abuseEmail}?subject=Report%20result%20%40${published.handle}%20${published.weekStartDate}`}>report abuse</a></p>}
@@ -73,23 +78,10 @@ const description = published
             )}
           </aside>
           <div class="work-main result-detail">
-            <div class="result-block">
-              <p class="work-label">{projectStageLabel(published.projectStage)}</p>
-              <p class="builder-bio">{published.projectSentence}</p>
-              {published.projectUrlAtPublish && (
-                <p class="project-link"><a href={published.projectUrlAtPublish} target="_blank" rel="noopener noreferrer nofollow">visit project ↗</a></p>
-              )}
-            </div>
             {published.promise && (
               <div class="result-block">
                 <p class="work-label">what they planned to do</p>
                 <h2 class="work-heading">{published.promise}</h2>
-              </div>
-            )}
-            {published.feedbackRequest && (
-              <div class="result-block">
-                <p class="work-label">feedback wanted</p>
-                <p class="builder-bio">{published.feedbackRequest}</p>
               </div>
             )}
             {published.proofUrl && (
