@@ -29,11 +29,12 @@ export function normalizeUrl(value: string) {
   return url.toString();
 }
 
-export const ownerNames = sql<string>`coalesce((select string_agg(u.name, ', ' order by u.name, u.id) from app_private.project_owner po join app_private.user u on u.id = po.user_id where po.project_id = ${project.id}), '')`;
+// Keep the outer reference explicit: Drizzle strips column qualifiers in single-table selections.
+export const ownerNames = sql<string>`coalesce((select string_agg(u.name, ', ' order by u.name, u.id) from app_private.project_owner po join app_private.user u on u.id = po.user_id where po.project_id = "project"."id"), '')`;
 
 const publicColumns = {
   id: project.id,
-  referrerUserId: sql<string | null>`(select po.user_id from app_private.project_owner po where po.project_id = ${project.id} order by po.user_id limit 1)`,
+  referrerUserId: sql<string | null>`(select po.user_id from app_private.project_owner po where po.project_id = "project"."id" order by po.user_id limit 1)`,
   handle: project.handle,
   displayName: ownerNames,
   location: project.location,

@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.4.1.1] - 2026-09-07
+
+### Fixed
+
+- Show only a project’s own teammates on its public page and in the project directory.
+
 ## [0.4.1.0] - 2026-09-07
 
 ### Fixed
