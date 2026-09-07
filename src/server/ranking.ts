@@ -310,6 +310,14 @@ export async function getReviewState(userId: string) {
   });
 }
 
+export function blocksWeeklyUpdate(
+  review: Awaited<ReturnType<typeof getReviewState>>,
+  startsAt: Date,
+  now: Date,
+) {
+  return review.state === 'pair' && review.week.startsAt < startsAt && now < review.week.votingClosesAt;
+}
+
 export async function submitReview(userId: string, assignmentId: number, selected: string) {
   return db.transaction(async (tx) => {
     const [owned] = await tx.select({ weekId: comparison.weekId }).from(comparison)

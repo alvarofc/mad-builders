@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { transaction } = vi.hoisted(() => ({ transaction: vi.fn() }));
 vi.mock('./db', () => ({ db: { transaction }, databaseConfigured: false }));
 vi.mock('./auth', () => ({ auth: {} }));
+vi.mock('./ranking', async (importOriginal) => ({
+  ...await importOriginal<typeof import('./ranking')>(),
+  getReviewState: vi.fn().mockResolvedValue({ state: 'closed' }),
+}));
 import { projectStageLabel, validProjectStage, publishResult } from './results';
-import { submitReview } from './ranking';
+import { getReviewState, submitReview } from './ranking';
 import { commitment, result } from './schema';
 
 const now = new Date('2026-09-06T15:00:00Z');
@@ -42,7 +46,39 @@ function mockPublication(reads: unknown[][], clock = now) {
   return mockTransaction([[{ weekId: currentWeek.id }], ...reads], clock);
 }
 
+beforeEach(() => { vi.mocked(getReviewState).mockResolvedValue({ state: 'closed' }); });
+
 describe('Pioneer update fields', () => {
+  it('blocks the following week until voting is finished, but allows completion and exceptions', async () => {
+    const priorWeek = { ...currentWeek, startsAt: new Date('2026-08-23T22:00:00Z'), votingClosesAt: new Date(now.getTime() + 1000) };
+    for (const state of ['pair', 'complete', 'exhausted', 'unranked', 'ineligible', 'closed'] as const) {
+      vi.mocked(getReviewState).mockResolvedValue({ state, week: priorWeek, reviewed: 3 } as Awaited<ReturnType<typeof getReviewState>>);
+      const writes = mockPublication([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [], [], []]);
+      const publication = publishResult({ ...input, commitmentId: 77 });
+      if (state === 'pair') {
+        await expect(publication).rejects.toThrow('voting_required');
+        expect(writes).toEqual([]);
+      } else {
+        await expect(publication).resolves.toHaveProperty('result');
+      }
+    }
+  });
+
+  it('allows the same week, catch-up weeks, and voting that closed while waiting to publish', async () => {
+    for (const votingWeek of [currentWeek, nextWeek, { ...currentWeek, startsAt: new Date('2026-08-23T22:00:00Z'), votingClosesAt: now }]) {
+      vi.mocked(getReviewState).mockResolvedValue({ state: 'pair', week: votingWeek, reviewed: 3 } as Awaited<ReturnType<typeof getReviewState>>);
+      mockPublication([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [], [], []]);
+      await expect(publishResult({ ...input, commitmentId: 77 })).resolves.toHaveProperty('result');
+    }
+  });
+
+  it('also blocks publication by week ID when no commitment was supplied', async () => {
+    vi.mocked(getReviewState).mockResolvedValue({ state: 'pair', week: { ...currentWeek, startsAt: new Date('2026-08-23T22:00:00Z'), votingClosesAt: new Date(now.getTime() + 1000) }, reviewed: 3 } as Awaited<ReturnType<typeof getReviewState>>);
+    const writes = mockTransaction([[currentWeek], [], [nextWeek], []]);
+    await expect(publishResult(input)).rejects.toThrow('voting_required');
+    expect(writes.filter((write) => write.table === result)).toEqual([]);
+  });
+
   it('accepts only supported project stages', () => {
     expect(validProjectStage('launched')).toBe(true);
     expect(validProjectStage('profitable')).toBe(false);

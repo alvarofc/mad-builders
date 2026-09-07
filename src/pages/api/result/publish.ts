@@ -73,6 +73,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
     return redirect(visible ? `/builders/${builder.handle}/weeks/${published.weekStartDate}` : '/settings', 303);
   } catch (error) {
     const code = error instanceof Error ? error.message : '';
+    if (code === 'voting_required') return fail('Finish last week’s voting at /vote?demo=0 before publishing this update. Your draft is still saved.', 409);
     if (code === 'update_locked') return fail('Voting has opened. This update is now locked.', 409);
     if (code === 'status_required') return fail('Choose how much of your plan you completed.');
     if (code === 'next_commitment_required') return fail('Write next week\'s commitment before publishing.');

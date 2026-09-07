@@ -3,6 +3,7 @@ import ProductLayout from '../layouts/ProductLayout.astro';
 import ShareButton from '../components/ShareButton.astro';
 import { authConfigured } from '../server/auth';
 import { getProfileByUserId, normalizeHandle, validHandle } from '../server/profiles';
+import { blocksWeeklyUpdate, getReviewState } from '../server/ranking';
 import WeeklyUpdateForm from '../components/WeeklyUpdateForm';
 import { projectStages } from '../server/results';
 import { getBuildState, madridDate } from '../server/weeks';
@@ -14,6 +15,8 @@ const currentUser = Astro.locals.user;
 const currentProfile = currentUser ? await getProfileByUserId(currentUser.id) : null;
 const selectedWeekDate = Astro.url.searchParams.get('week');
 const buildState = currentProfile ? await getBuildState(currentProfile.userId, selectedWeekDate) : null;
+const review = currentProfile && buildState?.currentWeek ? await getReviewState(currentProfile.userId) : null;
+const votingRequired = review && buildState?.currentWeek && blocksWeeklyUpdate(review, buildState.currentWeek.startsAt, buildState.now);
 const unavailableWeek = Boolean(currentProfile && selectedWeekDate && !buildState);
 if (unavailableWeek) Astro.response.status = 404;
 const ref = normalizeHandle(Astro.url.searchParams.get('ref') ?? '');
@@ -168,6 +171,14 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                     </form>
                   </details>
                 )}
+              </>
+            ) : votingRequired && review?.state === 'pair' ? (
+              <>
+                <p class="work-label">{review.reviewed} of 10 reviewed</p>
+                <h2 class="work-heading">Finish last week's voting first.</h2>
+                <p class="work-copy">Review the remaining pairs before publishing this week's update. Your saved draft will be here when you return.</p>
+                <a class="work-button" href="/vote?demo=0">continue voting</a>
+                <p class="work-note">Voting closes {madridDate(review.week.votingClosesAt)}.</p>
               </>
             ) : buildState?.currentCommitment || (buildState?.currentWeek && buildState.phase === 'active') ? (
               <>
