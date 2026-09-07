@@ -57,7 +57,10 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
           <a href="/builders" class="nav-projects">Projects</a>
           <a href={site.whatsapp} class="nav-secondary">WhatsApp</a>
           <a href="/leaderboard" class="cta">rankings →</a>
-          {!signedIn && <a href="/build#this-week" class="login-button">log in</a>}
+          {!signedIn && <>
+            <a href="/build#this-week" class="login-button" hidden>log in</a>
+            <noscript><a href="/build#this-week" class="login-button">log in</a></noscript>
+          </>}
         </nav>
       </div>
     </header>}
@@ -100,21 +103,21 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     </div>
     {!Astro.url.searchParams.has('invite') && <Analytics />}
 
-    <script>
-      const loginButton = document.querySelector<HTMLAnchorElement>('.login-button');
+    <script is:inline>
+      const loginButton = document.querySelector('.login-button');
       if (loginButton) {
         const refreshLoginButton = async () => {
-          loginButton.style.visibility = 'hidden';
+          let signedIn = false;
           try {
             const response = await fetch('/api/auth/get-session', { cache: 'no-store' });
             if (response.ok) {
               const session = await response.json();
-              loginButton.hidden = Boolean(session?.user);
+              signedIn = Boolean(session?.user);
             }
           } catch {
             // Keep the login link available when the session service is unreachable.
           } finally {
-            loginButton.style.visibility = '';
+            loginButton.hidden = signedIn;
           }
         };
         void refreshLoginButton();
