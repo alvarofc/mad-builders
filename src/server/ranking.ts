@@ -78,6 +78,56 @@ export function rankCandidateScores(scores: CandidateScore[]) {
   }, []);
 }
 
+// Pending pairs reserve coverage briefly; returning voters can still finish older pairs.
+const PAIR_RESERVATION_MS = 10 * 60 * 1000;
+
+export function selectReviewPair(
+  candidateIds: number[],
+  availableIds: number[],
+  used: Set<string>,
+  assignments: Array<ScoredChoice & { assignedAt: Date }>,
+  now: Date,
+) {
+  const coverage = new Map(
+    scoreCandidateChoices(candidateIds, assignments).map((score) => [score.resultId, score.decisions]),
+  );
+  const frequency = new Map<string, number>();
+  for (const assignment of assignments) {
+    const { candidateLowId: low, candidateHighId: high, choice } = assignment;
+    if (!coverage.has(low) || !coverage.has(high)) continue;
+    const pending = choice === null && now.getTime() - assignment.assignedAt.getTime() < PAIR_RESERVATION_MS;
+    if (pending) {
+      coverage.set(low, coverage.get(low)! + 1);
+      coverage.set(high, coverage.get(high)! + 1);
+    }
+    if (pending || choice === 'low' || choice === 'high' || choice === 'tie') {
+      const key = `${low}:${high}`;
+      frequency.set(key, (frequency.get(key) ?? 0) + 1);
+    }
+  }
+
+  const pairs: Array<{ low: number; high: number; least: number; most: number; frequency: number }> = [];
+  for (let left = 0; left < availableIds.length; left += 1) {
+    for (let right = left + 1; right < availableIds.length; right += 1) {
+      const low = Math.min(availableIds[left], availableIds[right]);
+      const high = Math.max(availableIds[left], availableIds[right]);
+      const key = `${low}:${high}`;
+      if (used.has(key)) continue;
+      const a = coverage.get(low)!;
+      const b = coverage.get(high)!;
+      pairs.push({ low, high, least: Math.min(a, b), most: Math.max(a, b), frequency: frequency.get(key) ?? 0 });
+    }
+  }
+  // Cover the least-reviewed participant first, then the opponent, then vary pairings.
+  const compare = (a: (typeof pairs)[number], b: (typeof pairs)[number]) =>
+    a.least - b.least || a.most - b.most || a.frequency - b.frequency;
+  pairs.sort(compare);
+  const best = pairs[0];
+  if (!best) return null;
+  const peers = pairs.filter((pair) => compare(pair, best) === 0);
+  return peers[Math.floor(Math.random() * peers.length)];
+}
+
 const candidateColumns = {
   id: result.id,
   userId: result.userId,
@@ -195,40 +245,22 @@ export async function getReviewState(userId: string) {
         .map((assignment) => `${assignment.candidateLowId}:${assignment.candidateHighId}`),
     );
     const allAssignments = await tx
-      .select({ low: comparison.candidateLowId, high: comparison.candidateHighId })
+      .select({
+        candidateLowId: comparison.candidateLowId,
+        candidateHighId: comparison.candidateHighId,
+        choice: comparison.choice,
+        assignedAt: comparison.assignedAt,
+      })
       .from(comparison)
       .where(and(eq(comparison.weekId, votingWeek.id), isNull(comparison.invalidatedAt)));
-    const exposure = new Map<number, number>();
-    const frequency = new Map<string, number>();
-    for (const assignment of allAssignments) {
-      exposure.set(assignment.low, (exposure.get(assignment.low) ?? 0) + 1);
-      exposure.set(assignment.high, (exposure.get(assignment.high) ?? 0) + 1);
-      const key = `${assignment.low}:${assignment.high}`;
-      frequency.set(key, (frequency.get(key) ?? 0) + 1);
-    }
-
-    const pairs: Array<{ low: number; high: number; weight: number; frequency: number }> = [];
-    for (let left = 0; left < available.length; left += 1) {
-      for (let right = left + 1; right < available.length; right += 1) {
-        const low = Math.min(available[left].id, available[right].id);
-        const high = Math.max(available[left].id, available[right].id);
-        const key = `${low}:${high}`;
-        if (used.has(key)) continue;
-        pairs.push({
-          low,
-          high,
-          weight: (exposure.get(low) ?? 0) + (exposure.get(high) ?? 0),
-          frequency: frequency.get(key) ?? 0,
-        });
-      }
-    }
-    pairs.sort((a, b) => a.frequency - b.frequency || a.weight - b.weight);
-    const best = pairs[0];
-    if (!best) return { state: 'exhausted' as const, week: votingWeek, reviewed };
-    const peers = pairs.filter(
-      (pair) => pair.frequency === best.frequency && pair.weight === best.weight,
+    const picked = selectReviewPair(
+      candidates.map((candidate) => candidate.id),
+      available.map((candidate) => candidate.id),
+      used,
+      allAssignments,
+      clock.now,
     );
-    const picked = peers[Math.floor(Math.random() * peers.length)];
+    if (!picked) return { state: 'exhausted' as const, week: votingWeek, reviewed };
     const presentedFirstId = Math.random() < 0.5 ? picked.low : picked.high;
     const [assignment] = await tx
       .insert(comparison)

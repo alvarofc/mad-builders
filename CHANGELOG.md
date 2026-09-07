@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.1.1.0] - 2026-09-07
+
+### Fixed
+
+- Spread weekly voting more evenly across eligible participants.
+
 ## [0.1.0.1] - 2026-09-06
 
 ### Fixed
