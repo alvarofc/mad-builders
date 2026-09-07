@@ -189,3 +189,45 @@ it('blocks publishing with an invalid proof URL and allows explicitly skipping i
   expect(fetchMock).toHaveBeenCalledOnce();
   expect((fetchMock.mock.calls[0][1].body as FormData).has('proofUrl')).toBe(false);
 });
+
+it('keeps text controls associated with the form as answers change and are skipped', async () => {
+  await mount({ ...initialValues, projectSentence: '', summary: '' });
+  const form = container.querySelector('form')!;
+  const project = await type('A new project');
+  expect(project.getAttribute('form')).toBe(form.id);
+  expect(project.form).toBe(form);
+  await click('Next');
+  const summary = await type('Shipped a working demo');
+  expect(summary.getAttribute('form')).toBe(form.id);
+  expect(summary.form).toBe(form);
+  for (let i = 0; i < 3; i++) await click('Next');
+  await type('Discard this feedback');
+  await click('Skip');
+  const data = new FormData(form);
+  expect(data.get('projectSentence')).toBe('A new project');
+  expect(data.get('summary')).toBe('Shipped a working demo');
+  expect(data.has('feedbackRequest')).toBe(false);
+  expect(JSON.parse(localStorage.getItem(draftKey)!)).toMatchObject({
+    projectSentence: 'A new project', summary: 'Shipped a working demo', feedbackRequest: '',
+  });
+});
+
+it('publishes after skipping malformed URLs without native validation blocking the form', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: false, text: async () => 'Please retry.' });
+  vi.stubGlobal('fetch', fetchMock);
+  await mount();
+  for (let i = 0; i < 4; i++) await click('Next');
+  await click('Skip');
+  const projectUrl = await type('not-a-url');
+  await click('Skip');
+  expect(projectUrl.form).toBeNull();
+  await click('Next');
+  const proofUrl = await type('not-a-url');
+  await click('Skip and publish update');
+  expect(proofUrl.form).toBeNull();
+  expect(fetchMock).toHaveBeenCalledOnce();
+  const data = fetchMock.mock.calls[0][1].body as FormData;
+  expect(data.get('summary')).toBe(initialValues.summary);
+  expect(data.has('projectUrl')).toBe(false);
+  expect(data.has('proofUrl')).toBe(false);
+});
