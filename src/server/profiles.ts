@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gt, isNull, lte, sql } from 'drizzle-orm';
 import { db, databaseConfigured } from './db';
 import { commitment, profile, ranking, result, user, week } from './schema';
 import { getDatabaseNow } from './weeks';
+import { PAGE_SIZE, pageNumber } from './pagination';
 
 export const reservedHandles = new Set([
   'api',
@@ -65,9 +66,8 @@ export async function getPublicProfileByHandle(handle: string) {
   return result ?? null;
 }
 
-export async function listPublicProfiles() {
+export async function listPublicProfiles(page = 1) {
   if (!databaseConfigured) return [];
-  // ponytail: load the full pilot directory; paginate when response size becomes a problem.
   return db
     .select(publicColumns)
     .from(profile)
@@ -75,7 +75,8 @@ export async function listPublicProfiles() {
     .where(
       and(eq(profile.isPublic, true), isNull(profile.hiddenAt), isNull(profile.withdrawnAt)),
     )
-    .orderBy(asc(profile.createdAt));
+    .orderBy(asc(profile.createdAt), asc(profile.userId))
+    .limit(PAGE_SIZE + 1).offset((pageNumber(page) - 1) * PAGE_SIZE);
 }
 
 const publicResultColumns = {

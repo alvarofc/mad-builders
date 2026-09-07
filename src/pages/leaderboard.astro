@@ -1,4 +1,5 @@
 ---
+import { pageNumber } from '../server/pagination';
 import ProductLayout from '../layouts/ProductLayout.astro';
 import LeaderboardPanel from '../components/LeaderboardPanel.astro';
 import { getProfileByUserId } from '../server/profiles';
@@ -8,7 +9,7 @@ import { demoLeaderboard, demoProjects } from '../data/builders-demo';
 export const prerender = false;
 
 const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
-const board = demo ? demoLeaderboard : await getLatestLeaderboard(Astro.locals.user?.id);
+const board = demo ? demoLeaderboard : await getLatestLeaderboard(Astro.locals.user?.id, pageNumber(Astro.url.searchParams.get('page')));
 const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---

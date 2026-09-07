@@ -24,7 +24,7 @@ const demoWeek = {
   rankingStatus: 'final', finalizedAt: now, createdAt: now,
 };
 export const demoLeaderboard: NonNullable<Awaited<ReturnType<typeof getLatestLeaderboard>>> = {
-  week: demoWeek, now, provisional: false,
+  week: demoWeek, now, provisional: false, page: 1, hasNext: false,
   entries: demoProjects.map((project, index) => ({
     ...project, weekStartDate: demoWeek.weekStartDate, rank: index + 1,
     wins: 10 - index, ties: 0, decisions: 12, scoreNumerator: (10 - index) * 2, scoreDenominator: 24,

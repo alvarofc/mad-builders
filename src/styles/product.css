@@ -618,7 +618,7 @@
 .leaderboard-columns,
 .leaderboard-row {
   display: grid;
-  grid-template-columns: 64px minmax(0, 0.9fr) minmax(0, 1.1fr) 80px;
+  grid-template-columns: 5rem minmax(0, 0.9fr) minmax(0, 1.1fr) 80px;
   gap: 20px;
   align-items: center;
 }
@@ -872,9 +872,13 @@
   }
 
   .leaderboard-row {
-    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-columns: 4rem minmax(0, 1fr) auto;
     gap: 12px;
     min-height: 80px;
+  }
+
+  .leaderboard-rank {
+    font-size: 1rem;
   }
 
   .leaderboard-update {
