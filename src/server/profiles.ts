@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, isNull, lte, sql } from 'drizzle-orm';
 import { db, databaseConfigured } from './db';
-import { commitment, profile, ranking, result, user, week } from './schema';
+import { commitment, project, projectOwner, ranking, result, user, week } from './schema';
 import { getDatabaseNow } from './weeks';
 import { PAGE_SIZE, pageNumber } from './pagination';
 
@@ -29,37 +29,41 @@ export function normalizeUrl(value: string) {
   return url.toString();
 }
 
+export const ownerNames = sql<string>`coalesce((select string_agg(u.name, ', ' order by u.name, u.id) from app_private.project_owner po join app_private.user u on u.id = po.user_id where po.project_id = ${project.id}), '')`;
+
 const publicColumns = {
-  userId: profile.userId,
-  handle: profile.handle,
-  displayName: profile.displayName,
-  location: profile.location,
-  bio: profile.bio,
-  projectName: profile.projectName,
-  projectUrl: profile.projectUrl,
-  projectStage: profile.projectStage,
-  image: user.image,
-  joinedAt: profile.createdAt,
+  id: project.id,
+  referrerUserId: sql<string | null>`(select po.user_id from app_private.project_owner po where po.project_id = ${project.id} order by po.user_id limit 1)`,
+  handle: project.handle,
+  displayName: ownerNames,
+  location: project.location,
+  bio: project.bio,
+  projectName: project.projectName,
+  projectUrl: project.projectUrl,
+  projectStage: project.projectStage,
+  image: sql<string | null>`null`,
+  joinedAt: project.createdAt,
 };
 
-export async function getProfileByUserId(userId: string) {
+export async function getProfileByUserId(userId: string, connection: Pick<typeof db, 'select'> = db) {
   if (!databaseConfigured) return null;
-  const [result] = await db.select().from(profile).where(eq(profile.userId, userId)).limit(1);
-  return result ?? null;
+  const [record] = await connection.select({ project }).from(project)
+    .innerJoin(projectOwner, eq(project.id, projectOwner.projectId))
+    .where(and(eq(projectOwner.userId, userId), eq(projectOwner.active, true))).limit(1);
+  return record?.project ?? null;
 }
 
 export async function getPublicProfileByHandle(handle: string) {
   if (!databaseConfigured) return null;
   const [result] = await db
     .select(publicColumns)
-    .from(profile)
-    .innerJoin(user, eq(profile.userId, user.id))
+    .from(project)
     .where(
       and(
-        eq(profile.handle, normalizeHandle(handle)),
-        eq(profile.isPublic, true),
-        isNull(profile.hiddenAt),
-        isNull(profile.withdrawnAt),
+        eq(project.handle, normalizeHandle(handle)),
+        eq(project.isPublic, true),
+        isNull(project.hiddenAt),
+        isNull(project.withdrawnAt),
       ),
     )
     .limit(1);
@@ -70,18 +74,17 @@ export async function listPublicProfiles(page = 1) {
   if (!databaseConfigured) return [];
   return db
     .select(publicColumns)
-    .from(profile)
-    .innerJoin(user, eq(profile.userId, user.id))
+    .from(project)
     .where(
-      and(eq(profile.isPublic, true), isNull(profile.hiddenAt), isNull(profile.withdrawnAt)),
+      and(eq(project.isPublic, true), isNull(project.hiddenAt), isNull(project.withdrawnAt)),
     )
-    .orderBy(asc(profile.createdAt), asc(profile.userId))
+    .orderBy(asc(project.createdAt), asc(project.id))
     .limit(PAGE_SIZE + 1).offset((pageNumber(page) - 1) * PAGE_SIZE);
 }
 
 const publicResultColumns = {
   id: result.id,
-  userId: result.userId,
+  projectId: result.projectId,
   weekStartDate: week.weekStartDate,
   promise: commitment.promise,
   status: result.status,
@@ -97,7 +100,7 @@ const publicResultColumns = {
   onTime: result.onTime,
   submissionClosesAt: week.submissionClosesAt,
   weekFinalizedAt: week.finalizedAt,
-  nextPromise: sql<string | null>`(select c.promise from app_private.commitment c join app_private.week w on w.id = c.week_id where c.user_id = ${result.userId} and w.week_start_date = ${week.weekStartDate} + 7 limit 1)`,
+  nextPromise: sql<string | null>`(select c.promise from app_private.commitment c join app_private.week w on w.id = c.week_id where c.project_id = ${result.projectId} and w.week_start_date = ${week.weekStartDate} + 7 limit 1)`,
   rank: ranking.rank,
 };
 
@@ -106,16 +109,15 @@ const visibleResult = and(isNull(result.hiddenAt), isNull(result.withdrawnAt));
 export async function listRecentUpdates() {
   if (!databaseConfigured) return [];
   return db.select({ ...publicColumns, ...publicResultColumns }).from(result)
-    .innerJoin(profile, eq(result.userId, profile.userId))
-    .innerJoin(user, eq(profile.userId, user.id))
+    .innerJoin(project, eq(result.projectId, project.id))
     .innerJoin(commitment, eq(result.commitmentId, commitment.id))
     .innerJoin(week, eq(result.weekId, week.id))
     .leftJoin(ranking, eq(result.id, ranking.resultId))
-    .where(and(visibleResult, eq(profile.isPublic, true), isNull(profile.hiddenAt), isNull(profile.withdrawnAt)))
+    .where(and(visibleResult, eq(project.isPublic, true), isNull(project.hiddenAt), isNull(project.withdrawnAt)))
     .orderBy(desc(result.publishedAt)).limit(5);
 }
 
-export async function listPublicResultsByUserId(userId: string) {
+export async function listPublicResultsByProjectId(projectId: string) {
   if (!databaseConfigured) return [];
   return db
     .select(publicResultColumns)
@@ -123,11 +125,11 @@ export async function listPublicResultsByUserId(userId: string) {
     .innerJoin(commitment, eq(result.commitmentId, commitment.id))
     .innerJoin(week, eq(result.weekId, week.id))
     .leftJoin(ranking, eq(result.id, ranking.resultId))
-    .where(and(eq(result.userId, userId), visibleResult))
+    .where(and(eq(result.projectId, projectId), visibleResult))
     .orderBy(desc(week.weekStartDate));
 }
 
-export async function listResultsForOwner(userId: string) {
+export async function listResultsForProject(projectId: string) {
   if (!databaseConfigured) return [];
   return db
     .select({ ...publicResultColumns, withdrawnAt: result.withdrawnAt })
@@ -135,7 +137,7 @@ export async function listResultsForOwner(userId: string) {
     .innerJoin(commitment, eq(result.commitmentId, commitment.id))
     .innerJoin(week, eq(result.weekId, week.id))
     .leftJoin(ranking, eq(result.id, ranking.resultId))
-    .where(eq(result.userId, userId))
+    .where(eq(result.projectId, projectId))
     .orderBy(desc(week.weekStartDate));
 }
 
@@ -150,18 +152,17 @@ export async function getPublicResult(handle: string, weekStartDate: string) {
       ...publicResultColumns,
     })
     .from(result)
-    .innerJoin(profile, eq(result.userId, profile.userId))
-    .innerJoin(user, eq(result.userId, user.id))
+    .innerJoin(project, eq(result.projectId, project.id))
     .innerJoin(commitment, eq(result.commitmentId, commitment.id))
     .innerJoin(week, eq(result.weekId, week.id))
     .leftJoin(ranking, eq(result.id, ranking.resultId))
     .where(
       and(
-        eq(profile.handle, normalizeHandle(handle)),
+        eq(project.handle, normalizeHandle(handle)),
         eq(week.weekStartDate, weekStartDate),
-        eq(profile.isPublic, true),
-        isNull(profile.hiddenAt),
-        isNull(profile.withdrawnAt),
+        eq(project.isPublic, true),
+        isNull(project.hiddenAt),
+        isNull(project.withdrawnAt),
         visibleResult,
       ),
     )
@@ -169,7 +170,7 @@ export async function getPublicResult(handle: string, weekStartDate: string) {
   return published ?? null;
 }
 
-export async function getPublicBuilderActivity(userId: string) {
+export async function getPublicProjectActivity(projectId: string) {
   if (!databaseConfigured) return { commitment: null, streak: 0, now: new Date(0) };
 
   const now = await getDatabaseNow();
@@ -182,7 +183,7 @@ export async function getPublicBuilderActivity(userId: string) {
     .from(commitment)
     .innerJoin(week, eq(commitment.weekId, week.id))
     .where(and(
-      eq(commitment.userId, userId),
+      eq(commitment.projectId, projectId),
       gt(week.votingClosesAt, now),
       // Voting can overlap a newer building week; never label that older goal current.
       sql`${week.startsAt} >= coalesce((select max(w.starts_at) from app_private.week w where w.starts_at <= ${now.toISOString()}), ${now.toISOString()}::timestamptz)`,
@@ -197,7 +198,7 @@ export async function getPublicBuilderActivity(userId: string) {
       result,
       and(
         eq(result.weekId, week.id),
-        eq(result.userId, userId),
+        eq(result.projectId, projectId),
         isNull(result.hiddenAt),
         isNull(result.withdrawnAt),
       ),
@@ -224,11 +225,21 @@ export async function createProfile(input: {
   projectUrl: string | null;
   referredByUserId: string | null;
 }) {
-  const [created] = await db.insert(profile).values(input).returning();
-  return created;
+  return db.transaction(async (tx) => {
+    // Serialize creation and switching for this account.
+    await tx.select({ id: user.id }).from(user).where(eq(user.id, input.userId)).for('update');
+    const [existing] = await tx.select().from(projectOwner).where(eq(projectOwner.userId, input.userId)).limit(1);
+    if (existing) throw new Error('project_already_exists');
+    const { userId, displayName, ...fields } = input;
+    const [created] = await tx.insert(project).values({ ...fields, id: crypto.randomUUID() }).returning();
+    await tx.update(user).set({ name: displayName }).where(eq(user.id, userId));
+    await tx.insert(projectOwner).values({ projectId: created.id, userId, active: true });
+    return created;
+  });
 }
 
 export async function updateProfile(input: {
+  projectId: string;
   userId: string;
   displayName: string;
   location: string;
@@ -236,17 +247,14 @@ export async function updateProfile(input: {
   projectName: string;
   projectUrl: string | null;
 }) {
-  const [updated] = await db
-    .update(profile)
-    .set({
-      displayName: input.displayName,
-      location: input.location,
-      bio: input.bio,
-      projectName: input.projectName,
-      projectUrl: input.projectUrl,
-      updatedAt: new Date(),
-    })
-    .where(eq(profile.userId, input.userId))
-    .returning();
-  return updated ?? null;
+  const current = await getProfileByUserId(input.userId);
+  if (!current || current.id !== input.projectId) return null;
+  return db.transaction(async (tx) => {
+    await tx.update(user).set({ name: input.displayName }).where(eq(user.id, input.userId));
+    const [updated] = await tx.update(project).set({
+      location: input.location, bio: input.bio, projectName: input.projectName,
+      projectUrl: input.projectUrl, updatedAt: new Date(),
+    }).where(eq(project.id, current.id)).returning();
+    return updated;
+  });
 }

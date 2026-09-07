@@ -17,10 +17,11 @@ vi.mock('./db', async () => {
   return { db: drizzle(connection, { schema }), databaseConfigured: true, testConnection: connection };
 });
 import { db } from './db';
-import { account, commitment, comparison, profile, ranking, result, user, week } from './schema';
+import { account, commitment, comparison, project, projectOwner, projectInvite, ranking, result, user, week } from './schema';
 import { publishResult } from './results';
 import { getBuildState } from './weeks';
-import { getPublicBuilderActivity, listPublicProfiles } from './profiles';
+import { acceptProjectInvite, createProjectInvite, getProjectInvite, revokeProjectInvite, decideProjectAccess, requestProjectAccess, switchProject } from './projects';
+import { getProfileByUserId, getPublicProjectActivity, listPublicProfiles } from './profiles';
 import { ensureWeekFinalized, getLatestLeaderboard, getReviewState, submitReview } from './ranking';
 import { allowWrite } from './rate-limit';
 import { POST as withdraw } from '../pages/api/result/visibility';
@@ -30,11 +31,12 @@ import { POST as saveCommitment } from '../pages/api/commitment';
 async function resetFixtures() {
   const [target] = await db.execute<{ name: string }>(sql`select current_database() as name`);
   if (target.name !== 'mad_builders_test') throw new Error('Refusing to reset a non-test database');
-  await db.execute(sql`truncate app_private."user", app_private.week, app_private.rate_limit restart identity cascade`);
+  await db.execute(sql`truncate app_private.project, app_private."user", app_private.week, app_private.rate_limit restart identity cascade`);
 }
 async function builder(id: string) {
   await db.insert(user).values({ id, name: id, email: `${id}@example.invalid` });
-  await db.insert(profile).values({ userId: id, handle: id, displayName: id, projectName: `Project ${id}` });
+  await db.insert(project).values({ id: id, handle: id, projectName: `Project ${id}` });
+  await db.insert(projectOwner).values({ projectId: id, userId: id, active: true });
 }
 async function scheduledWeek(phase: 'building' | 'voting' | 'closed') {
   const [clock] = await db.execute<{ now: string }>(sql`select now() as now`);
@@ -46,7 +48,7 @@ async function scheduledWeek(phase: 'building' | 'voting' | 'closed') {
   }).returning();
   return created;
 }
-const publication = (userId: string, weekId: number) => ({ userId, weekId, commitmentId: null, status: 'submitted' as const, summary: 'Shipped a working prototype', feedbackRequest: '', nextPromise: 'Interview five builders', projectSentence: 'Tools for builders', projectUrl: null, projectStage: 'building' as const, proof: { url: null, status: 'self_reported' as const, checkedAt: null } });
+const publication = (userId: string, weekId: number) => ({ userId, projectId: userId, weekId, commitmentId: null, status: 'submitted' as const, summary: 'Shipped a working prototype', feedbackRequest: '', nextPromise: 'Interview five builders', projectSentence: 'Tools for builders', projectUrl: null, projectStage: 'building' as const, proof: { url: null, status: 'self_reported' as const, checkedAt: null } });
 
 async function votingFixture(phase: 'voting' | 'closed', count = 6) {
   const targetWeek = await scheduledWeek(phase);
@@ -54,21 +56,21 @@ async function votingFixture(phase: 'voting' | 'closed', count = 6) {
   for (let i = 0; i < count; i++) {
     const id = `candidate-${i}`;
     await builder(id);
-    const [plan] = await db.insert(commitment).values({ userId: id, weekId: targetWeek.id, promise: 'Ship a prototype' }).returning();
-    const [published] = await db.insert(result).values({ commitmentId: plan.id, userId: id, weekId: targetWeek.id, status: 'complete', summary: 'Shipped a prototype', onTime: true }).returning();
+    const [plan] = await db.insert(commitment).values({ projectId: id, weekId: targetWeek.id, promise: 'Ship a prototype' }).returning();
+    const [published] = await db.insert(result).values({ commitmentId: plan.id, projectId: id, weekId: targetWeek.id, status: 'complete', summary: 'Shipped a prototype', onTime: true }).returning();
     candidates.push(published);
   }
   if (phase === 'closed') {
     for (let i = 0; i < 8; i++) {
       await builder(`voter-${i}`);
-      await db.insert(comparison).values({ weekId: targetWeek.id, voterUserId: `voter-${i}`, candidateLowId: candidates[0].id, candidateHighId: candidates[1].id, presentedFirstId: candidates[0].id, choice: 'low', decidedAt: new Date() });
+      await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: `voter-${i}`, candidateLowId: candidates[0].id, candidateHighId: candidates[1].id, presentedFirstId: candidates[0].id, choice: 'low', decidedAt: new Date() });
     }
   }
   return { targetWeek, candidates };
 }
 function requestContext(userId: string, fields: Record<string, string>) {
   const url = new URL('https://www.mad.builders/api/test');
-  return { url, locals: { user: { id: userId } }, request: new Request(url, { method: 'POST', headers: { origin: url.origin }, body: new URLSearchParams(fields) }), redirect: (path: string, status: number) => new Response(null, { status, headers: { location: path } }) } as Parameters<typeof withdraw>[0];
+  return { url, locals: { user: { id: userId } }, request: new Request(url, { method: 'POST', headers: { origin: url.origin }, body: new URLSearchParams({ projectId: userId, ...fields }) }), redirect: (path: string, status: number) => new Response(null, { status, headers: { location: path } }) } as Parameters<typeof withdraw>[0];
 }
 
 // Queue both real operations behind a held row lock, observing Postgres lock waits
@@ -138,7 +140,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       const low = Math.min(candidate.id, neighbor.id);
       const high = Math.max(candidate.id, neighbor.id);
       return candidates.slice(0, 8).map((voter) => ({
-        weekId: targetWeek.id, voterUserId: voter.userId, candidateLowId: low,
+        weekId: targetWeek.id, voterProjectId: voter.projectId, candidateLowId: low,
         candidateHighId: high, presentedFirstId: low, choice: 'tie', decidedAt: new Date(),
       }));
     }));
@@ -166,7 +168,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const directory = await Promise.all([1, 2, 3].map((page) => listPublicProfiles(page)));
     expect(directory.map((rows) => rows.length)).toEqual([51, 51, 3]);
     expect(new Set(directory.flatMap((rows) => rows.slice(0, 50).map((row) => row.handle))).size).toBe(103);
-    await db.update(profile).set({ hiddenAt: new Date() }).where(eq(profile.userId, 'candidate-0'));
+    await db.update(project).set({ hiddenAt: new Date() }).where(eq(project.id, 'candidate-0'));
     const visible = await Promise.all([1, 2, 3].map((page) => getLatestLeaderboard(undefined, page)));
     expect(visible.flatMap((board) => board!.entries)).toHaveLength(102);
     expect(visible.flatMap((board) => board!.entries).some((entry) => entry.handle === 'candidate-0')).toBe(false);
@@ -178,14 +180,15 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       id: `batch-${index}`, name: `Builder ${index}`, email: `batch-${index}@example.invalid`,
     }));
     await db.insert(user).values(builders);
-    await db.insert(profile).values(builders.map(({ id, name }) => ({
-      userId: id, handle: id, displayName: name, projectName: name,
+    await db.insert(project).values(builders.map(({ id, name }) => ({
+      id, handle: id, projectName: name,
     })));
+    await db.insert(projectOwner).values(builders.map(({ id }) => ({ projectId: id, userId: id, active: true })));
     const plans = await db.insert(commitment).values(builders.map(({ id }) => ({
-      userId: id, weekId: targetWeek.id, promise: 'Ship a prototype',
+      projectId: id, weekId: targetWeek.id, promise: 'Ship a prototype',
     }))).returning();
     const candidates = await db.insert(result).values(plans.map((plan) => ({
-      commitmentId: plan.id, userId: plan.userId, weekId: targetWeek.id,
+      commitmentId: plan.id, projectId: plan.projectId, weekId: targetWeek.id,
       status: 'complete' as const, summary: 'Shipped a prototype', onTime: true,
     }))).returning();
     // Four decisions on each edge give every project eight counted decisions.
@@ -194,7 +197,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       const low = Math.min(candidate.id, neighbor.id);
       const high = Math.max(candidate.id, neighbor.id);
       return candidates.slice(0, 6).filter((voter) => voter.id !== low && voter.id !== high).slice(0, 4).map((voter) => ({
-        weekId: targetWeek.id, voterUserId: voter.userId, candidateLowId: low,
+        weekId: targetWeek.id, voterProjectId: voter.projectId, candidateLowId: low,
         candidateHighId: high, presentedFirstId: low, choice: 'tie', decidedAt: new Date(),
       }));
     }));
@@ -221,15 +224,100 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect(goals.map((goal) => goal.promise).sort()).toEqual(['', 'Interview five builders']);
   });
 
+  it('lets owners invite teammates with expiring, revocable, single-use links', async () => {
+    await builder('founder');
+    await builder('outsider');
+    await db.insert(user).values({ id: 'invitee', name: 'Invitee', email: 'invitee@example.invalid' });
+    expect(await createProjectInvite('outsider', 'founder')).toBe(false);
+    expect(await createProjectInvite('founder', 'founder')).toBe(true);
+    const [invite] = await db.select().from(projectInvite);
+    expect(await getProjectInvite(invite.token)).toMatchObject({ name: 'Project founder' });
+    expect(await getProfileByUserId('invitee')).toBeNull();
+    expect(await revokeProjectInvite('outsider', 'founder', invite.token)).toBe(false);
+    const accepted = await Promise.all([
+      acceptProjectInvite('invitee', invite.token), acceptProjectInvite('invitee', invite.token),
+    ]);
+    expect(accepted.filter(Boolean)).toHaveLength(1);
+    expect((await getProfileByUserId('invitee'))?.id).toBe('founder');
+    expect(await getProjectInvite(invite.token)).toBeNull();
+    expect(await acceptProjectInvite('outsider', invite.token)).toBe(false);
+    for (const mode of ['expired', 'revoked']) {
+      await createProjectInvite('founder', 'founder');
+      const [pending] = await db.select().from(projectInvite);
+      if (mode === 'expired') await db.update(projectInvite).set({ expiresAt: new Date(0) }).where(eq(projectInvite.token, pending.token));
+      else expect(await revokeProjectInvite('founder', 'founder', pending.token)).toBe(true);
+      expect(await getProjectInvite(pending.token)).toBeNull();
+      expect(await acceptProjectInvite('outsider', pending.token)).toBe(false);
+      await db.delete(projectInvite).where(eq(projectInvite.token, pending.token));
+    }
+  });
+
+  it('requires owner approval, then lets co-owners publish and edit one shared weekly result', async () => {
+    await builder('founder');
+    await builder('teammate');
+    await builder('outsider');
+    await expect(getReviewState('teammate', 'founder')).rejects.toThrow('project_changed');
+    const current = await scheduledWeek('building');
+    expect(await requestProjectAccess('teammate', 'founder')).toBe(true);
+    expect(await switchProject('teammate', 'founder')).toBe(false);
+    expect(await decideProjectAccess('outsider', 'founder', 'teammate', true)).toBe(false);
+    expect(await decideProjectAccess('founder', 'founder', 'teammate', true)).toBe(true);
+    expect(await switchProject('teammate', 'founder')).toBe(true);
+    expect((await getProfileByUserId('teammate'))?.id).toBe('founder');
+    const published = await Promise.all(['founder', 'teammate'].map((userId) =>
+      publishResult({ ...publication(userId, current.id), projectId: 'founder' })));
+    expect(published[0].result.id).toBe(published[1].result.id);
+    expect(await db.select().from(result)).toHaveLength(1);
+    expect(await db.select().from(commitment)).toHaveLength(1);
+    const edited = await publishResult({ ...publication('teammate', current.id), projectId: 'founder', commitmentId: published[0].result.commitmentId, summary: 'Our shared launch is live' });
+    expect(edited.result).toMatchObject({ id: published[0].result.id, projectId: 'founder', updatedByUserId: 'teammate', summary: 'Our shared launch is live' });
+    await expect(publishResult({ ...publication('outsider', current.id), projectId: 'founder' })).rejects.toThrow('project_changed');
+    expect(await switchProject('teammate', 'teammate')).toBe(true);
+    await expect(publishResult({ ...publication('teammate', current.id), projectId: 'founder' })).rejects.toThrow('project_changed');
+    expect((await db.select().from(project)).map((entry) => entry.id)).toContain('teammate');
+  });
+
+  it('gives co-owners the same ten reviews and one leaderboard entry per startup', async () => {
+    const { candidates } = await votingFixture('voting');
+    await db.insert(user).values({ id: 'cofounder', name: 'Cofounder', email: 'cofounder@example.invalid' });
+    await requestProjectAccess('cofounder', 'candidate-0');
+    expect(await decideProjectAccess('candidate-0', 'candidate-0', 'cofounder', true)).toBe(true);
+    for (let index = 0; index < 10; index++) {
+      const pair = await getReviewState('candidate-0');
+      if (pair.state !== 'pair') throw new Error('Expected pair');
+      expect(pair.reviewed).toBe(index);
+      expect([pair.first.id, pair.second.id]).not.toContain(candidates[0].id);
+      expect(await getReviewState('cofounder')).toMatchObject({ assignmentId: pair.assignmentId, reviewed: index });
+      expect(await submitReview('cofounder', pair.assignmentId, 'first')).toBe(true);
+    }
+    expect(await getReviewState('candidate-0')).toMatchObject({ state: 'complete', reviewed: 10 });
+    expect(await getReviewState('cofounder')).toMatchObject({ state: 'complete', reviewed: 10 });
+    expect(await db.select().from(comparison)).toHaveLength(10);
+    const board = await getLatestLeaderboard('cofounder');
+    expect(new Set(board?.entries.map((entry) => entry.handle)).size).toBe(board?.entries.length);
+  });
+
+  it('invalidates earlier reviews when projects gain a shared owner', async () => {
+    const { candidates, targetWeek } = await votingFixture('voting');
+    const [assignment] = await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: 'candidate-0', candidateLowId: candidates[1].id, candidateHighId: candidates[2].id, presentedFirstId: candidates[1].id, choice: 'low', decidedAt: new Date() }).returning();
+    await requestProjectAccess('candidate-0', 'candidate-1');
+    expect(await decideProjectAccess('candidate-1', 'candidate-1', 'candidate-0', true)).toBe(true);
+    expect((await db.select().from(comparison).where(eq(comparison.id, assignment.id)))[0].invalidationReason).toBe('shared_owner');
+    expect(await submitReview('candidate-0', assignment.id, 'first')).toBe(false);
+    const next = await getReviewState('candidate-0');
+    if (next.state !== 'pair') throw new Error('Expected an unrelated pair');
+    expect([next.first.id, next.second.id]).not.toContain(candidates[1].id);
+  });
+
   it('rolls back result and profile edits when updating the next goal fails', async () => {
     await builder('publisher');
     const current = await scheduledWeek('building');
     await db.insert(week).values({ weekStartDate: '2000-01-10', startsAt: new Date(current.votingClosesAt.getTime() + 3600000), submissionClosesAt: new Date(current.votingClosesAt.getTime() + 7200000), votingClosesAt: new Date(current.votingClosesAt.getTime() + 10800000) });
     const original = await publishResult(publication('publisher', current.id));
-    const before = await db.select().from(profile);
+    const before = await db.select().from(project);
     await expect(publishResult({ ...publication('publisher', current.id), commitmentId: original.result.commitmentId, summary: 'Should roll back this edit', projectSentence: 'Should roll back this description', nextPromise: 'bad' })).rejects.toThrow('next_commitment_required');
     expect(await db.select().from(result)).toEqual([original.result]);
-    expect(await db.select().from(profile)).toEqual(before);
+    expect(await db.select().from(project)).toEqual(before);
     expect((await db.select().from(commitment)).map((row) => row.promise).sort()).toEqual(['', 'Interview five builders']);
   });
 
@@ -237,8 +325,8 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     await builder('publisher');
     const prior = await scheduledWeek('voting');
     const [current] = await db.insert(week).values({ weekStartDate: '2000-01-10', startsAt: new Date(prior.submissionClosesAt.getTime() + 1000), submissionClosesAt: new Date(prior.votingClosesAt.getTime() + 3600000), votingClosesAt: new Date(prior.votingClosesAt.getTime() + 7200000) }).returning();
-    const [oldGoal] = await db.insert(commitment).values({ userId: 'publisher', weekId: prior.id, promise: 'Ship the old prototype' }).returning();
-    await db.insert(commitment).values({ userId: 'publisher', weekId: current.id, promise: 'Keep the new week goal' });
+    const [oldGoal] = await db.insert(commitment).values({ projectId: 'publisher', weekId: prior.id, promise: 'Ship the old prototype' }).returning();
+    await db.insert(commitment).values({ projectId: 'publisher', weekId: current.id, promise: 'Keep the new week goal' });
     const normal = await getBuildState('publisher');
     expect(normal?.currentWeek?.id).toBe(current.id);
     expect(normal?.unfinishedWeeks.map((entry) => entry.id)).toContain(prior.id);
@@ -258,15 +346,28 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const [current] = await db.insert(week).values({ weekStartDate: '2000-01-10', startsAt: new Date(prior.submissionClosesAt.getTime() + 1000), submissionClosesAt: new Date(prior.votingClosesAt.getTime() + 3600000), votingClosesAt: new Date(prior.votingClosesAt.getTime() + 7200000) }).returning();
     const [next] = await db.insert(week).values({ weekStartDate: '2000-01-17', startsAt: new Date(current.votingClosesAt.getTime() + 1000), submissionClosesAt: new Date(current.votingClosesAt.getTime() + 3600000), votingClosesAt: new Date(current.votingClosesAt.getTime() + 7200000) }).returning();
     await db.insert(commitment).values([
-      { userId: 'publisher', weekId: prior.id, promise: 'Old goal' },
-      { userId: 'publisher', weekId: current.id, promise: 'Current goal' },
-      { userId: 'publisher', weekId: next.id, promise: 'Next goal' },
+      { projectId: 'publisher', weekId: prior.id, promise: 'Old goal' },
+      { projectId: 'publisher', weekId: current.id, promise: 'Current goal' },
+      { projectId: 'publisher', weekId: next.id, promise: 'Next goal' },
     ]);
-    expect((await getPublicBuilderActivity('publisher')).commitment?.promise).toBe('Current goal');
+    expect((await getPublicProjectActivity('publisher')).commitment?.promise).toBe('Current goal');
     await db.update(commitment).set({ promise: '' }).where(eq(commitment.weekId, current.id));
-    expect((await getPublicBuilderActivity('publisher')).commitment?.promise).toBe('Next goal');
+    expect((await getPublicProjectActivity('publisher')).commitment?.promise).toBe('Next goal');
     await db.delete(commitment).where(eq(commitment.weekId, next.id));
-    expect((await getPublicBuilderActivity('publisher')).commitment).toBeNull();
+    expect((await getPublicProjectActivity('publisher')).commitment).toBeNull();
+  });
+
+  it('holds the review week lock until the supplied publication transaction ends', async () => {
+    const { targetWeek } = await votingFixture('voting');
+    await db.transaction(async (tx) => {
+      expect(await getReviewState('candidate-0', 'candidate-0', tx)).toMatchObject({ state: 'pair' });
+      await expect(db.transaction(async (other) => {
+        await other.execute(sql`select id from app_private.week where id = ${targetWeek.id} for update nowait`);
+      })).rejects.toThrow();
+    });
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`select id from app_private.week where id = ${targetWeek.id} for update nowait`);
+    });
   });
 
   it('resumes one assignment under concurrent requests and saves one immutable vote', async () => {
@@ -274,8 +375,8 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const pairs = await Promise.all(Array.from({ length: 8 }, () => getReviewState('candidate-0')));
     const ids = pairs.map((pair) => {
       if (pair.state !== 'pair') throw new Error(`Expected pair, received ${pair.state}`);
-      expect(pair.first.userId).not.toBe('candidate-0');
-      expect(pair.second.userId).not.toBe('candidate-0');
+      expect(pair.first.projectId).not.toBe('candidate-0');
+      expect(pair.second.projectId).not.toBe('candidate-0');
       return pair.assignmentId;
     });
     expect(new Set(ids).size).toBe(1);
@@ -356,7 +457,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     await builder('publisher');
     const current = await scheduledWeek('building');
     const original = mode === 'edit' ? await publishResult(publication('publisher', current.id)) : null;
-    const [plan] = mode === 'late' ? await db.insert(commitment).values({ userId: 'publisher', weekId: current.id, promise: 'Ship a prototype' }).returning() : [];
+    const [plan] = mode === 'late' ? await db.insert(commitment).values({ projectId: 'publisher', weekId: current.id, promise: 'Ship a prototype' }).returning() : [];
     const input = { ...publication('publisher', current.id), commitmentId: original?.result.commitmentId ?? plan?.id ?? null, status: mode === 'late' ? 'complete' as const : 'submitted' as const };
     const outcome = await crossDeadline(current.id, 'submissionClosesAt', () => publishResult(input));
     if (mode === 'late') {
@@ -406,7 +507,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     for (let i = 0; i < 8; i++) {
       const voter = `extra-voter-${i}`;
       await builder(voter);
-      await db.insert(comparison).values({ weekId: targetWeek.id, voterUserId: voter, candidateLowId: candidates[0].id, candidateHighId: candidates[1].id, presentedFirstId: candidates[0].id, choice: 'low', decidedAt: new Date() });
+      await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: voter, candidateLowId: candidates[0].id, candidateHighId: candidates[1].id, presentedFirstId: candidates[0].id, choice: 'low', decidedAt: new Date() });
     }
     for (let i = 0; i < 10; i++) {
       const pair = await getReviewState('candidate-0');
@@ -414,11 +515,12 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       expect(await submitReview('candidate-0', pair.assignmentId, 'pass')).toBe(true);
     }
     expect((await getLatestLeaderboard('candidate-0'))?.entries).toHaveLength(2);
-    const table = kind === 'profile' ? profile : result;
-    await db.update(table).set({ hiddenAt: new Date() }).where(eq(table.userId, 'candidate-5'));
+    const table = kind === 'profile' ? project : result;
+    const identity = kind === 'profile' ? project.id : result.projectId;
+    await db.update(table).set({ hiddenAt: new Date() }).where(eq(identity, 'candidate-5'));
     expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ week: { rankingStatus: 'unranked' }, provisional: false, entries: [] });
     expect((await db.select().from(week))[0].finalizedAt).toBeNull();
-    await db.update(table).set({ hiddenAt: null }).where(eq(table.userId, 'candidate-5'));
+    await db.update(table).set({ hiddenAt: null }).where(eq(identity, 'candidate-5'));
     expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ provisional: true });
     expect((await getLatestLeaderboard('candidate-0'))?.entries).toHaveLength(2);
   });
@@ -466,7 +568,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect((responses[0] as Response).status).toBe(200);
     expect(responses[1]).toMatchObject({ rankingStatus: 'unranked' });
     expect(await db.select().from(ranking)).toHaveLength(0);
-    expect((await db.select().from(comparison).where(eq(comparison.voterUserId, 'voter-0')))[0].invalidatedAt).not.toBeNull();
+    expect((await db.select().from(comparison).where(eq(comparison.voterProjectId, 'voter-0')))[0].invalidatedAt).not.toBeNull();
   });
 
   it('allows a later withdrawal without rewriting already finalized scores', async () => {
@@ -492,7 +594,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect(responses[0]).toMatchObject({ rankingStatus: 'final' });
     expect((responses[1] as Response).status).toBe(404);
     expect(await db.select().from(ranking)).toHaveLength(2);
-    expect((await db.select().from(comparison).where(eq(comparison.voterUserId, 'voter-0')))[0].invalidatedAt).toBeNull();
+    expect((await db.select().from(comparison).where(eq(comparison.voterProjectId, 'voter-0')))[0].invalidatedAt).toBeNull();
   });
 
   it('enforces user and IP limits atomically and resets expired windows', async () => {

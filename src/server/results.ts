@@ -1,8 +1,9 @@
-import { and, asc, eq, gt, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, isNull, sql } from 'drizzle-orm';
 import { auth } from './auth';
 import { blocksWeeklyUpdate, getReviewState } from './ranking';
 import { db } from './db';
-import { account, commitment, profile, result, week } from './schema';
+import { getProfileByUserId } from './profiles';
+import { account, commitment, project, result, week } from './schema';
 
 export type ProofCheck = {
   url: string | null;
@@ -88,6 +89,7 @@ export async function checkProof(value: string, userId: string, headers: Headers
 }
 
 export async function publishResult(input: {
+  projectId: string;
   userId: string;
   commitmentId: number | null;
   weekId: number | null;
@@ -100,12 +102,18 @@ export async function publishResult(input: {
   projectStage: ProjectStage;
   proof: ProofCheck;
 }) {
-  // Finish the review transaction before taking publication locks.
-  const review = await getReviewState(input.userId);
   return db.transaction(async (tx) => {
+    // ponytail: serialize open weeks like membership/moderation; narrow this lock set
+    // if publication throughput requires it, preserving ascending order for catch-up updates.
+    await tx.select({ id: week.id }).from(week).where(isNull(week.finalizedAt)).orderBy(week.id).for('update');
+    const review = await getReviewState(input.userId, input.projectId, tx);
+    const ownedProject = await getProfileByUserId(input.userId, tx);
+    if (!ownedProject) throw new Error('commitment_not_found');
+    const projectId = ownedProject.id;
+    if (projectId !== input.projectId) throw new Error('project_changed');
     if (input.commitmentId) {
       const [owned] = await tx.select({ weekId: commitment.weekId }).from(commitment)
-        .where(and(eq(commitment.id, input.commitmentId), eq(commitment.userId, input.userId))).limit(1);
+        .where(and(eq(commitment.id, input.commitmentId), eq(commitment.projectId, projectId))).limit(1);
       if (!owned) throw new Error('commitment_not_found');
       await tx.select({ id: week.id }).from(week).where(eq(week.id, owned.weekId)).for('update');
     }
@@ -114,7 +122,7 @@ export async function publishResult(input: {
           .select({ commitment, week })
           .from(commitment)
           .innerJoin(week, eq(commitment.weekId, week.id))
-          .where(and(eq(commitment.id, input.commitmentId), eq(commitment.userId, input.userId)))
+          .where(and(eq(commitment.id, input.commitmentId), eq(commitment.projectId, projectId)))
           .for('update')
           .limit(1)
       : [];
@@ -129,10 +137,10 @@ export async function publishResult(input: {
       if (openWeek) {
         const [createdCommitment] = await tx
           .insert(commitment)
-          .values({ userId: input.userId, weekId: openWeek.id, promise: '' })
+          .values({ projectId, weekId: openWeek.id, promise: '' })
           .onConflictDoUpdate({
-            target: [commitment.userId, commitment.weekId],
-            set: { userId: input.userId },
+            target: [commitment.projectId, commitment.weekId],
+            set: { projectId },
           })
           .returning();
         record = { commitment: createdCommitment, week: openWeek };
@@ -159,7 +167,7 @@ export async function publishResult(input: {
       ? await tx
           .select({ id: commitment.id })
           .from(commitment)
-          .where(and(eq(commitment.userId, input.userId), eq(commitment.weekId, nextWeek.id)))
+          .where(and(eq(commitment.projectId, projectId), eq(commitment.weekId, nextWeek.id)))
           .limit(1)
       : [];
     // Read wall time after the week locks, including any wait for the next goal's week.
@@ -180,8 +188,9 @@ export async function publishResult(input: {
 
     const onTime = clock.now < record.week.submissionClosesAt;
     const values = {
+        updatedByUserId: input.userId,
         commitmentId: record.commitment.id,
-        userId: input.userId,
+        projectId,
         weekId: record.week.id,
         status,
         summary: input.summary,
@@ -200,20 +209,20 @@ export async function publishResult(input: {
       : await tx.insert(result).values(values).returning();
 
     await tx
-      .update(profile)
+      .update(project)
       .set({
         bio: input.projectSentence,
         projectUrl: input.projectUrl,
         projectStage: input.projectStage,
-        firstCommitmentAt: sql`coalesce(${profile.firstCommitmentAt}, now())`,
+        firstCommitmentAt: sql`coalesce(${project.firstCommitmentAt}, now())`,
         updatedAt: clock.now,
       })
-      .where(eq(profile.userId, input.userId));
+      .where(eq(project.id, projectId));
 
     if (nextWeek && clock.now < nextWeek.startsAt && !existingNextCommitment) {
       await tx
         .insert(commitment)
-        .values({ userId: input.userId, weekId: nextWeek.id, promise: input.nextPromise })
+        .values({ projectId, weekId: nextWeek.id, promise: input.nextPromise })
         .onConflictDoNothing();
     } else if (nextWeek && existingNextCommitment && input.nextPromise && clock.now < nextWeek.startsAt) {
       if (input.nextPromise.length < 5 || input.nextPromise.length > 280) throw new Error('next_commitment_required');
@@ -223,9 +232,9 @@ export async function publishResult(input: {
 
     if (onTime && input.status !== 'missed') {
       await tx
-        .update(profile)
-        .set({ firstOnTimeResultAt: sql`coalesce(${profile.firstOnTimeResultAt}, now())` })
-        .where(eq(profile.userId, input.userId));
+        .update(project)
+        .set({ firstOnTimeResultAt: sql`coalesce(${project.firstOnTimeResultAt}, now())` })
+        .where(eq(project.id, projectId));
     }
 
     return { result: published, weekStartDate: record.week.weekStartDate };

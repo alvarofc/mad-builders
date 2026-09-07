@@ -1,6 +1,7 @@
 ---
 import ProductLayout from '../layouts/ProductLayout.astro';
 import ShareButton from '../components/ShareButton.astro';
+import { getProjectInvite, listOwnedProjects } from '../server/projects';
 import { authConfigured } from '../server/auth';
 import { getProfileByUserId, normalizeHandle, validHandle } from '../server/profiles';
 import { blocksWeeklyUpdate, getReviewState } from '../server/ranking';
@@ -11,11 +12,15 @@ import { getBuildState, madridDate } from '../server/weeks';
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', 'no-store');
 
+const inviteToken = Astro.url.searchParams.get('invite') ?? '';
+const invitation = inviteToken ? await getProjectInvite(inviteToken) : null;
+if (inviteToken) Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 const currentUser = Astro.locals.user;
 const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
+const ownedProjects = currentUser ? await listOwnedProjects(currentUser.id) : [];
 const selectedWeekDate = Astro.url.searchParams.get('week');
-const buildState = currentProfile ? await Astro.locals.timing.measure('build_state', () => getBuildState(currentProfile.userId, selectedWeekDate)) : null;
-const review = currentProfile && buildState?.currentWeek ? await Astro.locals.timing.measure('review', () => getReviewState(currentProfile.userId)) : null;
+const buildState = currentProfile ? await Astro.locals.timing.measure('build_state', () => getBuildState(currentProfile.id, selectedWeekDate)) : null;
+const review = currentProfile && buildState?.currentWeek ? await Astro.locals.timing.measure('review', () => getReviewState(currentUser!.id)) : null;
 const votingRequired = review && buildState?.currentWeek && blocksWeeklyUpdate(review, buildState.currentWeek.startsAt, buildState.now);
 const unavailableWeek = Boolean(currentProfile && selectedWeekDate && !buildState);
 if (unavailableWeek) Astro.response.status = 404;
@@ -28,6 +33,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
   title="Proof of work - mad.builders"
   description="Make a weekly promise, publish what shipped, and build a public record of your work."
   active="build"
+  noindex={Boolean(inviteToken)}
   profileHandle={currentProfile?.handle}
   signedIn={Boolean(currentUser)}
 >
@@ -49,6 +55,41 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
       </div>
       <div class="wrap update-shell">
         <div>
+        {inviteToken && (
+          <div class="result-block">
+            {invitation ? <>
+              <h2 class="work-heading">You’re invited to {invitation.name}.</h2>
+              <p class="work-copy">Join as a co-owner to edit the project, publish shared updates, and invite teammates.</p>
+              {currentUser ? (
+                <form method="post" action="/api/project">
+                  <input type="hidden" name="token" value={inviteToken} />
+                  <button class="work-button" name="action" value="accept-invite">accept invitation</button>
+                </form>
+              ) : <p class="work-note">Sign in below to accept your invitation.</p>}
+            </> : <p class="work-copy">This invite has expired, been revoked, or already been used. Ask the owner for a new link.</p>}
+          </div>
+        )}
+        {currentUser && (
+          <details class="result-block" id="join-project" open={Astro.url.searchParams.has('requested')}>
+            <summary>Join an existing startup</summary>
+            <p class="work-note">Request co-ownership using its project handle. An existing owner approves requests in settings. Once approved, reload this page and choose the shared project.</p>
+            {Astro.url.searchParams.has('requested') && <p class="work-copy" role="status">Request sent. Ask your teammate to approve it in settings.</p>}
+            <form class="work-form" method="post" action="/api/project">
+              <input type="hidden" name="action" value="request" />
+              <label class="work-field"><span>project handle</span><input name="handle" minlength="3" maxlength="30" placeholder="your-startup" required /></label>
+              <button class="work-button secondary" type="submit">request co-ownership</button>
+            </form>
+          </details>
+        )}
+        {ownedProjects.length > 1 && (
+          <form class="work-form" method="post" action="/api/project">
+            <input type="hidden" name="action" value="switch" />
+            <label class="work-field"><span>active project</span>
+              <select name="projectId">{ownedProjects.map((entry) => <option value={entry.id} selected={entry.active}>{entry.name}</option>)}</select>
+            </label>
+            <button class="work-button secondary" type="submit">switch project</button>
+          </form>
+        )}
         {!authConfigured ? (
           <>
             <h2 class="work-heading">The build log is offline.</h2>
@@ -65,7 +106,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
               class="work-button"
               type="button"
               data-github-sign-in
-              data-callback={safeRef ? `/build?ref=${safeRef}` : '/build'}
+              data-callback={invitation ? `/build?invite=${inviteToken}` : safeRef ? `/build?ref=${safeRef}` : '/build'}
             >
               continue with GitHub
             </button>
@@ -90,10 +131,10 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 />
               </label>
               <label class="work-field">
-                <span>public handle</span>
+                <span>project handle</span>
                 <input
                   name="handle"
-                  placeholder="ana-builds"
+                  placeholder="your-startup"
                   minlength="3"
                   maxlength="30"
                   pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]"
@@ -159,13 +200,14 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                     <summary>Edit next week's goals</summary>
                     <p class="work-note">Goals lock {madridDate(buildState.nextWeek.startsAt)}. Your published update stays unchanged.</p>
                     <form class="work-form" method="post" action="/api/commitment" data-api-form>
+                      <input type="hidden" name="projectId" value={currentProfile?.id} />
                       <input type="hidden" name="weekId" value={buildState.nextWeek.id} />
                       <label class="work-field">
                         <span>What do you want to have done by the end of next week?</span>
                         <textarea name="promise" minlength="5" maxlength="280" required>{buildState.nextCommitment?.promise}</textarea>
                       </label>
                       <div>
-                        <button class="work-button" type="submit">save my commitment</button>
+                        <button class="work-button" type="submit">save project commitment</button>
                         <p class="work-status" data-form-status aria-live="polite"></p>
                       </div>
                     </form>
@@ -189,7 +231,8 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 )}
                 <WeeklyUpdateForm
                   client:load
-                  draftKey={`weekly:${currentProfile.userId}:${buildState.currentWeek?.id}`}
+                  projectId={currentProfile.id}
+                  draftKey={`weekly:${currentProfile.id}:${buildState.currentWeek?.id}`}
                   commitmentId={buildState.currentCommitment?.id}
                   weekId={buildState.currentWeek?.id}
                   promise={buildState.currentCommitment?.promise}
@@ -208,6 +251,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                     proofUrl: buildState.currentResult?.proofUrl ?? '',
                   }}
                 />
+
               </>
             ) : buildState?.nextWeek ? (
               <>
@@ -215,6 +259,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 <h2 class="work-heading">What do you want to have done by the end of next week?</h2>
                 <p class="work-copy">Set clear goals that another builder can judge as complete or incomplete.</p>
                 <form class="work-form" method="post" action="/api/commitment" data-api-form>
+                  <input type="hidden" name="projectId" value={currentProfile?.id} />
                   <input type="hidden" name="weekId" value={buildState.nextWeek.id} />
                   <label class="work-field">
                     <span>next week's goals</span>
@@ -226,7 +271,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                     >{buildState.nextCommitment?.promise}</textarea>
                   </label>
                   <div>
-                    <button class="work-button" type="submit">save my commitment</button>
+                    <button class="work-button" type="submit">save project commitment</button>
                     <p class="work-status" data-form-status aria-live="polite"></p>
                   </div>
                 </form>

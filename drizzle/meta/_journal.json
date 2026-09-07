@@ -50,6 +50,13 @@
       "when": 1788777604500,
       "tag": "0006_nice_vertigo",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788777604501,
+      "tag": "0007_shared_projects",
+      "breakpoints": true
     }
   ]
 }

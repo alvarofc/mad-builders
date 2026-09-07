@@ -5,6 +5,7 @@ import { submitApiForm } from '../scripts/submit-api-form';
 import '../styles/questionnaire.css';
 
 type Props = {
+  projectId: string;
   draftKey: string;
   commitmentId?: number;
   weekId?: number;
@@ -126,6 +127,7 @@ export default function WeeklyUpdateForm(props: Props) {
         finally { setSaving(false); }
       }}
     >
+      <input type="hidden" name="projectId" value={props.projectId} />
       <p className="draft-status" role="status">{draftStatus}</p>
       {props.commitmentId ? <input type="hidden" name="commitmentId" value={props.commitmentId} /> : <input type="hidden" name="weekId" value={props.weekId} />}
       {!props.promise && <input type="hidden" name="status" value="submitted" />}

@@ -2,6 +2,19 @@
 
 Changes to mad.builders.
 
+## [0.4.0.0] - 2026-09-07
+
+### Added
+
+- Invite teammates to co-own a startup using single-use links that expire after seven days.
+- Request access to an existing startup, approve teammates, and switch between shared projects.
+
+### Changed
+
+- Share one startup profile, weekly update, voting quota, and ranking across all owners.
+- Keep existing project handles and history, record who edits updates, and base reminders on shared project activity.
+- Prevent teammates from reviewing projects with overlapping owners and protect writes when switching projects.
+
 ## [0.3.3.0] - 2026-09-07
 
 ### Changed
