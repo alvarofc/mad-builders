@@ -24,3 +24,12 @@ it('preserves production origins behind Vercel without trusting foreign hosts', 
     }
   }
 });
+
+it('keeps form origins while withholding invite paths from referrers', async () => {
+  const { readFile } = await import('node:fs/promises');
+  for (const page of ['build', 'settings']) {
+    const source = await readFile(new URL(`../pages/${page}.astro`, import.meta.url), 'utf8');
+    expect(source).toContain("headers.set('Referrer-Policy', 'strict-origin')");
+    expect(source).not.toContain("headers.set('Referrer-Policy', 'no-referrer')");
+  }
+});

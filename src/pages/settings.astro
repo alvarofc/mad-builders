@@ -10,7 +10,7 @@ if (!currentUser) return Astro.redirect('/build');
 const currentProfile = await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id));
 if (!currentProfile) return Astro.redirect('/build');
 Astro.response.headers.set('Cache-Control', 'no-store');
-Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+Astro.response.headers.set('Referrer-Policy', 'strict-origin');
 const team = await getProjectTeam(currentProfile.id);
 const projects = await listOwnedProjects(Astro.locals.user.id);
 const results = await Astro.locals.timing.measure('results', () => listResultsForProject(currentProfile.id));

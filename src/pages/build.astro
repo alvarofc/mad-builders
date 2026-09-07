@@ -14,7 +14,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 
 const inviteToken = Astro.url.searchParams.get('invite') ?? '';
 const invitation = inviteToken ? await getProjectInvite(inviteToken) : null;
-if (inviteToken) Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+if (inviteToken) Astro.response.headers.set('Referrer-Policy', 'strict-origin');
 const currentUser = Astro.locals.user;
 const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
 const ownedProjects = currentUser ? await listOwnedProjects(currentUser.id) : [];

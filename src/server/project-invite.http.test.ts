@@ -37,7 +37,7 @@ it.skipIf(!origin || !databaseUrl || !secret)('creates and accepts an invite thr
     expect(invite?.token).toMatch(/^[a-f0-9]{64}$/);
     const landing = await fetch(`${origin}/build?invite=${invite.token}`, { headers: { cookie: cookies.get(teammate)! } });
     expect(landing.status).toBe(200);
-    expect(landing.headers.get('referrer-policy')).toBe('no-referrer');
+    expect(landing.headers.get('referrer-policy')).toBe('strict-origin');
     const html = await landing.text();
     expect(html).toContain('accept invitation');
     expect(html).not.toContain('<vercel-analytics');
