@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.3.1.2] - 2026-09-07
+
+### Fixed
+
+- Publish projects and submit forms without valid requests being rejected as cross-site submissions on the production domains.
+
 ## [0.3.1.1] - 2026-09-07
 
 ### Changed
