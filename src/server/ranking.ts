@@ -488,7 +488,9 @@ export async function getLatestLeaderboard(userId?: string) {
     : await db.select().from(week).orderBy(asc(week.startsAt)).limit(1);
   const latestWeek = latestClosedWeek ?? latestStartedWeek ?? nextWeek;
   if (!latestWeek) return null;
-  const finalWeek = latestClosedWeek ? await ensureWeekFinalized(latestWeek.id) : latestWeek;
+  const finalWeek = latestClosedWeek && !latestClosedWeek.finalizedAt
+    ? await ensureWeekFinalized(latestWeek.id)
+    : latestWeek;
   const entries = finalWeek?.rankingStatus === 'final'
     ? await db
         .select({

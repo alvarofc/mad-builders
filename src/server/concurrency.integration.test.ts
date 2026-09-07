@@ -260,6 +260,21 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect(await db.select().from(ranking).orderBy(ranking.rank)).toEqual(ranks);
   });
 
+  it.each([2, 6])('reads a finalized leaderboard with %i candidates without another locking transaction', async (count) => {
+    await votingFixture('closed', count);
+    const first = await getLatestLeaderboard();
+    expect(first?.week?.finalizedAt).not.toBeNull();
+    const transaction = vi.spyOn(db, 'transaction');
+    try {
+      const repeated = await getLatestLeaderboard();
+      expect(repeated?.week).toEqual(first?.week);
+      expect(repeated?.entries).toEqual(first?.entries);
+      expect(transaction).not.toHaveBeenCalled();
+    } finally {
+      transaction.mockRestore();
+    }
+  });
+
   it.each(['edit', 'late', 'first'] as const)('uses post-lock wall time for %s publication', async (mode) => {
     await builder('publisher');
     const current = await scheduledWeek('building');
