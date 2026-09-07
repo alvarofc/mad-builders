@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { createElement, useEffect, useId, useRef, useState } from 'react';
 import { Questionnaire } from '@shadcn/react/questionnaire';
 import { track } from '@vercel/analytics';
 import { submitApiForm } from '../scripts/submit-api-form';
@@ -50,6 +50,7 @@ function answerError(question: Question, answer = '') {
 }
 
 export default function WeeklyUpdateForm(props: Props) {
+  const formId = useId();
   const [values, setValues] = useState(props.initialValues);
   const [ready, setReady] = useState(false);
   const [draftStatus, setDraftStatus] = useState('Drafts stay on this browser until you publish.');
@@ -106,6 +107,7 @@ export default function WeeklyUpdateForm(props: Props) {
       items={questions}
       onItemChange={setActiveQuestion}
       ref={formRef}
+      id={formId}
       noValidate={false}
       onKeyDownCapture={(event) => {
         if (event.target instanceof HTMLTextAreaElement && event.key === 'Enter' && !event.metaKey && !event.ctrlKey) event.stopPropagation();
@@ -155,7 +157,12 @@ export default function WeeklyUpdateForm(props: Props) {
                 value={values[question.name]}
                 onChange={(event) => setValues((current) => ({ ...current, [question.name]: event.target.value }))}
                 type={question.type}
-                render={question.type === 'url' ? <input inputMode="url" /> : <textarea />}
+                render={(inputProps) => createElement(question.type === 'url' ? 'input' : 'textarea', {
+                  ...inputProps,
+                  // Firefox can leave inputs detached after removing form="". Keep skipped answers detached.
+                  form: inputProps.name ? formId : '',
+                  inputMode: question.type === 'url' ? 'url' : undefined,
+                })}
                 minLength={question.minLength}
                 maxLength={question.maxLength}
                 placeholder={question.placeholder}
