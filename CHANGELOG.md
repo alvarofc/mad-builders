@@ -2,6 +2,15 @@
 
 Changes to mad.builders.
 
+## [0.1.4.0] - 2026-09-07
+
+### Changed
+
+- Preview weekly share cards, edit captions, and choose X, LinkedIn, WhatsApp, or copy options from a compact popover.
+- Download share images with the company description and logo, with initials when the logo is unavailable.
+- Share the latest weekly update from a project profile, including the week and full progress in the caption.
+- Find project links, feedback requests, and an invitation to publish your own update near the top of public results.
+
 ## [0.1.3.0] - 2026-09-07
 
 ### Changed
