@@ -4,49 +4,125 @@ interface Props {
   title: string;
   eventName: 'builder_profile_shared' | 'weekly_result_shared';
   handle: string;
+  expanded?: boolean;
 }
 
-const { path, title, eventName, handle } = Astro.props;
+const { path, title, eventName, handle, expanded = false } = Astro.props;
+const weekly = eventName === 'weekly_result_shared';
+const image = `/api/og${path.split('?')[0]}.png`;
+const popoverId = `share-${crypto.randomUUID()}`;
 ---
 
-<div>
-  <button
-    class="work-button"
-    type="button"
-    data-share
-    data-path={path}
-    data-title={title}
-    data-event={eventName}
-    data-handle={handle}
-  >
-    {eventName === 'weekly_result_shared' ? "share this week's progress" : 'share project'}
-  </button>
-  <p class="work-status" data-share-status aria-live="polite"></p>
-</div>
+<details class="share-panel" open={expanded} data-share-panel data-path={path} data-event={eventName} data-handle={handle}>
+  <summary class="work-button secondary">{weekly ? 'share weekly update' : 'share project'}</summary>
+  <div class="share-content">
+    <p class="work-label">{weekly ? "weekly update · ready to post" : "project · ready to post"}</p>
+    <img src={image} alt={`Share card for @${handle}`} width="1200" height="630" loading="lazy" />
+    <label class="work-field">
+      <span>{weekly ? "Your weekly update caption" : "Your caption"}</span>
+      <textarea data-share-caption rows="5">{title}</textarea>
+    </label>
+    <div class="work-actions share-controls">
+      <button class="work-button" type="button" popovertarget={popoverId} data-share-trigger>{weekly ? "share weekly update" : "share project"}</button>
+      <a class="work-button secondary" href={image} download={`${handle}-update.png`}>save image</a>
+    </div>
+    <div class="share-options" id={popoverId} popover="auto" aria-label="Share options">
+      <p class="work-label">{weekly ? "share weekly update via" : "share project via"}</p>
+      <div class="share-networks" aria-label="Share on social networks">
+        <a class="work-button secondary" data-social="x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer">X ↗</a>
+        <a class="work-button secondary" data-social="linkedin" href="https://www.linkedin.com/sharing/share-offsite/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+        <a class="work-button secondary" data-social="whatsapp" href="https://wa.me/" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>
+      </div>
+      <div class="work-actions">
+        <button class="work-button" type="button" data-copy-post>copy post</button>
+        <button class="work-button secondary" type="button" data-copy-link>copy link</button>
+      </div>
+      <p class="share-hint">For LinkedIn, copy your post first and paste it in the composer. Long updates may need shortening for X.</p>
+      <p class="work-status" data-share-status aria-live="polite"></p>
+    </div>
+  </div>
+</details>
 
 <script>
   import { track } from '@vercel/analytics';
 
-  document.querySelectorAll<HTMLButtonElement>('[data-share]').forEach((button) => {
-    if (button.dataset.ready) return;
-    button.dataset.ready = 'true';
-
-    button.addEventListener('click', async () => {
-      const status = button.parentElement?.querySelector<HTMLElement>('[data-share-status]');
-      const url = new URL(button.dataset.path || '/', window.location.origin).toString();
-
-      try {
-        if (navigator.share) {
-          await navigator.share({ title: button.dataset.title, text: button.dataset.title, url });
-        } else {
-          await navigator.clipboard.writeText(url);
-          if (status) status.textContent = 'Link copied.';
-        }
-        track(button.dataset.event || 'page_shared', { handle: button.dataset.handle || '' });
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-        if (status) status.textContent = 'Could not share. Copy the page URL instead.';
+  document.querySelectorAll<HTMLElement>('[data-share-panel]').forEach((panel) => {
+    const popover = panel.querySelector<HTMLElement>('[popover]');
+    const trigger = panel.querySelector<HTMLButtonElement>('[data-share-trigger]');
+    if (popover && trigger) {
+      function position() {
+        const rect = trigger!.getBoundingClientRect();
+        const below = window.innerHeight - rect.bottom - 16;
+        const above = rect.top - 16;
+        const useBelow = below >= Math.min(560, above);
+        popover!.style.maxHeight = `${Math.max(120, useBelow ? below : above)}px`;
+        popover!.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - popover!.offsetWidth - 12))}px`;
+        popover!.style.top = `${useBelow ? rect.bottom + 8 : Math.max(12, rect.top - popover!.offsetHeight - 8)}px`;
       }
-    });
+      popover.addEventListener('toggle', () => {
+        if (popover.matches(':popover-open')) {
+          position();
+          window.addEventListener('resize', position);
+          window.addEventListener('scroll', position, true);
+        } else {
+          window.removeEventListener('resize', position);
+          window.removeEventListener('scroll', position, true);
+        }
+      });
+    }
+    const caption = panel.querySelector<HTMLTextAreaElement>('[data-share-caption]')!;
+    const status = panel.querySelector<HTMLElement>('[data-share-status]')!;
+    const url = new URL(panel.dataset.path!, window.location.origin).toString();
+    const post = () => [caption.value.trim(), url].filter(Boolean).join('\n\n');
+    const networks = panel.querySelectorAll<HTMLAnchorElement>('[data-social]');
+
+    function updateLinks() {
+      networks.forEach((link) => {
+        const network = link.dataset.social;
+        const destination = new URL(network === 'x' ? 'https://twitter.com/intent/tweet'
+          : network === 'linkedin' ? 'https://www.linkedin.com/sharing/share-offsite/' : 'https://wa.me/');
+        if (network === 'linkedin') destination.searchParams.set('url', url);
+        else if (network === 'x') {
+          destination.searchParams.set('text', caption.value.trim());
+          destination.searchParams.set('url', url);
+        } else destination.searchParams.set('text', post());
+        link.href = destination.toString();
+      });
+    }
+    caption.addEventListener('input', updateLinks);
+    updateLinks();
+    networks.forEach((link) => link.addEventListener('click', () => {
+      updateLinks();
+      track('share_composer_opened', { handle: panel.dataset.handle!, network: link.dataset.social! });
+    }));
+
+    async function copy(linkOnly: boolean) {
+      try {
+        await navigator.clipboard.writeText(linkOnly ? url : post());
+        status.textContent = linkOnly ? 'Link copied.' : 'Post copied. Paste it into your post.';
+      } catch {
+        status.textContent = `Could not copy. Select your caption and copy this link: ${url}`;
+        return;
+      }
+      track(panel.dataset.event!, { handle: panel.dataset.handle!, method: linkOnly ? 'copy_link' : 'copy_post' });
+    }
+    panel.querySelector('[data-copy-post]')!.addEventListener('click', () => copy(false));
+    panel.querySelector('[data-copy-link]')!.addEventListener('click', () => copy(true));
   });
 </script>
+
+<style>
+  .share-panel { width: 100%; max-width: 640px; min-width: 0; }
+  summary { width: fit-content; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  .share-options { position: fixed; inset: auto; margin: 0; padding: 20px; width: min(340px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; color: var(--green); background: var(--cream); border: 1px solid var(--green-line); border-radius: 12px; box-shadow: 0 12px 40px var(--green-line); }
+  .share-content { margin-top: 20px; padding: clamp(16px, 3vw, 28px); border: 1px solid var(--green-line); }
+  img { width: 100%; height: auto; margin-bottom: 24px; }
+  textarea { min-height: 130px; resize: vertical; }
+  .share-controls { margin-top: 20px; }
+  .share-hint { margin: 16px 0 0; color: var(--green-dim); font-size: 16px; }
+  .work-status { overflow-wrap: anywhere; }
+  .share-networks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0; }
+  .share-networks a { padding-inline: 8px; }
+  @media (max-width: 380px) { .share-networks { grid-template-columns: 1fr; } }
+</style>

@@ -59,13 +59,6 @@ const proofLabel = (status: string) =>
             <p class="work-copy">Voting opens to builders who publish an eligible result for the week.</p>
             <a class="work-button" href="/build">make my page</a>
           </>
-        ) : review.state === 'pair' && review.reviewed === 5 && !Astro.url.searchParams.has('continue') ? (
-          <div class="review-checkpoint">
-            <p class="work-label">5 of 10 saved</p>
-            <h2 class="work-heading">Halfway there. Take a breather.</h2>
-            <p class="work-copy">Your votes are saved. Finish the next five now or come back before {madridDate(review.week.votingClosesAt)}. All ten unlock the early leaderboard.</p>
-            <div class="work-actions"><a class="work-button" href={demo ? '/vote?demo=1&round=5&continue=1#review-content' : '/vote?demo=0&continue=1#review-content'}>next five</a><a class="work-button secondary" href={demo ? '/leaderboard?demo=1' : '/build?demo=0#this-week'}>come back later</a></div>
-          </div>
         ) : review.state === 'pair' ? (
           <>
             <p class="work-label">{review.reviewed} of 10 reviewed / closes {madridDate(review.week.votingClosesAt)}</p>
