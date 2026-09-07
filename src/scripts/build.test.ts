@@ -5,7 +5,9 @@ import { expect, it, vi } from 'vitest';
 
 // Execute the page's real submit handler without adding a browser dependency.
 const page = readFileSync(new URL('../pages/build.astro', import.meta.url), 'utf8');
-const script = stripTypeScriptTypes(page.split('<script>')[1].split('</script>')[0]
+const submitScript = stripTypeScriptTypes(readFileSync(new URL('./submit-api-form.ts', import.meta.url), 'utf8')
+  .replace(/^import .*;$/gm, '').replace('export async function', 'async function'));
+const script = submitScript + '\n' + stripTypeScriptTypes(page.split('<script>')[1].split('</script>')[0]
   .replace(/^\s*import .*;$/gm, ''));
 
 it('provides an independent next-goal form after publication, gated by its own deadline', () => {
@@ -69,25 +71,18 @@ it.each([
   ['https://mad.builders/build', true],
   ['https://mad.builders/build/?ref=ana', true],
 ])('handles publication redirect %s without losing an expired-session draft', async (url, expired) => {
-  const listeners: Record<string, Function> = {};
   const message = { textContent: '' };
   const button = { disabled: false };
   const form = {
-    dataset: { draftKey: 'weekly:ana:1' }, action: '/api/result/publish',
-    querySelectorAll: () => [],
+    action: '/api/result/publish',
     querySelector: (selector: string) => selector.startsWith('button') ? button : message,
-    addEventListener: (name: string, callback: Function) => { listeners[name] = callback; },
   };
   const removeItem = vi.fn();
   const assign = vi.fn();
-  runInNewContext(script, {
-    document: { querySelector: () => null, querySelectorAll: () => [form] },
-    localStorage: { getItem: () => '{}', removeItem },
-    window: { location: { origin: 'https://mad.builders', assign } },
-    fetch: async () => ({ ok: true, url }),
-    FormData: class {}, URL, track: vi.fn(),
+  await runInNewContext(submitScript + '\nsubmitApiForm(form, \'weekly:ana:1\')', {
+    form, localStorage: { removeItem }, window: { location: { origin: 'https://mad.builders', assign } },
+    fetch: async () => ({ ok: true, url }), FormData: class {}, URL, track: vi.fn(),
   });
-  await listeners.submit({ preventDefault() {} });
   expect(button.disabled).toBe(false);
   if (expired) {
     expect(message.textContent).toContain('session expired');
@@ -97,4 +92,27 @@ it.each([
     expect(removeItem).toHaveBeenCalledWith('weekly:ana:1');
     expect(assign).toHaveBeenCalledWith(url);
   }
+});
+
+it.each(['http', 'network'])('preserves the draft and allows retry after a %s publication failure', async (failure) => {
+  const message = { textContent: '' };
+  const button = { disabled: false };
+  const form = {
+    action: '/api/result/publish',
+    querySelector: (selector: string) => selector.startsWith('button') ? button : message,
+  };
+  const removeItem = vi.fn();
+  const assign = vi.fn();
+  await runInNewContext(submitScript + '\nsubmitApiForm(form, "weekly:ana:1")', {
+    form, localStorage: { removeItem }, window: { location: { origin: 'https://mad.builders', assign } },
+    fetch: async () => {
+      if (failure === 'network') throw new Error('offline');
+      return { ok: false, text: async () => 'Voting has opened.' };
+    },
+    FormData: class {}, URL, track: vi.fn(),
+  });
+  expect(button.disabled).toBe(false);
+  expect(message.textContent).toBe(failure === 'network' ? 'Could not save. Try again.' : 'Voting has opened.');
+  expect(removeItem).not.toHaveBeenCalled();
+  expect(assign).not.toHaveBeenCalled();
 });

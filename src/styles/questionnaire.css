@@ -1,0 +1,10 @@
+.weekly-questionnaire [hidden] { display: none; }
+.questionnaire-item { border: 0; padding: 0; margin: 0; min-width: 0; }
+.questionnaire-title { font-size: 1.25rem; font-weight: 500; margin-bottom: 20px; }
+.questionnaire-choices { display: grid; gap: 10px; }
+.questionnaire-choice { display: flex; gap: 12px; align-items: center; padding: 14px; border: 1px solid var(--green-line); border-radius: 8px; cursor: pointer; }
+.questionnaire-choice[data-checked] { border-color: var(--green); background: var(--green); color: var(--cream); }
+.questionnaire-choice input { accent-color: var(--green); width: 18px; height: 18px; flex-shrink: 0; }
+.questionnaire-choice:focus-within { outline: 2px solid var(--green); outline-offset: 4px; }
+.questionnaire-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.weekly-questionnaire textarea { min-height: 160px; }
