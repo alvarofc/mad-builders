@@ -26,7 +26,7 @@ Deploy this repository to Vercel with the build command `astro build`.
 
 Weekly updates keep the Pioneer questions and show them one at a time with shadcn's Questionnaire. Known project details are prefilled. Drafts are saved locally in the browser, scoped to the builder and week, and cleared after publication. Updates can be edited until voting opens; the previous goal stays locked. First updates have no completion grade because there is no earlier goal. Next week's goals remain editable until Monday at 00:00, including after publishing the current update. Catch-up links on `/build` let builders finish earlier updates after rollover; late updates do not enter ranking or extend streaks.
 
-Each vote is saved independently. Builders can pause after five comparisons and resume later; ten unlock the provisional leaderboard. Shares and referrals do not affect rank.
+Each vote is saved independently. Builders can pause after five comparisons and resume later; ten unlock the provisional leaderboard. While last week's voting remains open, eligible builders must finish their comparisons before publishing the next weekly update. Publishing is available once voting closes or no pairs remain; builders who are not eligible to vote are exempt. Shares and referrals do not affect rank.
 
 The project directory and leaderboard show up to 50 projects per page. Previous and Next links use `?page=2` and preserve other query parameters. Rankings keep their overall position across pages. `/build` focuses on your weekly check-in; rankings live on `/leaderboard`.
 
