@@ -53,18 +53,6 @@ it('lets builders retry sign-in after returned HTTP errors or network failures',
   }
 });
 
-it('hides only the update being edited from recently published', async () => {
-  const panel = readFileSync(new URL('../components/LeaderboardPanel.astro', import.meta.url), 'utf8');
-  const setup = stripTypeScriptTypes(panel.split('---')[1].replace(/^\s*import .*;$/gm, ''));
-  for (const [excludeResultId, expected] of [[undefined, [1, 2]], [1, [2]]] as const) {
-    const recent = await runInNewContext(`(async () => { ${setup}; return recent; })()`, {
-      Astro: { props: { board: null, excludeResultId } },
-      listRecentUpdates: async () => [{ id: 1 }, { id: 2 }],
-    });
-    expect(Array.from(recent, (entry: { id: number }) => entry.id)).toEqual(expected);
-  }
-});
-
 it.each([
   ['https://mad.builders/builders/ana/weeks/2026-08-31', false],
   ['https://mad.builders/settings', false],

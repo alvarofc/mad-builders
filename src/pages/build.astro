@@ -1,14 +1,11 @@
 ---
 import ProductLayout from '../layouts/ProductLayout.astro';
-import LeaderboardPanel from '../components/LeaderboardPanel.astro';
 import ShareButton from '../components/ShareButton.astro';
 import { authConfigured } from '../server/auth';
 import { getProfileByUserId, normalizeHandle, validHandle } from '../server/profiles';
-import { getLatestLeaderboard } from '../server/ranking';
 import WeeklyUpdateForm from '../components/WeeklyUpdateForm';
 import { projectStages } from '../server/results';
 import { getBuildState, madridDate } from '../server/weeks';
-import { demoLeaderboard } from '../data/builders-demo';
 
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', 'no-store');
@@ -19,8 +16,6 @@ const selectedWeekDate = Astro.url.searchParams.get('week');
 const buildState = currentProfile ? await getBuildState(currentProfile.userId, selectedWeekDate) : null;
 const unavailableWeek = Boolean(currentProfile && selectedWeekDate && !buildState);
 if (unavailableWeek) Astro.response.status = 404;
-const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
-const board = demo ? demoLeaderboard : await getLatestLeaderboard(currentUser?.id);
 const ref = normalizeHandle(Astro.url.searchParams.get('ref') ?? '');
 const safeRef = validHandle(ref) ? ref : '';
 const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'active';
@@ -39,17 +34,15 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
         <span>mad builders / weekly proof of work</span>
         <div class="app-context-actions">
           {currentProfile && <a href={`/builders/${currentProfile.handle}`}>{currentProfile.projectName} →</a>}
-          <a class="work-button" href="#this-week">{buildState?.currentResult ? 'your update' : 'write update'}</a>
+          <a href="/leaderboard">leaderboard →</a>
         </div>
       </div>
-      {demo && <p class="work-note">Local demo leaderboard. Your weekly update below is real. <a href="/vote?demo=1">Try voting →</a> · <a href="/build?demo=0">Show real leaderboard</a></p>}
-      <LeaderboardPanel board={board} signedIn={Boolean(currentUser)} demo={demo} excludeResultId={editing ? buildState?.currentResult?.id : undefined} />
     </div>
 
     <section class="week-section" id="this-week">
       <div class="wrap section-heading">
         <p class="work-label">accountability loop</p>
-        <h2 class="app-section-title">{buildState?.selectedLateWeek ? 'Catch up' : 'This week'}</h2>
+        <h1 class="app-section-title">{buildState?.selectedLateWeek ? 'Catch up' : 'This week'}</h1>
       </div>
       <div class="wrap update-shell">
         <div>

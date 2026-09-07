@@ -28,7 +28,7 @@ Weekly updates keep the Pioneer questions and show them one at a time with shadc
 
 Each vote is saved independently. Builders can pause after five comparisons and resume later; ten unlock the provisional leaderboard. Shares and referrals do not affect rank.
 
-The project directory and leaderboard show up to 50 projects per page. Previous and Next links use `?page=2` and preserve other query parameters. Rankings keep their overall position across pages; the leaderboard on `/build` shows the first page and links to `/leaderboard` for more.
+The project directory and leaderboard show up to 50 projects per page. Previous and Next links use `?page=2` and preserve other query parameters. Rankings keep their overall position across pages. `/build` focuses on your weekly check-in; rankings live on `/leaderboard`.
 
 Apply `drizzle/0005_company_scale_indexes.sql` through `pnpm db:migrate` for directory and ranking lookup indexes. After a large import, run `ANALYZE` on the affected tables so Postgres plans queries using current row counts. Stale statistics caused very slow leaderboard reads in the local 5,000-project smoke test; this is import maintenance, not work for each page request.
 
@@ -40,7 +40,35 @@ Use Supabase's session pooler (port 5432) for local `DATABASE_URL` and its direc
 
 With the dev server running, `NAVIGATION_TEST_URL=http://localhost:4321 pnpm exec vitest run src/server/navigation.integration.test.ts` checks concurrent app-page requests.
 
-Local `/build`, `/leaderboard`, and `/vote` show demo rankings or comparisons by default. Use `?demo=0` for real data. The weekly update form on `/build` always saves real data.
+Local `/leaderboard` and `/vote` show demo rankings or comparisons by default. Use `?demo=0` for real data. `/build` always uses real data.
+
+### Email setup
+
+Welcome and weekly reminders use Resend with the approved cream-and-green templates. The sender is `mad.builders <hello@email.mad.builders>`.
+
+1. Verify `email.mad.builders` in Resend and set `RESEND_API_KEY` in Vercel’s production environment.
+2. Set a random `CRON_SECRET` (at least 32 characters) in Vercel production. Store the same value in Supabase Vault under the name `mad_builders_cron_secret`.
+3. Set `EMAIL_AUTOMATION_START_AT` to the activation timestamp, such as `2026-09-08T00:00:00Z`. Welcome emails only go to accounts created on or after this timestamp. Leave it empty to keep automatic sending disabled.
+4. Apply migration `0006_nice_vertigo.sql` before deploying. It adds email preferences, unsubscribe tokens, and delivery records. Keep credentials in local `.env` files or Vercel, never Git.
+
+After migration and deployment, enable Supabase Cron (`pg_cron`) and `pg_net` in the Supabase dashboard, then run [`scripts/schedule-emails.sql`](scripts/schedule-emails.sql) in its SQL editor. The named job calls the production `/api/email/cron` endpoint hourly at minute 17, using the Vault secret as its bearer token. Re-running the script updates the same job. A missing or short Vault secret sends no HTTP request. No Vercel cron or GitHub Actions scheduler is needed.
+
+Monitor both `cron.job_run_details` and `net._http_response`: the cron job queues an asynchronous HTTP request, so a successful cron run does not mean the endpoint succeeded. Check HTTP status and response counts in `net._http_response` promptly; pg_net responses expire by default. To stop the scheduler, run `select cron.unschedule('mad-builders-email-reminders');`. Never point it at a preview deployment using the production database. See [Supabase’s scheduling guide](https://supabase.com/docs/guides/functions/schedule-functions) for the Cron, pg_net, and Vault pattern.
+
+Welcome emails arrive on the next hourly run. Sunday check-ins run between 14:00 and 18:00 Madrid for active builders with this week’s commitment or result, and ask only for missing results or next-week goals. Monday voting reminders use the same window and require an on-time result, enough eligible candidates, unfinished votes, and an available comparison. Stored week deadlines handle summer and winter time.
+
+Every email includes a plain-text version and unsubscribe link. Opening the link shows a confirmation; submitting it stops welcome and reminder emails. Inbox one-click unsubscribe uses the same POST endpoint. Link scanners cannot unsubscribe someone with a GET request.
+
+Delivery records prevent repeated sends. An atomic two-minute lease handles overlapping cron calls; retries use the saved request body and Resend idempotency key. Retries stop after 23 hours, before Resend’s 24-hour protection expires. Changed reminder content is not retried, so completing an action does not trigger an outdated reminder. Unsent rows older than 23 hours need inspection against Resend logs before any manual retry.
+
+The job selects up to 100 recipients per email kind and stops starting sends after 40 seconds. It spaces requests by 600 ms and retries eligible unsent recipients on the next run. This is sized for the current community; increase scheduling frequency or move delivery to a queue before a large import. Monitor non-200 cron responses and unsent delivery records.
+
+To run email database checks against the disposable database described below:
+
+```bash
+DATABASE_EMAIL_TEST_URL=postgres://postgres:test-only@127.0.0.1:55439/mad_builders_test pnpm exec vitest run src/server/email-recipients.test.ts
+DATABASE_TEST_URL=postgres://postgres:test-only@127.0.0.1:55439/mad_builders_test pnpm exec vitest run src/server/email.integration.test.ts
+```
 
 ### Release checks
 
