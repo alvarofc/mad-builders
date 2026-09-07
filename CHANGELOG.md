@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.4.1.2] - 2026-09-07
+
+### Fixed
+
+- Create and accept teammate invitations without the browser’s form submissions being rejected as cross-site requests.
+- Keep invite tokens out of referrer headers while preserving the origin needed to verify forms.
+
 ## [0.4.1.1] - 2026-09-07
 
 ### Fixed
