@@ -63,7 +63,7 @@ it('waits for activation, then sends every email kind and reports failures witho
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ sent: 2, failed: 1 });
     expect(vi.mocked(sendEmailOnce).mock.calls).toEqual([
-      ['welcome', { userId: 'new-builder' }], ['checkin', checkin], ['voting', voting],
+      ['checkin', checkin], ['voting', voting], ['welcome', { userId: 'new-builder' }],
     ]);
     expect(error).toHaveBeenCalledOnce();
   } finally { vi.useRealTimers(); error.mockRestore(); }

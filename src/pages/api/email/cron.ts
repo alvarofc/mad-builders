@@ -31,9 +31,9 @@ export const GET: APIRoute = async ({ request }) => {
     order by u.created_at limit 100
   `);
   const jobs = [
-    ...welcome.map((recipient) => ({ kind: 'welcome' as const, recipient })),
     ...(await getReminderRecipients('checkin', now)).map((recipient) => ({ kind: 'checkin' as const, recipient })),
     ...(await getReminderRecipients('voting', now)).map((recipient) => ({ kind: 'voting' as const, recipient })),
+    ...welcome.map((recipient) => ({ kind: 'welcome' as const, recipient })),
   ];
   let sent = 0;
   let failed = 0;
