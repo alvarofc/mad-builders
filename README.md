@@ -47,11 +47,13 @@ Local `/leaderboard` and `/vote` show demo rankings or comparisons by default. U
 Welcome and weekly reminders use Resend with the approved cream-and-green templates. The sender is `mad.builders <hello@email.mad.builders>`.
 
 1. Verify `email.mad.builders` in Resend and set `RESEND_API_KEY` in Vercel’s production environment.
-2. Set a random `CRON_SECRET` (at least 32 characters). Vercel sends it as the cron request’s bearer token.
+2. Set a random `CRON_SECRET` (at least 32 characters) in Vercel production. Store the same value in Supabase Vault under the name `mad_builders_cron_secret`.
 3. Set `EMAIL_AUTOMATION_START_AT` to the activation timestamp, such as `2026-09-08T00:00:00Z`. Welcome emails only go to accounts created on or after this timestamp. Leave it empty to keep automatic sending disabled.
 4. Apply migration `0006_nice_vertigo.sql` before deploying. It adds email preferences, unsubscribe tokens, and delivery records. Keep credentials in local `.env` files or Vercel, never Git.
 
-`vercel.json` runs `/api/email/cron` hourly. This requires a Vercel plan that supports hourly cron jobs; Hobby’s daily limit is insufficient. Alternatively, call the endpoint hourly from an external scheduler using the same bearer token. Cron jobs run on production deployments. Never enable a preview deployment’s scheduler against the production database.
+After migration and deployment, enable Supabase Cron (`pg_cron`) and `pg_net` in the Supabase dashboard, then run [`scripts/schedule-emails.sql`](scripts/schedule-emails.sql) in its SQL editor. The named job calls the production `/api/email/cron` endpoint hourly at minute 17, using the Vault secret as its bearer token. Re-running the script updates the same job. A missing or short Vault secret sends no HTTP request. No Vercel cron or GitHub Actions scheduler is needed.
+
+Monitor both `cron.job_run_details` and `net._http_response`: the cron job queues an asynchronous HTTP request, so a successful cron run does not mean the endpoint succeeded. Check HTTP status and response counts in `net._http_response` promptly; pg_net responses expire by default. To stop the scheduler, run `select cron.unschedule('mad-builders-email-reminders');`. Never point it at a preview deployment using the production database. See [Supabase’s scheduling guide](https://supabase.com/docs/guides/functions/schedule-functions) for the Cron, pg_net, and Vault pattern.
 
 Welcome emails arrive on the next hourly run. Sunday check-ins run between 14:00 and 18:00 Madrid for active builders with this week’s commitment or result, and ask only for missing results or next-week goals. Monday voting reminders use the same window and require an on-time result, enough eligible candidates, unfinished votes, and an available comparison. Stored week deadlines handle summer and winter time.
 
