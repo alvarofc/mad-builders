@@ -2,6 +2,17 @@
 
 Changes to mad.builders.
 
+## [0.3.0.0] - 2026-09-07
+
+### Added
+
+- Welcome emails and weekly check-in and voting reminders, with the mad.builders design and footer.
+- Reminders that ask only for unfinished actions, with unsubscribe links and protection against duplicate sends.
+
+### Changed
+
+- Keep weekly updates on `/build` and rankings on `/leaderboard`.
+
 ## [0.2.0.0] - 2026-09-07
 
 ### Changed
