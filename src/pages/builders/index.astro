@@ -6,11 +6,12 @@ import ProjectMark from '../../components/ProjectMark.astro';
 import { getProfileByUserId, listPublicProfiles } from '../../server/profiles';
 
 export const prerender = false;
+const currentUser = Astro.locals.user;
 
 const page = pageNumber(Astro.url.searchParams.get('page'));
-const rows = await listPublicProfiles(page);
+const rows = await Astro.locals.timing.measure('projects', () => listPublicProfiles(page));
 const profiles = rows.slice(0, PAGE_SIZE);
-const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
+const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
@@ -19,7 +20,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
   description="Projects building in public, one week at a time."
   active="builders"
   profileHandle={currentProfile?.handle}
-  signedIn={Boolean(Astro.locals.user)}
+  signedIn={Boolean(currentUser)}
 >
   <div class="work-page">
     <header class="work-hero">

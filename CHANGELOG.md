@@ -15,6 +15,13 @@ Changes to mad.builders.
 - Keep existing project handles and history, record who edits updates, and base reminders on shared project activity.
 - Prevent teammates from reviewing projects with overlapping owners and protect writes when switching projects.
 
+## [0.3.3.0] - 2026-09-07
+
+### Changed
+
+- Run app pages in Paris, near the configured database, to reduce network delays.
+- Inspect navigation delays by initialization, session lookup, schedule refresh, and page data loading in browser response timings.
+
 ## [0.3.2.1] - 2026-09-07
 
 ### Fixed

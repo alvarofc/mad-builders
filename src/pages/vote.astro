@@ -11,12 +11,12 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 
 const currentUser = Astro.locals.user;
 const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
-const currentProfile = currentUser ? await getProfileByUserId(currentUser.id) : null;
+const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
 const review = demo ? demoReview(Astro.url.searchParams.get('round')) : !currentUser
   ? { state: 'signed_out' as const }
   : !currentProfile
     ? { state: 'profile_required' as const }
-    : await getReviewState(currentUser.id);
+    : await Astro.locals.timing.measure('review', () => getReviewState(currentUser.id));
 
 const proofLabel = (status: string) =>
   status === 'github_account_matched'

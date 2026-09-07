@@ -4,15 +4,16 @@ import { getProjectTeam, listOwnedProjects } from '../server/projects';
 import { getProfileByUserId, listResultsForProject } from '../server/profiles';
 
 export const prerender = false;
+const currentUser = Astro.locals.user;
 
-if (!Astro.locals.user) return Astro.redirect('/build');
-const currentProfile = await getProfileByUserId(Astro.locals.user.id);
+if (!currentUser) return Astro.redirect('/build');
+const currentProfile = await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id));
 if (!currentProfile) return Astro.redirect('/build');
 Astro.response.headers.set('Cache-Control', 'no-store');
 Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 const team = await getProjectTeam(currentProfile.id);
 const projects = await listOwnedProjects(Astro.locals.user.id);
-const results = await listResultsForProject(currentProfile.id);
+const results = await Astro.locals.timing.measure('results', () => listResultsForProject(currentProfile.id));
 ---
 
 <ProductLayout

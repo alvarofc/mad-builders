@@ -7,10 +7,11 @@ import { getLatestLeaderboard } from '../server/ranking';
 import { demoLeaderboard, demoProjects } from '../data/builders-demo';
 
 export const prerender = false;
+const currentUser = Astro.locals.user;
 
 const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
-const board = demo ? demoLeaderboard : await getLatestLeaderboard(Astro.locals.user?.id, pageNumber(Astro.url.searchParams.get('page')));
-const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
+const board = demo ? demoLeaderboard : await Astro.locals.timing.measure('leaderboard', () => getLatestLeaderboard(currentUser?.id, pageNumber(Astro.url.searchParams.get('page'))));
+const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
@@ -19,12 +20,12 @@ Astro.response.headers.set('Cache-Control', 'no-store');
   description="Share your progress, get reviewed by other builders, and see how you stack up. A little competition gives you a reason to go further next week."
   active="leaderboard"
   profileHandle={currentProfile?.handle}
-  signedIn={Boolean(Astro.locals.user)}
+  signedIn={Boolean(currentUser)}
 >
   <div class="work-page">
     <div class="wrap app-shell">
       {demo && <p class="work-note">Local demo. Fictional projects and sample scores. <a href="/vote?demo=1">Try voting →</a> · <a href="/leaderboard?demo=0">Show real data</a></p>}
-      <LeaderboardPanel board={board} signedIn={Boolean(Astro.locals.user)} demo={demo} />
+      <LeaderboardPanel board={board} signedIn={Boolean(currentUser)} demo={demo} />
       <p class="leaderboard-caveat">One useful weekly signal, not a universal founder score.</p>
       {demo && demoProjects.map((project) => (
         <article class="result-block" id={project.handle}>
