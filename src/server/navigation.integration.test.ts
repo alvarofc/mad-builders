@@ -1,13 +1,19 @@
 import { expect, it } from 'vitest';
 
 it.skipIf(!process.env.NAVIGATION_TEST_URL)('shows local demo projects and voting through the normal navbar URLs', async () => {
-  for (const [path, content] of [['/build', 'Taller'], ['/leaderboard', 'Miga'], ['/vote', 'Choose A']]) {
+  for (const [path, content] of [['/leaderboard', 'Miga'], ['/vote', 'Choose A']]) {
     const response = await fetch(new URL(path, process.env.NAVIGATION_TEST_URL), { signal: AbortSignal.timeout(5000) });
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain('Local demo');
     expect(html).toContain(content);
   }
+  const build = await fetch(new URL('/build', process.env.NAVIGATION_TEST_URL));
+  expect(build.status).toBe(200);
+  const html = await build.text();
+  expect(html).toContain('id="this-week"');
+  expect(html).not.toContain('id="leaderboard-title"');
+  expect(html).not.toContain('Local demo');
 }, 20000);
 
 it.skipIf(!process.env.NAVIGATION_TEST_URL)('loads app pages under concurrent navigation without blocking the connection', async () => {

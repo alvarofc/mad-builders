@@ -9,13 +9,11 @@ interface Props {
   board: Awaited<ReturnType<typeof getLatestLeaderboard>>;
   signedIn?: boolean;
   demo?: boolean;
-  excludeResultId?: number;
 }
 
-const { board, signedIn = false, demo = false, excludeResultId } = Astro.props;
+const { board, signedIn = false, demo = false } = Astro.props;
 const ranked = board?.week && (board.week.rankingStatus === 'final' || board.provisional);
-const recent = ((!ranked || !board?.entries.length) && (!board || board.page === 1) ? await listRecentUpdates() : [])
-  .filter((entry) => entry.id !== excludeResultId);
+const recent = (!ranked || !board?.entries.length) && (!board || board.page === 1) ? await listRecentUpdates() : [];
 const status = !board
   ? 'not scheduled'
   : board.provisional
