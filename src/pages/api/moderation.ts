@@ -3,7 +3,7 @@ import type { APIRoute } from 'astro';
 import { db } from '../../server/db';
 import { isOrganizer } from '../../server/organizers';
 import { allowWrite } from '../../server/rate-limit';
-import { comparison, profile, result, week } from '../../server/schema';
+import { comparison, project, result, week } from '../../server/schema';
 
 export const prerender = false;
 
@@ -34,14 +34,14 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
         .orderBy(week.id)
         .for('update');
       const rows = await tx
-        .update(profile)
+        .update(project)
         .set({
           hiddenAt: action === 'hide' ? sql`now()` : null,
           hiddenReason: action === 'hide' ? reason : null,
           updatedAt: sql`now()`,
         })
-        .where(eq(profile.handle, handle))
-        .returning({ id: profile.userId });
+        .where(eq(project.handle, handle))
+        .returning({ id: project.id });
       return rows.length;
     }
 
@@ -49,9 +49,9 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
       const [target] = await tx
         .select({ id: result.id, weekId: result.weekId })
         .from(result)
-        .innerJoin(profile, eq(result.userId, profile.userId))
+        .innerJoin(project, eq(result.projectId, project.id))
         .innerJoin(week, eq(result.weekId, week.id))
-        .where(and(eq(profile.handle, handle), eq(week.weekStartDate, weekStartDate)))
+        .where(and(eq(project.handle, handle), eq(week.weekStartDate, weekStartDate)))
         .limit(1);
       if (!target) return 0;
       await tx.select({ id: week.id }).from(week).where(eq(week.id, target.weekId)).for('update');
@@ -67,7 +67,7 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
     }
 
     if (kind === 'voter' && action === 'invalidate') {
-      const [target] = await tx.select({ userId: profile.userId }).from(profile).where(eq(profile.handle, handle)).limit(1);
+      const [target] = await tx.select({ projectId: project.id }).from(project).where(eq(project.handle, handle)).limit(1);
       if (!target) return 0;
       const openWeeks = await tx
         .select({ id: week.id })
@@ -81,7 +81,7 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
         .set({ invalidatedAt: sql`now()`, invalidationReason: reason })
         .where(
           and(
-            eq(comparison.voterUserId, target.userId),
+            eq(comparison.voterProjectId, target.projectId),
             inArray(comparison.weekId, openWeeks.map((openWeek) => openWeek.id)),
             isNull(comparison.invalidatedAt),
           ),

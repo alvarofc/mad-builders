@@ -1,13 +1,19 @@
 ---
 import ProductLayout from '../layouts/ProductLayout.astro';
-import { getProfileByUserId, listResultsForOwner } from '../server/profiles';
+import { getProjectTeam, listOwnedProjects } from '../server/projects';
+import { getProfileByUserId, listResultsForProject } from '../server/profiles';
 
 export const prerender = false;
+const currentUser = Astro.locals.user;
 
-if (!Astro.locals.user) return Astro.redirect('/build');
-const currentProfile = await getProfileByUserId(Astro.locals.user.id);
+if (!currentUser) return Astro.redirect('/build');
+const currentProfile = await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id));
 if (!currentProfile) return Astro.redirect('/build');
-const results = await listResultsForOwner(Astro.locals.user.id);
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+const team = await getProjectTeam(currentProfile.id);
+const projects = await listOwnedProjects(Astro.locals.user.id);
+const results = await Astro.locals.timing.measure('results', () => listResultsForProject(currentProfile.id));
 ---
 
 <ProductLayout
@@ -32,6 +38,7 @@ const results = await listResultsForOwner(Astro.locals.user.id);
           Taking your project offline also hides its metadata and social preview. Your account and history stay in the database.
         </p>
         <form method="post" action="/api/profile/visibility">
+          <input type="hidden" name="projectId" value={currentProfile?.id} />
           <button
             class="work-button secondary"
             name="action"
@@ -42,12 +49,13 @@ const results = await listResultsForOwner(Astro.locals.user.id);
         </form>
       </aside>
       <div class="work-main">
-        <p class="work-label">project and builder</p>
+        <p class="work-label">project and your account</p>
         <h2 class="work-heading">What people see.</h2>
         <form class="work-form" method="post" action="/api/profile">
+          <input type="hidden" name="projectId" value={currentProfile?.id} />
           <label class="work-field">
             <span>your name</span>
-            <input name="displayName" value={currentProfile.displayName} minlength="2" maxlength="80" autocomplete="name" required />
+            <input name="displayName" value={Astro.locals.user.name} minlength="2" maxlength="80" autocomplete="name" required />
           </label>
           <label class="work-field">
             <span>location</span>
@@ -65,8 +73,53 @@ const results = await listResultsForOwner(Astro.locals.user.id);
             <span>What are you building in a sentence?</span>
             <textarea name="bio" minlength="5" maxlength="280" required>{currentProfile.bio}</textarea>
           </label>
-          <button class="work-button" type="submit">save profile</button>
+          <button class="work-button" type="submit">save changes</button>
         </form>
+        <hr class="work-rule" />
+        <p class="work-label" id="team">co-owners</p>
+        <h2 class="work-heading">One project. Shared updates.</h2>
+        <p class="work-copy">{team.owners.map((owner) => owner.name).join(', ')}</p>
+        <p class="work-note">All co-owners can edit the project, publish its weekly update, manage visibility, and approve co-owners. Create an invite link and send it to your teammate. They can sign in and accept it to join as a co-owner.</p>
+        <form method="post" action="/api/project">
+          <input type="hidden" name="projectId" value={currentProfile.id} />
+          <button class="work-button" name="action" value="invite">invite a teammate</button>
+        </form>
+        {team.invites.map((invite) => (
+          <div class="result-block">
+            <label class="work-field">
+              <span>Invite link. Copy and share with one teammate.</span>
+              <input type="url" readonly value={new URL(`/build?invite=${invite.token}`, Astro.url.origin).href} />
+            </label>
+            <p class="work-note">Anyone with this link can join as a co-owner. It works once and expires in seven days.</p>
+            <form method="post" action="/api/project">
+              <input type="hidden" name="projectId" value={currentProfile.id} />
+              <input type="hidden" name="token" value={invite.token} />
+              <button class="work-button secondary" name="action" value="revoke-invite">revoke invite</button>
+            </form>
+          </div>
+        ))}
+        {team.requests.map((applicant) => (
+          <form class="work-form" method="post" action="/api/project">
+            <input type="hidden" name="projectId" value={currentProfile.id} />
+            <input type="hidden" name="userId" value={applicant.id} />
+            <p class="work-copy">{applicant.name} ({applicant.email}) wants to co-own {currentProfile.projectName}.</p>
+            <p class="work-note">Confirm this is your teammate before granting access.</p>
+            <div class="work-actions">
+              <button class="work-button" name="action" value="approve">approve co-owner</button>
+              <button class="work-button secondary" name="action" value="decline">decline</button>
+            </div>
+          </form>
+        ))}
+        {projects.length > 1 && (
+          <form class="work-form" method="post" action="/api/project">
+            <input type="hidden" name="action" value="switch" />
+            <label class="work-field"><span>active project</span>
+              <select name="projectId">{projects.map((entry) => <option value={entry.id} selected={entry.active}>{entry.name}</option>)}</select>
+            </label>
+            <button class="work-button secondary" type="submit">switch project</button>
+          </form>
+        )}
+        <p class="work-note">To join another startup, <a href="/build#join-project">request access</a>. Its owner must approve you.</p>
         <hr class="work-rule" />
         <p class="work-label">weekly results</p>
         <h2 class="work-heading">Choose what stays public.</h2>
@@ -80,6 +133,7 @@ const results = await listResultsForOwner(Astro.locals.user.id);
                   <span class="result-summary">{published.summary}</span>
                 </span>
                 <form method="post" action="/api/result/visibility">
+                  <input type="hidden" name="projectId" value={currentProfile?.id} />
                   <input type="hidden" name="resultId" value={published.id} />
                   <button class="work-button secondary" name="action" value={published.withdrawnAt ? 'restore' : 'withdraw'}>
                     {published.withdrawnAt ? 'restore' : 'hide'}

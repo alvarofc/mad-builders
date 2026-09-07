@@ -9,6 +9,26 @@ Changes to mad.builders.
 - Publish weekly updates in Firefox without losing text answers or seeing a misleading character-limit error.
 - Keep text answers in browser drafts when filling out weekly updates in Firefox.
 
+## [0.4.0.0] - 2026-09-07
+
+### Added
+
+- Invite teammates to co-own a startup using single-use links that expire after seven days.
+- Request access to an existing startup, approve teammates, and switch between shared projects.
+
+### Changed
+
+- Share one startup profile, weekly update, voting quota, and ranking across all owners.
+- Keep existing project handles and history, record who edits updates, and base reminders on shared project activity.
+- Prevent teammates from reviewing projects with overlapping owners and protect writes when switching projects.
+
+## [0.3.3.0] - 2026-09-07
+
+### Changed
+
+- Run app pages in Paris, near the configured database, to reduce network delays.
+- Inspect navigation delays by initialization, session lookup, schedule refresh, and page data loading in browser response timings.
+
 ## [0.3.2.1] - 2026-09-07
 
 ### Fixed

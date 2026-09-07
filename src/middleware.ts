@@ -1,11 +1,12 @@
+import { requestTiming } from './server/timing';
 import { defineMiddleware } from 'astro:middleware';
-import { auth, authConfigured } from './server/auth';
-import { databaseConfigured } from './server/db';
-import { ensureWeeklySchedule } from './server/weeks';
+
+let firstRequest = true;
 
 export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.user = null;
   context.locals.session = null;
+  const timing = context.locals.timing = requestTiming();
 
   const path = context.url.pathname.replace(/\/+$/, '') || '/';
   if (import.meta.env.DEV && context.url.searchParams.get('demo') !== '0' && ['/vote', '/leaderboard'].includes(path)) return next();
@@ -18,25 +19,36 @@ export const onRequest = defineMiddleware(async (context, next) => {
     path.startsWith('/api/profile') ||
     path === '/api/moderation' ||
     path === '/api/commitment' ||
+    path === '/api/project' ||
     path.startsWith('/api/result/') ||
     path === '/api/review';
 
   if (!needsSession) return next();
-  if (databaseConfigured) await ensureWeeklySchedule();
-  if (!authConfigured) return next();
+  const first = firstRequest;
+  firstRequest = false;
+  let headers = new Headers();
+  const response = await timing.measure('server_ready', async () => {
+    const [{ auth, authConfigured }, { databaseConfigured }, { ensureWeeklySchedule }] =
+      await timing.measure('dependency_load', () => Promise.all([
+        import('./server/auth'), import('./server/db'), import('./server/weeks'),
+      ]));
+    if (databaseConfigured) await timing.measure('schedule', ensureWeeklySchedule);
+    if (authConfigured) {
+      const { response: session, headers: sessionHeaders } = await timing.measure('session', () => auth.api.getSession({
+        headers: context.request.headers,
+        returnHeaders: true,
+      }));
+      headers = sessionHeaders;
+      context.locals.user = session?.user ?? null;
+      context.locals.session = session?.session ?? null;
+    }
 
-  const { response: session, headers } = await auth.api.getSession({
-    headers: context.request.headers,
-    returnHeaders: true,
+    return timing.measure('page_ready', next);
   });
-  context.locals.user = session?.user ?? null;
-  context.locals.session = session?.session ?? null;
-
-  const response = await next();
   const cookies = headers.getSetCookie();
-  if (!cookies.length) return response;
   // Redirect responses can have immutable headers; preserve their status and body.
   const refreshed = new Response(response.body, response);
   for (const cookie of cookies) refreshed.headers.append('set-cookie', cookie);
+  refreshed.headers.append('Server-Timing', `${timing.header()}, instance;desc="${first ? 'first-request' : 'warm'}"`);
   return refreshed;
 });

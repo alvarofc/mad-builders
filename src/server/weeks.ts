@@ -56,14 +56,14 @@ async function refreshWeeklySchedule() {
   scheduleFreshUntil = Date.now() + 60_000;
 }
 
-export async function getBuildState(userId: string, selectedWeekDate?: string | null) {
+export async function getBuildState(projectId: string, selectedWeekDate?: string | null) {
   if (!databaseConfigured) return null;
 
   const now = await getDatabaseNow();
   const unfinishedWeeks = await db.select({ week }).from(commitment)
     .innerJoin(week, eq(commitment.weekId, week.id))
     .leftJoin(result, eq(result.commitmentId, commitment.id))
-    .where(and(eq(commitment.userId, userId), lte(week.submissionClosesAt, now), isNull(result.id)))
+    .where(and(eq(commitment.projectId, projectId), lte(week.submissionClosesAt, now), isNull(result.id)))
     .orderBy(desc(week.startsAt));
   const selectedWeek = selectedWeekDate
     ? unfinishedWeeks.find(({ week }) => week.weekStartDate === selectedWeekDate)?.week
@@ -86,7 +86,7 @@ export async function getBuildState(userId: string, selectedWeekDate?: string | 
     ? await db
         .select()
         .from(commitment)
-        .where(and(eq(commitment.userId, userId), eq(commitment.weekId, currentWeek.id)))
+        .where(and(eq(commitment.projectId, projectId), eq(commitment.weekId, currentWeek.id)))
         .limit(1)
     : [];
   const [currentResult] = currentCommitment
@@ -102,7 +102,7 @@ export async function getBuildState(userId: string, selectedWeekDate?: string | 
     ? await db
         .select()
         .from(commitment)
-        .where(and(eq(commitment.userId, userId), eq(commitment.weekId, nextWeek.id)))
+        .where(and(eq(commitment.projectId, projectId), eq(commitment.weekId, nextWeek.id)))
         .limit(1)
     : [];
 

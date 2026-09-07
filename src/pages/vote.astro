@@ -11,12 +11,12 @@ Astro.response.headers.set('Cache-Control', 'no-store');
 
 const currentUser = Astro.locals.user;
 const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
-const currentProfile = currentUser ? await getProfileByUserId(currentUser.id) : null;
+const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
 const review = demo ? demoReview(Astro.url.searchParams.get('round')) : !currentUser
   ? { state: 'signed_out' as const }
   : !currentProfile
     ? { state: 'profile_required' as const }
-    : await getReviewState(currentUser.id);
+    : await Astro.locals.timing.measure('review', () => getReviewState(currentUser.id));
 
 const proofLabel = (status: string) =>
   status === 'github_account_matched'
@@ -48,22 +48,22 @@ const proofLabel = (status: string) =>
         {review.state === 'signed_out' ? (
           <>
             <p class="work-label">sign in required</p>
-            <h2 class="work-heading">Builders vote.</h2>
-            <p class="work-copy">Sign in with GitHub, make your page, and publish on time to review this week's work.</p>
+            <h2 class="work-heading">Startups vote.</h2>
+            <p class="work-copy">Sign in with GitHub, create or join a project, and publish on time to review this week's work.</p>
             <a class="work-button" href="/build">continue with GitHub</a>
           </>
         ) : review.state === 'profile_required' ? (
           <>
             <p class="work-label">finish your profile</p>
-            <h2 class="work-heading">Make your builder page first.</h2>
-            <p class="work-copy">Voting opens to builders who publish an eligible result for the week.</p>
+            <h2 class="work-heading">Create or join a project first.</h2>
+            <p class="work-copy">Voting opens to projects with an eligible result for the week. Co-owners share ten comparisons.</p>
             <a class="work-button" href="/build">make my page</a>
           </>
         ) : review.state === 'pair' ? (
           <>
             <p class="work-label">{review.reviewed} of 10 reviewed / closes {madridDate(review.week.votingClosesAt)}</p>
             <progress value={review.reviewed} max="10" aria-label="Comparisons saved"></progress>
-            <p class="draft-status">Every choice is saved. You can leave and resume here.</p>
+            <p class="draft-status">Every choice is saved for your startup. Co-owners share these ten comparisons.</p>
             <div class="pair-grid">
               {[review.first, review.second].map((candidate, index) => (
                 <>

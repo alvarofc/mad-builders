@@ -98,7 +98,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       <a href="/logo/mad-builders-cream.svg" download role="menuitem">logo · svg <span>↓</span></a>
       <a href="/logo/mad-builders-cream.png" download role="menuitem">logo · png <span>↓</span></a>
     </div>
-    <Analytics />
+    {!Astro.url.searchParams.has('invite') && <Analytics />}
 
     <script>
       const brandMenu = document.querySelector<HTMLElement>('#brand-menu');

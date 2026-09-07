@@ -1,6 +1,8 @@
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { transaction } = vi.hoisted(() => ({ transaction: vi.fn() }));
 vi.mock('./db', () => ({ db: { transaction }, databaseConfigured: false }));
+vi.mock('./profiles', async (importOriginal) => ({ ...await importOriginal<typeof import('./profiles')>(), getProfileByUserId: vi.fn(async () => ({ id: 'builder' })) }));
 vi.mock('./auth', () => ({ auth: {} }));
 vi.mock('./ranking', async (importOriginal) => ({
   ...await importOriginal<typeof import('./ranking')>(),
@@ -13,12 +15,15 @@ import { commitment, result } from './schema';
 const now = new Date('2026-09-06T15:00:00Z');
 const currentWeek = { id: 1, weekStartDate: '2026-08-31', startsAt: new Date('2026-08-30T22:00:00Z'), submissionClosesAt: new Date('2026-09-06T16:00:00Z'), votingClosesAt: new Date('2026-09-07T16:00:00Z') };
 const nextWeek = { ...currentWeek, id: 2, startsAt: new Date('2026-09-06T22:00:00Z') };
-const input = { userId: 'builder', commitmentId: null, weekId: 1, status: 'submitted' as const, summary: 'Shipped the demo', feedbackRequest: '', nextPromise: 'Test it with five builders', projectSentence: 'Tools for builders', projectUrl: null, projectStage: 'building' as const, proof: { url: null, status: 'self_reported' as const, checkedAt: null } };
+const input = { userId: 'builder', projectId: 'builder', commitmentId: null, weekId: 1, status: 'submitted' as const, summary: 'Shipped the demo', feedbackRequest: '', nextPromise: 'Test it with five builders', projectSentence: 'Tools for builders', projectUrl: null, projectStage: 'building' as const, proof: { url: null, status: 'self_reported' as const, checkedAt: null } };
 
 function mockTransaction(reads: unknown[][], clock = now) {
   const writes: Array<{ table: unknown; values: any }> = [];
   const tx = {
-    execute: vi.fn().mockResolvedValue([{ now: clock.toISOString() }]),
+    execute: vi.fn().mockImplementation((query) => {
+      const rendered = new PgDialect().sqlToQuery(query);
+      return Promise.resolve(rendered.sql.includes('clock_timestamp') ? [{ now: clock.toISOString() }] : []);
+    }),
     select: () => {
       const query = { from: () => query, where: () => query, for: () => query, orderBy: () => query, innerJoin: () => query, limit: async () => reads.shift() ?? [] };
       return query;
@@ -88,6 +93,7 @@ describe('Pioneer update fields', () => {
   it('publishes a first update with its created commitment ID and a neutral status', async () => {
     const writes = mockTransaction([[currentWeek], [], [nextWeek], []]);
     await publishResult(input);
+    expect(getReviewState).toHaveBeenLastCalledWith(input.userId, input.projectId, expect.objectContaining({ select: expect.any(Function), execute: expect.any(Function) }));
     expect(writes.find((write) => write.table === result)?.values).toMatchObject({ commitmentId: 77, status: 'submitted' });
     expect(writes.filter((write) => write.table === commitment).map((write) => write.values.promise)).toEqual(['', input.nextPromise]);
   });
