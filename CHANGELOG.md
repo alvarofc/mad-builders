@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.2.0.0] - 2026-09-07
+
+### Changed
+
+- Write weekly updates one question at a time, with progress, previous and next controls, and optional skips.
+- Keep the same questions, prefilled details, and browser drafts in the new form.
+
 ## [0.1.3.0] - 2026-09-07
 
 ### Changed
