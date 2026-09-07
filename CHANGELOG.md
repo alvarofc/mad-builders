@@ -15,6 +15,12 @@ Changes to mad.builders.
 - Keep existing project handles and history, record who edits updates, and base reminders on shared project activity.
 - Prevent teammates from reviewing projects with overlapping owners and protect writes when switching projects.
 
+## [0.3.2.1] - 2026-09-07
+
+### Fixed
+
+- Share weekly updates and builder profiles with readable text in their preview images.
+
 ## [0.3.2.0] - 2026-09-07
 
 ### Fixed
