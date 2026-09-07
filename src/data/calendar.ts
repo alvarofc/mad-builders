@@ -262,6 +262,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Novena edición del encuentro de El Confidencial sobre activos digitales, con sesiones sobre el euro digital, tokenización y el papel de la IA en las finanzas. La recepción empieza a las 08:45; el aforo presencial está completo, pero la inscripción online sigue abierta.',
   },
   {
+    title: 'Astra Commons: Madrid',
+    date: '2026-09-16',
+    time: '18:00',
+    endTime: '21:00',
+    location: 'Madrid',
+    url: 'https://luma.com/to9pt7z7',
+    image: '/events/astra-commons-madrid.png',
+    description:
+      'Encuentro informal para tomar un café con la comunidad de builders y conversar sobre el lanzamiento de GPT-6 Astra. Los asistentes registrados recibirán 100 dólares en créditos de Codex y 50 dólares en créditos de API; la dirección se comparte tras el registro.',
+  },
+  {
     title: 'Claude Community Madrid Launch Meetup',
     date: '2026-09-16',
     time: '18:30',
@@ -282,6 +293,17 @@ export const calendarEvents: CalendarEvent[] = [
     image: '/events/codemeet-control-agents.jpg',
     description:
       'Tres charlas técnicas sobre sistemas agénticos: ahorro de tokens, construcción de MCPs y seguridad. La sesión termina con preguntas y cervezas en la oficina de Celonis.',
+  },
+  {
+    title: "How to stop your AI agent from amplifying your team's tech debt",
+    date: '2026-09-17',
+    time: '19:00',
+    endTime: '20:30',
+    location: 'Puerta Innovación, Toledo 110, La Latina',
+    url: 'https://luma.com/mq1ffwe1',
+    image: '/events/ai-agent-tech-debt.jpg',
+    description:
+      'Kevin Martínez comparte el flujo de trabajo que aplica en proyectos frontend para integrar agentes de IA sin acumular deuda técnica, con pruebas en el navegador y reglas para controlar al agente. La charla será en español, o en inglés si algún asistente lo necesita, con recepción a las 18:50 y networking al terminar.',
   },
   {
     title: 'HackSpain 2026',
@@ -379,6 +401,17 @@ export const calendarEvents: CalendarEvent[] = [
     image: '/events/madrid-devops-postgresql.jpg',
     description:
       'Jorge Argente Ferrero comparte el post-mortem de un incidente en Clarity AI y el rediseño que siguió. La charla cubre particionado declarativo de PostgreSQL, cargas atómicas y releases inmutables.',
+  },
+  {
+    title: 'Construyendo sin filtros #15: Nadie construye solo',
+    date: '2026-09-29',
+    time: '18:30',
+    endTime: '21:00',
+    location: 'Aticco Castellana, Chamartín',
+    url: 'https://luma.com/bztpl6hb',
+    image: '/events/construyendo-sin-filtros-15.png',
+    description:
+      'Pilar González, de NutriSync Collective, y Carlos de la Lama, de Startup Embassy, hablan sobre encontrar cofounders y el papel de la comunidad en los primeros pasos de una startup. La sesión de Startup Grind Madrid termina con cervezas y conversación entre los asistentes.',
   },
   {
     title: 'Madrid | 48-hour Claude Code Hackathon',
