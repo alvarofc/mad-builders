@@ -23,7 +23,7 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 async function mount(values = initialValues) {
-  await act(async () => root.render(<WeeklyUpdateForm draftKey={draftKey} commitmentId={2} promise="Ship the demo" canSetNextPromise editing={false} late={false} stages={[{ value: 'idea', label: 'Exploring an idea' }, { value: 'launched', label: 'Launched' }]} initialValues={values} />));
+  await act(async () => root.render(<WeeklyUpdateForm projectId="startup" draftKey={draftKey} commitmentId={2} promise="Ship the demo" canSetNextPromise editing={false} late={false} stages={[{ value: 'idea', label: 'Exploring an idea' }, { value: 'launched', label: 'Launched' }]} initialValues={values} />));
 }
 function active() { return container.querySelector<HTMLFieldSetElement>('fieldset[data-active]')!; }
 function progress() { return container.querySelector('[role="progressbar"]')!.getAttribute('aria-valuenow'); }
@@ -96,7 +96,7 @@ it('skips optional answers and publishes the original fields, retaining drafts a
   await click('Skip and publish update');
   expect(fetchMock).toHaveBeenCalledTimes(1);
   const body = fetchMock.mock.calls[0][1].body as FormData;
-  expect(Object.fromEntries(body)).toEqual({ commitmentId: '2', projectSentence: 'Updated project', summary: 'Shipped a demo', status: 'complete', nextPromise: 'Launch the demo', projectStage: 'idea' });
+  expect(Object.fromEntries(body)).toEqual({ projectId: 'startup', commitmentId: '2', projectSentence: 'Updated project', summary: 'Shipped a demo', status: 'complete', nextPromise: 'Launch the demo', projectStage: 'idea' });
   expect(container.querySelector('[data-form-status]')!.textContent).toBe('Please retry.');
   expect(JSON.parse(localStorage.getItem(draftKey)!)).toMatchObject({ feedbackRequest: '', projectSentence: 'Updated project' });
 });

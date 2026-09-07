@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { renderResultOg } from '../../../../../../server/og';
-import { getPublicBuilderActivity, getPublicResult } from '../../../../../../server/profiles';
+import { getPublicProjectActivity, getPublicResult } from '../../../../../../server/profiles';
 
 export const prerender = false;
 
@@ -15,7 +15,7 @@ export const GET: APIRoute = async ({ params, request }) => {
   if (!published) return fallback(request);
 
   try {
-    const activity = await getPublicBuilderActivity(published.userId);
+    const activity = await getPublicProjectActivity(published.projectId);
     const image = await renderResultOg({ ...published, streak: activity.streak });
     return new Response(new Uint8Array(image), {
       headers: {

@@ -38,10 +38,10 @@ it('keeps Monday on the current week while offering the unfinished previous week
 });
 
 it('opens the owned late commitment after rollover without moving its next goal to a later week', async () => {
-  const predicates = reads([[{ week: previous }], [current], [{ id: 44, userId: 'owner', promise: 'Ship the prototype' }], [], [{ id: 55, promise: 'This week is already locked' }]]);
+  const predicates = reads([[{ week: previous }], [current], [{ id: 44, projectId: 'owner', promise: 'Ship the prototype' }], [], [{ id: 55, promise: 'This week is already locked' }]]);
   const state = await getBuildState('owner', previous.weekStartDate);
   expect(state).toMatchObject({ currentWeek: previous, currentCommitment: { id: 44 }, currentResult: null, nextWeek: current, selectedLateWeek: true, late: true, canSetNextPromise: false });
-  expect(predicates[0].sql).toContain('"commitment"."user_id" =');
+  expect(predicates[0].sql).toContain('"commitment"."project_id" =');
   expect(predicates[0].sql).toContain('"result"."id" is null');
   expect(predicates[0].params).toContain('owner');
   expect(predicates[1].params).toEqual([previous.startsAt.toISOString()]);
@@ -55,7 +55,7 @@ it.each(['not-a-date', '2026-02-30', '2026-08-24'])('rejects an unavailable or f
 });
 
 it('rejects a week that another tab published after the unfinished list was loaded', async () => {
-  reads([[{ week: previous }], [current], [{ id: 44, userId: 'owner' }], [{ id: 66 }]]);
+  reads([[{ week: previous }], [current], [{ id: 44, projectId: 'owner' }], [{ id: 66 }]]);
   expect(await getBuildState('owner', previous.weekStartDate)).toBeNull();
 });
 

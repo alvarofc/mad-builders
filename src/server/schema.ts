@@ -100,14 +100,11 @@ export const rateLimit = appPrivate.table('rate_limit', {
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
 });
 
-export const profile = appPrivate.table(
-  'profile',
+export const project = appPrivate.table(
+  'project',
   {
-    userId: text('user_id')
-      .primaryKey()
-      .references(() => user.id, { onDelete: 'cascade' }),
+    id: text('id').primaryKey(),
     handle: text('handle').notNull(),
-    displayName: text('display_name').notNull(),
     location: text('location').default('').notNull(),
     bio: text('bio').default('').notNull(),
     projectName: text('project_name').notNull(),
@@ -129,7 +126,7 @@ export const profile = appPrivate.table(
     uniqueIndex('profile_handle_uidx').on(table.handle),
     index('profile_referred_by_user_id_idx').on(table.referredByUserId),
     index('profile_public_created_at_idx').on(table.isPublic, table.createdAt),
-    index('profile_directory_idx').on(table.createdAt, table.userId)
+    index('profile_directory_idx').on(table.createdAt, table.id)
       .where(sql`${table.isPublic} = true and ${table.hiddenAt} is null and ${table.withdrawnAt} is null`),
     check('profile_handle_check', sql`${table.handle} ~ '^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$'`),
     check(
@@ -138,6 +135,27 @@ export const profile = appPrivate.table(
     ),
   ],
 );
+
+export const projectOwner = appPrivate.table('project_owner', {
+  projectId: text('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  active: boolean('active').default(false).notNull(),
+}, (table) => [
+  uniqueIndex('project_owner_pair_uidx').on(table.projectId, table.userId),
+  uniqueIndex('project_owner_active_uidx').on(table.userId).where(sql`${table.active}`),
+]);
+
+export const projectJoinRequest = appPrivate.table('project_join_request', {
+  projectId: text('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [uniqueIndex('project_join_request_pair_uidx').on(table.projectId, table.userId)]);
+
+export const projectInvite = appPrivate.table('project_invite', {
+  token: text('token').primaryKey(),
+  projectId: text('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+});
 
 export const week = appPrivate.table(
   'week',
@@ -166,9 +184,9 @@ export const commitment = appPrivate.table(
   'commitment',
   {
     id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-    userId: text('user_id')
+    projectId: text('project_id')
       .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
+      .references(() => project.id, { onDelete: 'cascade' }),
     weekId: bigint('week_id', { mode: 'number' })
       .notNull()
       .references(() => week.id, { onDelete: 'restrict' }),
@@ -177,7 +195,7 @@ export const commitment = appPrivate.table(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex('commitment_user_week_uidx').on(table.userId, table.weekId),
+    uniqueIndex('commitment_user_week_uidx').on(table.projectId, table.weekId),
     index('commitment_week_id_idx').on(table.weekId),
   ],
 );
@@ -189,9 +207,10 @@ export const result = appPrivate.table(
     commitmentId: bigint('commitment_id', { mode: 'number' })
       .notNull()
       .references(() => commitment.id, { onDelete: 'restrict' }),
-    userId: text('user_id')
+    projectId: text('project_id')
       .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
+      .references(() => project.id, { onDelete: 'cascade' }),
+    updatedByUserId: text('updated_by_user_id').references(() => user.id, { onDelete: 'set null' }),
     weekId: bigint('week_id', { mode: 'number' })
       .notNull()
       .references(() => week.id, { onDelete: 'restrict' }),
@@ -213,9 +232,9 @@ export const result = appPrivate.table(
   },
   (table) => [
     uniqueIndex('result_commitment_id_uidx').on(table.commitmentId),
-    uniqueIndex('result_user_week_uidx').on(table.userId, table.weekId),
+    uniqueIndex('result_user_week_uidx').on(table.projectId, table.weekId),
     index('result_week_candidate_idx').on(table.weekId, table.onTime, table.status),
-    index('result_user_published_at_idx').on(table.userId, table.publishedAt),
+    index('result_user_published_at_idx').on(table.projectId, table.publishedAt),
     index('result_recent_public_idx').on(table.publishedAt)
       .where(sql`${table.hiddenAt} is null and ${table.withdrawnAt} is null`),
     check('result_status_check', sql`${table.status} in ('complete', 'partial', 'missed', 'submitted')`),
@@ -237,9 +256,9 @@ export const comparison = appPrivate.table(
     weekId: bigint('week_id', { mode: 'number' })
       .notNull()
       .references(() => week.id, { onDelete: 'restrict' }),
-    voterUserId: text('voter_user_id')
+    voterProjectId: text('voter_project_id')
       .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
+      .references(() => project.id, { onDelete: 'cascade' }),
     candidateLowId: bigint('candidate_low_id', { mode: 'number' })
       .notNull()
       .references(() => result.id, { onDelete: 'restrict' }),
@@ -257,13 +276,13 @@ export const comparison = appPrivate.table(
   },
   (table) => [
     uniqueIndex('comparison_voter_pair_uidx').on(
-      table.voterUserId,
+      table.voterProjectId,
       table.weekId,
       table.candidateLowId,
       table.candidateHighId,
     ),
     uniqueIndex('comparison_unfinished_voter_week_uidx')
-      .on(table.voterUserId, table.weekId)
+      .on(table.voterProjectId, table.weekId)
       .where(sql`${table.choice} is null and ${table.invalidatedAt} is null`),
     index('comparison_week_candidate_low_idx').on(table.weekId, table.candidateLowId),
     index('comparison_week_candidate_high_idx').on(table.weekId, table.candidateHighId),

@@ -31,11 +31,12 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
         r.id is null as "needsResult", nc.id is null as "needsPromise"
       from app_private.week w
       cross join app_private."user" u
-      join app_private.profile p on p.user_id = u.id
-      left join app_private.commitment c on c.user_id = u.id and c.week_id = w.id
-      left join app_private.result r on r.user_id = u.id and r.week_id = w.id
+      join app_private.project_owner owner on owner.user_id = u.id and owner.active = true
+      join app_private.project p on p.id = owner.project_id
+      left join app_private.commitment c on c.project_id = p.id and c.week_id = w.id
+      left join app_private.result r on r.project_id = p.id and r.week_id = w.id
       left join app_private.week nw on nw.week_start_date = w.week_start_date + 7
-      left join app_private.commitment nc on nc.user_id = u.id and nc.week_id = nw.id
+      left join app_private.commitment nc on nc.project_id = p.id and nc.week_id = nw.id
       where ${window} and ${active}
         and (c.id is not null or r.id is not null)
         and (r.id is null or nc.id is null)
@@ -49,9 +50,9 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
         and w.submission_closes_at <= ${clock}::timestamptz
       order by w.starts_at desc limit 1
     ), candidates as (
-      select r.id, r.user_id from app_private.result r
+      select r.id, r.project_id from app_private.result r
       join voting_week w on w.id = r.week_id
-      join app_private.profile p on p.user_id = r.user_id
+      join app_private.project p on p.id = r.project_id
       where r.on_time = true and r.status in ('complete', 'partial', 'submitted')
         and r.hidden_at is null and r.withdrawn_at is null
         and p.is_public = true and p.hidden_at is null and p.withdrawn_at is null
@@ -60,23 +61,29 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
       false as "needsResult", false as "needsPromise"
     from voting_week w
     join app_private.result r on r.week_id = w.id
-    join app_private."user" u on u.id = r.user_id
-    join app_private.profile p on p.user_id = u.id
+    join app_private.project p on p.id = r.project_id
+    join app_private.project_owner owner on owner.project_id = p.id and owner.active = true
+    join app_private."user" u on u.id = owner.user_id
     where ${active} and r.on_time = true and r.hidden_at is null and r.withdrawn_at is null
       and (select count(*) from candidates) >= 6
       and (select count(*) from app_private.comparison c
-        where c.week_id = w.id and c.voter_user_id = u.id
+        where c.week_id = w.id and c.voter_project_id = p.id
           and c.invalidated_at is null and c.choice is not null) < 10
       and exists (
         select 1 from candidates low join candidates high on low.id < high.id
-        where low.user_id <> u.id and high.user_id <> u.id
+        where not exists (
+          select 1 from app_private.project_owner voter_owner
+          join app_private.project_owner candidate_owner on candidate_owner.user_id = voter_owner.user_id
+          where voter_owner.project_id = p.id
+            and candidate_owner.project_id in (low.project_id, high.project_id)
+        )
           and (
             not exists (
               select 1 from app_private.comparison c where c.week_id = w.id
-                and c.voter_user_id = u.id and c.candidate_low_id = low.id and c.candidate_high_id = high.id
+                and c.voter_project_id = p.id and c.candidate_low_id = low.id and c.candidate_high_id = high.id
             ) or exists (
               select 1 from app_private.comparison c where c.week_id = w.id
-                and c.voter_user_id = u.id and c.candidate_low_id = low.id and c.candidate_high_id = high.id
+                and c.voter_project_id = p.id and c.candidate_low_id = low.id and c.candidate_high_id = high.id
                 and c.choice is null and c.invalidated_at is null
             )
           )

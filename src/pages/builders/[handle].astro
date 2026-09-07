@@ -5,9 +5,9 @@ import ProjectMark from '../../components/ProjectMark.astro';
 import { absoluteUrl } from '../../config/seo';
 import {
   getProfileByUserId,
-  getPublicBuilderActivity,
+  getPublicProjectActivity,
   getPublicProfileByHandle,
-  listPublicResultsByUserId,
+  listPublicResultsByProjectId,
 } from '../../server/profiles';
 import { finalizeLatestClosedWeek } from '../../server/ranking';
 
@@ -17,8 +17,8 @@ const handle = Astro.params.handle ?? '';
 const abuseEmail = import.meta.env.ABUSE_REPORT_EMAIL;
 const builder = await getPublicProfileByHandle(handle);
 await finalizeLatestClosedWeek();
-const results = builder ? await listPublicResultsByUserId(builder.userId) : [];
-const activity = builder ? await getPublicBuilderActivity(builder.userId) : null;
+const results = builder ? await listPublicResultsByProjectId(builder.id) : [];
+const activity = builder ? await getPublicProjectActivity(builder.id) : null;
 const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
 
 Astro.response.headers.set('Cache-Control', 'no-store');
@@ -32,8 +32,8 @@ const profileUrl = builder ? absoluteUrl(`/builders/${builder.handle}`) : undefi
 const structuredData = builder
   ? {
       '@context': 'https://schema.org',
-      '@type': 'Person',
-      name: builder.displayName,
+      '@type': 'Organization',
+      name: builder.projectName,
       url: profileUrl,
       image: builder.image ?? undefined,
       description: builder.bio || description,
@@ -76,7 +76,7 @@ const proofLabel = (status: string) =>
 
         <section class="wrap work-grid">
           <aside class="work-aside">
-            <p class="work-label">builder</p>
+            <p class="work-label">owners</p>
             <p class="profile-name">{builder.displayName}</p>
             <p class="builder-handle mono">@{builder.handle}</p>
             <p class="work-label">shipping streak</p>

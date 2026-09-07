@@ -1,3 +1,4 @@
+import { getProfileByUserId } from '../../../server/profiles';
 import { and, eq, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { db } from '../../../server/db';
@@ -15,7 +16,11 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
     return new Response('Too many attempts. Try again in a minute.', { status: 429 });
   }
 
+  const current = await getProfileByUserId(locals.user.id);
+  if (!current) return redirect('/build', 303);
+
   const data = await request.formData();
+  if (data.get('projectId') !== current.id) return new Response('Your active project changed. Reload before saving.', { status: 409 });
   const resultId = Number(data.get('resultId'));
   const action = String(data.get('action') ?? '');
   if (!Number.isSafeInteger(resultId) || resultId < 1) {
@@ -29,14 +34,14 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
     const [owned] = await tx
       .select({ weekId: result.weekId })
       .from(result)
-      .where(and(eq(result.id, resultId), eq(result.userId, locals.user!.id)))
+      .where(and(eq(result.id, resultId), eq(result.projectId, current.id)))
       .limit(1);
     if (!owned) return;
     await tx.select({ id: week.id }).from(week).where(eq(week.id, owned.weekId)).for('update');
     await tx
       .update(result)
       .set({ withdrawnAt: action === 'withdraw' ? sql`now()` : null })
-      .where(and(eq(result.id, resultId), eq(result.userId, locals.user!.id)));
+      .where(and(eq(result.id, resultId), eq(result.projectId, current.id)));
   });
   return redirect('/settings', 303);
 };

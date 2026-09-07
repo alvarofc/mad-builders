@@ -24,9 +24,13 @@ Deploy this repository to Vercel with the build command `astro build`.
 5. Run `pnpm db:migrate` with the migration connection string.
 6. Weekly schedules are created automatically when the app receives a request. Submission closes Sunday at 18:00 Madrid time; voting runs until Monday at 18:00. The next building week starts Monday at 00:00 while voting finishes.
 
-Weekly updates keep the Pioneer questions and show them one at a time with shadcn's Questionnaire. Known project details are prefilled. Drafts are saved locally in the browser, scoped to the builder and week, and cleared after publication. Updates can be edited until voting opens; the previous goal stays locked. First updates have no completion grade because there is no earlier goal. Next week's goals remain editable until Monday at 00:00, including after publishing the current update. Catch-up links on `/build` let builders finish earlier updates after rollover; late updates do not enter ranking or extend streaks.
+Startups own their public page, commitments, weekly updates, streak, and ranking. Accounts are co-owners. Owners invite teammates from `/settings` by creating a single-use link that expires after seven days. They share the link directly; no email is sent automatically. The teammate signs in with GitHub and accepts to join and open the shared project. Owners can revoke unused invites. People can also request access by project handle on `/build`; an owner approves it in `/settings`. Every co-owner can edit the project and its update, manage visibility, and approve teammates. Accounts with multiple projects can switch the active project on either page.
 
-Each vote is saved independently. Builders can pause after five comparisons and resume later; ten unlock the provisional leaderboard. While last week's voting remains open, eligible builders must finish their comparisons before publishing the next weekly update. Publishing is available once voting closes or no pairs remain; builders who are not eligible to vote are exempt. Shares and referrals do not affect rank.
+Migration `0007_shared_projects` converts existing profiles into projects and adds their original users as owners, preserving handles and history. Apply it with the app stopped before serving the new code. Existing duplicate projects are kept separate; joining one does not merge or delete the other. Saved updates are shared; unpublished browser drafts are local, and simultaneous edits use the last successful save.
+
+Weekly updates keep the Pioneer questions and show them one at a time with shadcn's Questionnaire. Known project details are prefilled. Drafts are saved locally in the browser, scoped to the project and week, and cleared after publication. Updates can be edited until voting opens; the previous goal stays locked. First updates have no completion grade because there is no earlier goal. Next week's goals remain editable until Monday at 00:00, including after publishing the current update. Catch-up links on `/build` let builders finish earlier updates after rollover; late updates do not enter ranking or extend streaks.
+
+Each vote is saved independently. Co-owners share ten comparisons per startup; ten unlock the provisional leaderboard. Projects sharing an owner cannot review each other, and accepting a teammate invalidates those comparisons in unfinished weeks. While last week's voting remains open, eligible builders must finish their comparisons before publishing the next weekly update. Publishing is available once voting closes or no pairs remain; builders who are not eligible to vote are exempt. Shares and referrals do not affect rank.
 
 The project directory and leaderboard show up to 50 projects per page. Previous and Next links use `?page=2` and preserve other query parameters. Rankings keep their overall position across pages. `/build` focuses on your weekly check-in; rankings live on `/leaderboard`.
 
@@ -98,11 +102,11 @@ PUBLIC_VISIBILITY_TEST_URL=http://localhost:4322 DATABASE_VISIBILITY_TEST_URL=po
 
 Stop that Astro process when finished, then run `docker stop mad-builders-release-tests` to remove the disposable databases. The concurrency suite tests simultaneous database writes; the HTTP suite checks public pages, metadata, and PNG share images before and after hiding or withdrawing content.
 
-Organizer moderation uses `POST /api/moderation` with form fields. Send `kind=profile`, a builder `handle`, `action=hide|restore`, and a `reason`; for one result also send `kind=result` and its `week`. To invalidate an abusive account's unfinished-week votes, send `kind=voter&action=invalidate` with its handle and the reason. There is intentionally no moderation dashboard in the pilot.
+Organizer moderation uses `POST /api/moderation` with form fields. Send `kind=profile`, a project `handle`, `action=hide|restore`, and a `reason`; for one result also send `kind=result` and its `week`. To invalidate a project's unfinished-week votes, send `kind=voter&action=invalidate` with its handle and the reason. There is intentionally no moderation dashboard in the pilot.
 
 ## Updating content
 
-Marketing content lives in `src/data/`; builder profiles and weekly updates live in the database:
+Marketing content lives in `src/data/`; projects, ownership, and weekly updates live in the database:
 
 | File | What it controls |
 | --- | --- |
@@ -136,7 +140,7 @@ things.
 - `src/components/WeeklyUpdateForm.tsx`: React island using shadcn's Questionnaire for weekly updates
 - `src/pages/builders/`: public builder directory, profiles, and weekly result pages
 - `src/pages/vote.astro` and `src/pages/leaderboard.astro`: peer comparisons and weekly rankings
-- `src/pages/settings.astro`: profile editing and visibility controls
+- `src/pages/settings.astro`: project editing, co-owner approvals, project switching, and visibility controls
 - `src/pages/api/`: authenticated writes, GitHub auth, moderation, and generated social images
 - `src/server/`: Better Auth, Drizzle, and private database queries
 - `src/layouts/ProductLayout.astro`: shared app navigation

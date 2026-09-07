@@ -24,12 +24,12 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   const existing = await getProfileByUserId(locals.user.id);
 
   const data = await request.formData();
+  if (existing && data.get('projectId') !== existing.id) return fail('Your active project changed. Reload before saving.', 409);
   const handle = existing?.handle ?? normalizeHandle(field(data, 'handle'));
   const displayName = field(data, 'displayName');
   const location = field(data, 'location');
   const projectName = field(data, 'projectName');
   const bio = field(data, 'bio');
-  const referrerHandle = normalizeHandle(field(data, 'ref'));
 
   if (!existing && !validHandle(handle)) {
     return fail('Use 3 to 30 lowercase letters, numbers, or hyphens for your handle.');
@@ -53,7 +53,8 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   }
 
   if (existing) {
-    await updateProfile({
+    const updated = await updateProfile({
+      projectId: existing.id,
       userId: locals.user.id,
       displayName,
       location,
@@ -61,11 +62,12 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
       projectUrl,
       bio,
     });
+    if (!updated) return fail('Your active project changed. Reload before saving.', 409);
     return redirect('/settings', 303);
   }
 
-  const referrer = referrerHandle ? await getPublicProfileByHandle(referrerHandle) : null;
-  const referredByUserId = referrer?.userId === locals.user.id ? null : (referrer?.userId ?? null);
+  const referrer = await getPublicProfileByHandle(normalizeHandle(field(data, 'ref')));
+  const referredByUserId = referrer?.referrerUserId === locals.user.id ? null : (referrer?.referrerUserId ?? null);
 
   try {
     await createProfile({
@@ -79,6 +81,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
       referredByUserId,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === 'project_already_exists') return redirect('/build', 303);
     const cause = error instanceof Error && error.cause ? error.cause : error;
     if (typeof cause === 'object' && cause && 'code' in cause && cause.code === '23505') {
       return fail('That handle is already taken.', 409);

@@ -12,7 +12,7 @@ import { POST as publish } from '../pages/api/result/publish';
 import { POST as profile } from '../pages/api/profile';
 
 const origin = 'https://www.mad.builders';
-const validUpdate = { weekId: '1', status: 'submitted', summary: 'Shipped a demo', projectStage: 'building' };
+const validUpdate = { projectId: 'startup', weekId: '1', status: 'submitted', summary: 'Shipped a demo', projectStage: 'building' };
 function context(data: Record<string, string>, user: { id: string } | null = { id: 'builder' }, requestOrigin = origin) {
   return {
     request: new Request(`${origin}/api/test`, { method: 'POST', headers: { origin: requestOrigin }, body: new URLSearchParams(data) }),
@@ -24,7 +24,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   allowWrite.mockResolvedValue(true);
   submitReview.mockResolvedValue(true);
-  getProfileByUserId.mockResolvedValue({ handle: 'ana', bio: 'Tools for builders' });
+  getProfileByUserId.mockResolvedValue({ id: 'startup', handle: 'ana', bio: 'Tools for builders' });
   getPublicResult.mockResolvedValue({ id: 1 });
   checkProof.mockResolvedValue({ url: null, status: 'self_reported', checkedAt: null });
   publishResult.mockResolvedValue({ weekStartDate: '2026-08-31' });
@@ -136,4 +136,11 @@ it('maps known publication failures to recoverable responses', async () => {
     expect(response.status).toBe(status);
     expect(await response.text()).not.toContain(code);
   }
+});
+
+
+it('rejects a stale publication form after switching projects', async () => {
+  const response = await publish(context({ ...validUpdate, projectId: 'previous-project' }));
+  expect(response.status).toBe(409);
+  expect(publishResult).not.toHaveBeenCalled();
 });

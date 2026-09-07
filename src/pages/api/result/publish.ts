@@ -16,6 +16,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   if (!builder) return redirect('/build', 303);
 
   const data = await request.formData();
+  if (data.get('projectId') !== builder.id) return new Response('Your active project changed. Reload before saving.', { status: 409 });
   const parsedCommitmentId = Number(data.get('commitmentId'));
   const parsedWeekId = Number(data.get('weekId'));
   const commitmentId = Number.isSafeInteger(parsedCommitmentId) && parsedCommitmentId > 0 ? parsedCommitmentId : null;
@@ -59,6 +60,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   try {
     const published = await publishResult({
       userId: locals.user.id,
+      projectId: builder.id,
       commitmentId,
       weekId,
       status,
@@ -75,6 +77,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   } catch (error) {
     const code = error instanceof Error ? error.message : '';
     if (code === 'voting_required') return fail('Finish last week’s voting at /vote?demo=0 before publishing this update. Your draft is still saved.', 409);
+    if (code === 'project_changed') return fail('Your active project changed. Reload before saving.', 409);
     if (code === 'update_locked') return fail('Voting has opened. This update is now locked.', 409);
     if (code === 'status_required') return fail('Choose how much of your plan you completed.');
     if (code === 'next_commitment_required') return fail('Write next week\'s commitment before publishing.');

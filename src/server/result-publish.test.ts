@@ -2,7 +2,7 @@ import type { APIContext } from 'astro';
 import { expect, it, vi } from 'vitest';
 
 vi.mock('./profiles', () => ({
-  getProfileByUserId: vi.fn().mockResolvedValue({ handle: 'ana', bio: 'A useful project' }),
+  getProfileByUserId: vi.fn().mockResolvedValue({ id: 'startup', handle: 'ana', bio: 'A useful project' }),
   getPublicResult: vi.fn().mockResolvedValue(null),
   normalizeUrl: vi.fn().mockReturnValue(null),
 }));
@@ -21,7 +21,7 @@ it('counts multiline answers like textareas and still rejects results outside th
     const summary = 'a\nb' + 'x'.repeat(length - 3);
     const data = new FormData();
     for (const [name, value] of Object.entries({
-      weekId: '1', status: 'submitted', summary,
+      projectId: 'startup', weekId: '1', status: 'submitted', summary,
       projectSentence: 'a\nb' + 'x'.repeat(277),
       feedbackRequest: 'a\nb' + 'x'.repeat(497),
       nextPromise: 'a\nb' + 'x'.repeat(277), projectStage: 'idea',

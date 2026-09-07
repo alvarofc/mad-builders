@@ -11,7 +11,8 @@ import {
   sql,
 } from 'drizzle-orm';
 import { db, databaseConfigured } from './db';
-import { commitment, comparison, profile, ranking, result, week } from './schema';
+import { commitment, comparison, project, ranking, result, week } from './schema';
+import { getProfileByUserId, ownerNames } from './profiles';
 import { getDatabaseNow } from './weeks';
 import { PAGE_SIZE, pageNumber } from './pagination';
 
@@ -148,7 +149,7 @@ export function selectReviewPair(
 
 const candidateColumns = {
   id: result.id,
-  userId: result.userId,
+  projectId: result.projectId,
   projectSentence: result.projectSentence,
   projectStage: result.projectStage,
   promise: commitment.promise,
@@ -159,10 +160,18 @@ const candidateColumns = {
   proofStatus: result.proofStatus,
 };
 
-export async function getReviewState(userId: string) {
+export async function getReviewState(
+  userId: string,
+  expectedProjectId?: string,
+  connection?: Parameters<Parameters<typeof db.transaction>[0]>[0],
+) {
   if (!databaseConfigured) return { state: 'closed' as const };
+  const load = async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
+    const ownedProject = await getProfileByUserId(userId, tx);
+    if (expectedProjectId && ownedProject?.id !== expectedProjectId) throw new Error('project_changed');
+    if (!ownedProject) return { state: 'ineligible' as const };
+    const projectId = ownedProject.id;
 
-  return db.transaction(async (tx) => {
     // ponytail: the week lock serializes reviews; use coordinated per-voter locks
     // if measured lock waits limit throughput. Publication FKs share this lock.
     const [databaseClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
@@ -192,7 +201,7 @@ export async function getReviewState(userId: string) {
       .where(
         and(
           eq(result.weekId, votingWeek.id),
-          eq(result.userId, userId),
+          eq(result.projectId, projectId),
           eq(result.onTime, true),
           isNull(result.hiddenAt),
           isNull(result.withdrawnAt),
@@ -202,9 +211,9 @@ export async function getReviewState(userId: string) {
     if (!voterResult) return { state: 'ineligible' as const, week: votingWeek };
 
     const candidates = await tx
-      .select({ id: result.id, userId: result.userId })
+      .select({ id: result.id, projectId: result.projectId })
       .from(result)
-      .innerJoin(profile, eq(result.userId, profile.userId))
+      .innerJoin(project, eq(result.projectId, project.id))
       .where(
         and(
           eq(result.weekId, votingWeek.id),
@@ -212,9 +221,9 @@ export async function getReviewState(userId: string) {
           inArray(result.status, ['complete', 'partial', 'submitted']),
           isNull(result.hiddenAt),
           isNull(result.withdrawnAt),
-          eq(profile.isPublic, true),
-          isNull(profile.hiddenAt),
-          isNull(profile.withdrawnAt),
+          eq(project.isPublic, true),
+          isNull(project.hiddenAt),
+          isNull(project.withdrawnAt),
         ),
       );
     if (candidates.length < 6) return { state: 'unranked' as const, week: votingWeek };
@@ -222,6 +231,13 @@ export async function getReviewState(userId: string) {
     const loadCards = (ids: number[]) => tx.select(candidateColumns).from(result)
       .innerJoin(commitment, eq(result.commitmentId, commitment.id))
       .where(inArray(result.id, ids));
+    const related = await tx.execute<{ project_id: string }>(sql`
+      select distinct other.project_id from app_private.project_owner own
+      join app_private.project_owner other on own.user_id = other.user_id
+      where own.project_id = ${projectId}
+    `);
+    const conflicts = new Set(related.map((row) => row.project_id));
+    conflicts.add(projectId);
 
     const assignments = await tx
       .select()
@@ -229,7 +245,7 @@ export async function getReviewState(userId: string) {
       .where(
         and(
           eq(comparison.weekId, votingWeek.id),
-          eq(comparison.voterUserId, userId),
+          eq(comparison.voterProjectId, projectId),
         ),
       );
     const activeAssignments = assignments.filter((assignment) => !assignment.invalidatedAt);
@@ -248,7 +264,7 @@ export async function getReviewState(userId: string) {
           ? unfinished.candidateHighId
           : unfinished.candidateLowId,
       );
-      if (first && second) {
+      if (first && second && !conflicts.has(first.projectId) && !conflicts.has(second.projectId)) {
         return {
           state: 'pair' as const,
           week: votingWeek,
@@ -264,7 +280,7 @@ export async function getReviewState(userId: string) {
         .where(eq(comparison.id, unfinished.id));
     }
 
-    const available = candidates.filter((candidate) => candidate.userId !== userId);
+    const available = candidates.filter((candidate) => !conflicts.has(candidate.projectId));
     const used = new Set(
       assignments
         .map((assignment) => `${assignment.candidateLowId}:${assignment.candidateHighId}`),
@@ -291,7 +307,7 @@ export async function getReviewState(userId: string) {
       .insert(comparison)
       .values({
         weekId: votingWeek.id,
-        voterUserId: userId,
+        voterProjectId: projectId,
         candidateLowId: picked.low,
         candidateHighId: picked.high,
         presentedFirstId,
@@ -307,7 +323,8 @@ export async function getReviewState(userId: string) {
       first: byId.get(presentedFirstId)!,
       second: byId.get(presentedFirstId === picked.low ? picked.high : picked.low)!,
     };
-  });
+  };
+  return connection ? load(connection) : db.transaction(load);
 }
 
 export function blocksWeeklyUpdate(
@@ -320,8 +337,12 @@ export function blocksWeeklyUpdate(
 
 export async function submitReview(userId: string, assignmentId: number, selected: string) {
   return db.transaction(async (tx) => {
+    const ownedProject = await getProfileByUserId(userId, tx);
+    if (!ownedProject) return false;
+    const projectId = ownedProject.id;
+
     const [owned] = await tx.select({ weekId: comparison.weekId }).from(comparison)
-      .where(and(eq(comparison.id, assignmentId), eq(comparison.voterUserId, userId))).limit(1);
+      .where(and(eq(comparison.id, assignmentId), eq(comparison.voterProjectId, projectId))).limit(1);
     if (!owned) return false;
     // Moderation and finalization also lock the week before touching its comparisons.
     await tx.select({ id: week.id }).from(week).where(eq(week.id, owned.weekId)).for('update');
@@ -332,7 +353,7 @@ export async function submitReview(userId: string, assignmentId: number, selecte
       .where(
         and(
           eq(comparison.id, assignmentId),
-          eq(comparison.voterUserId, userId),
+          eq(comparison.voterProjectId, projectId),
           isNull(comparison.invalidatedAt),
         ),
       )
@@ -348,12 +369,21 @@ export async function submitReview(userId: string, assignmentId: number, selecte
 
     const [voterResult] = await tx.select({ id: result.id }).from(result).where(and(
       eq(result.weekId, assignment.week.id),
-      eq(result.userId, userId),
+      eq(result.projectId, projectId),
       eq(result.onTime, true),
       isNull(result.hiddenAt),
       isNull(result.withdrawnAt),
     )).limit(1);
     if (!voterResult) return false;
+
+    const [conflict] = await tx.execute(sql`
+      select 1 from app_private.project_owner own
+      join app_private.project_owner other on own.user_id = other.user_id
+      join app_private.result r on r.project_id = other.project_id
+      where own.project_id = ${projectId}
+        and r.id in (${assignment.comparison.candidateLowId}, ${assignment.comparison.candidateHighId}) limit 1
+    `);
+    if (conflict) return false;
 
     const firstIsLow = assignment.comparison.presentedFirstId === assignment.comparison.candidateLowId;
     const choice =
@@ -391,7 +421,7 @@ export async function ensureWeekFinalized(weekId: number) {
     const candidates = await tx
       .select({ id: result.id })
       .from(result)
-      .innerJoin(profile, eq(result.userId, profile.userId))
+      .innerJoin(project, eq(result.projectId, project.id))
       .where(
         and(
           eq(result.weekId, weekId),
@@ -399,9 +429,9 @@ export async function ensureWeekFinalized(weekId: number) {
           inArray(result.status, ['complete', 'partial', 'submitted']),
           isNull(result.hiddenAt),
           isNull(result.withdrawnAt),
-          eq(profile.isPublic, true),
-          isNull(profile.hiddenAt),
-          isNull(profile.withdrawnAt),
+          eq(project.isPublic, true),
+          isNull(project.hiddenAt),
+          isNull(project.withdrawnAt),
         ),
       );
     if (candidates.length < 6) {
@@ -452,6 +482,9 @@ export async function ensureWeekFinalized(weekId: number) {
 }
 
 async function getProvisionalLeaderboard(userId: string, now: Date, page: number) {
+  const ownedProject = await getProfileByUserId(userId);
+  if (!ownedProject) return null;
+  const projectId = ownedProject.id;
   const [votingWeek] = await db
     .select()
     .from(week)
@@ -466,7 +499,7 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
     .where(
       and(
         eq(comparison.weekId, votingWeek.id),
-        eq(comparison.voterUserId, userId),
+        eq(comparison.voterProjectId, projectId),
         isNotNull(comparison.choice),
         isNull(comparison.invalidatedAt),
       ),
@@ -475,9 +508,9 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
   if (reviewed.length < 10) return null;
 
   const candidates = await db
-    .select({ id: result.id, handle: profile.handle })
+    .select({ id: result.id, handle: project.handle })
     .from(result)
-    .innerJoin(profile, eq(result.userId, profile.userId))
+    .innerJoin(project, eq(result.projectId, project.id))
     .where(
       and(
         eq(result.weekId, votingWeek.id),
@@ -485,9 +518,9 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
         inArray(result.status, ['complete', 'partial', 'submitted']),
         isNull(result.hiddenAt),
         isNull(result.withdrawnAt),
-        eq(profile.isPublic, true),
-        isNull(profile.hiddenAt),
-        isNull(profile.withdrawnAt),
+        eq(project.isPublic, true),
+        isNull(project.hiddenAt),
+        isNull(project.withdrawnAt),
       ),
     );
   if (candidates.length < 6) {
@@ -506,19 +539,19 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
   const selected = ranked.slice(offset, offset + PAGE_SIZE);
   const details = selected.length ? await db.select({
     id: result.id,
-    handle: profile.handle,
-    displayName: profile.displayName,
-    projectName: profile.projectName,
-    projectUrl: profile.projectUrl,
+    handle: project.handle,
+    displayName: ownerNames,
+    projectName: project.projectName,
+    projectUrl: project.projectUrl,
     promise: commitment.promise,
     summary: result.summary,
     weekStartDate: week.weekStartDate,
   }).from(result)
     .innerJoin(commitment, eq(result.commitmentId, commitment.id))
-    .innerJoin(profile, eq(result.userId, profile.userId))
+    .innerJoin(project, eq(result.projectId, project.id))
     .innerJoin(week, eq(result.weekId, week.id))
     .where(and(inArray(result.id, selected.map((entry) => entry.resultId)),
-      eq(profile.isPublic, true), isNull(profile.hiddenAt), isNull(profile.withdrawnAt),
+      eq(project.isPublic, true), isNull(project.hiddenAt), isNull(project.withdrawnAt),
       isNull(result.hiddenAt), isNull(result.withdrawnAt))) : [];
   const byId = new Map(details.map((entry) => [entry.id, entry]));
   const entries = selected.flatMap((score) => {
@@ -567,10 +600,10 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
           decisions: ranking.decisions,
           scoreNumerator: ranking.scoreNumerator,
           scoreDenominator: ranking.scoreDenominator,
-          handle: profile.handle,
-          displayName: profile.displayName,
-          projectName: profile.projectName,
-          projectUrl: profile.projectUrl,
+          handle: project.handle,
+          displayName: ownerNames,
+          projectName: project.projectName,
+          projectUrl: project.projectUrl,
           promise: commitment.promise,
           summary: result.summary,
           weekStartDate: week.weekStartDate,
@@ -578,19 +611,19 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
         .from(ranking)
         .innerJoin(result, eq(ranking.resultId, result.id))
         .innerJoin(commitment, eq(result.commitmentId, commitment.id))
-        .innerJoin(profile, eq(result.userId, profile.userId))
+        .innerJoin(project, eq(result.projectId, project.id))
         .innerJoin(week, eq(ranking.weekId, week.id))
         .where(
           and(
             eq(ranking.weekId, latestWeek.id),
-            eq(profile.isPublic, true),
-            isNull(profile.hiddenAt),
-            isNull(profile.withdrawnAt),
+            eq(project.isPublic, true),
+            isNull(project.hiddenAt),
+            isNull(project.withdrawnAt),
             isNull(result.hiddenAt),
             isNull(result.withdrawnAt),
           ),
         )
-        .orderBy(asc(ranking.rank), asc(profile.handle))
+        .orderBy(asc(ranking.rank), asc(project.handle))
         .limit(PAGE_SIZE + 1).offset((page - 1) * PAGE_SIZE)
     : [];
 

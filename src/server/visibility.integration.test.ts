@@ -50,14 +50,16 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
 
     try {
       await sql`insert into app_private.user (id, name, email) values (${id}, 'Privacy test', ${`${id}@example.invalid`})`;
-      await sql`insert into app_private.profile (user_id, handle, display_name, project_name) values (${id}, ${handle}, 'Privacy test', ${project})`;
+      await sql`insert into app_private.project (id, handle, project_name) values (${id}, ${handle}, ${project})`;
       await sql`insert into app_private.user ${sql(directoryPeers.map((peer) => ({ id: peer.id, name: peer.handle, email: `${peer.id}@example.invalid` })))}`;
-      await sql`insert into app_private.profile ${sql(directoryPeers.map((peer) => ({ user_id: peer.id, handle: peer.handle, display_name: peer.handle, project_name: peer.handle })))}`;
+      await sql`insert into app_private.project ${sql(directoryPeers.map((peer) => ({ id: peer.id, handle: peer.handle, project_name: peer.handle })))}`;
+      await sql`insert into app_private.project_owner (project_id, user_id, active) values (${id}, ${id}, true)`;
+      await sql`insert into app_private.project_owner ${sql(directoryPeers.map((peer) => ({ project_id: peer.id, user_id: peer.id, active: true })))}`;
       const [week] = await sql`insert into app_private.week (week_start_date, starts_at, submission_closes_at, voting_closes_at)
         values (${weekDate}, now() - interval '1 hour', now() + interval '1 hour', now() + interval '2 hours') returning id`;
       weekId = week.id;
-      const [commitment] = await sql`insert into app_private.commitment (user_id, week_id, promise) values (${id}, ${weekId!}, 'Ship a demo') returning id`;
-      await sql`insert into app_private.result (commitment_id, user_id, week_id, status, summary, on_time)
+      const [commitment] = await sql`insert into app_private.commitment (project_id, week_id, promise) values (${id}, ${weekId!}, 'Ship a demo') returning id`;
+      await sql`insert into app_private.result (commitment_id, project_id, week_id, status, summary, on_time)
         values (${commitment.id}, ${id}, ${weekId!}, 'complete', ${summary}, true)`;
 
       // Positive controls prevent disconnected server/database configuration from passing invisibility checks.
@@ -83,14 +85,14 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
       const finalizedProfile = await html(profilePath);
       expect(finalizedProfile).toContain('unranked');
       expect(finalizedProfile).not.toContain('awaiting rank');
-      await sql`update app_private.result set on_time = false where user_id = ${id}`;
+      await sql`update app_private.result set on_time = false where project_id = ${id}`;
       expect((await html(profilePath)).match(/class="result-meta"[^>]*>([^<]*)/)?.[1].trim()).toBe('late');
-      await sql`update app_private.result set on_time = true where user_id = ${id}`;
+      await sql`update app_private.result set on_time = true where project_id = ${id}`;
 
       // There is no server-side result draft: drafts are localStorage only. is_public=false is the unpublished profile state.
       for (const state of ['draft', 'hidden', 'withdrawn']) {
-        await sql`update app_private.profile set is_public = ${state !== 'draft'},
-          hidden_at = ${state === 'hidden' ? new Date() : null}, withdrawn_at = ${state === 'withdrawn' ? new Date() : null} where user_id = ${id}`;
+        await sql`update app_private.project set is_public = ${state !== 'draft'},
+          hidden_at = ${state === 'hidden' ? new Date() : null}, withdrawn_at = ${state === 'withdrawn' ? new Date() : null} where id = ${id}`;
         for (const path of [profilePath, resultPath]) {
           const page = await html(path, 404);
           expect(page).not.toContain(project);
@@ -105,10 +107,10 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
         await expectPrivateImage(`/api/og${resultPath}.png`);
       }
 
-      await sql`update app_private.profile set is_public = true, hidden_at = null, withdrawn_at = null where user_id = ${id}`;
+      await sql`update app_private.project set is_public = true, hidden_at = null, withdrawn_at = null where id = ${id}`;
       for (const state of ['hidden', 'withdrawn']) {
         await sql`update app_private.result set hidden_at = ${state === 'hidden' ? new Date() : null},
-          withdrawn_at = ${state === 'withdrawn' ? new Date() : null} where user_id = ${id}`;
+          withdrawn_at = ${state === 'withdrawn' ? new Date() : null} where project_id = ${id}`;
         expect(await html(resultPath, 404)).not.toContain(summary);
         const page = await html(profilePath);
         expect(page).toContain(project);
@@ -118,8 +120,10 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
         expect(await png(`/api/og${profilePath}.png`)).not.toEqual(fallback);
       }
     } finally {
-      await sql`delete from app_private.result where user_id = ${id}`;
-      await sql`delete from app_private.commitment where user_id = ${id}`;
+      await sql`delete from app_private.result where project_id = ${id}`;
+      await sql`delete from app_private.commitment where project_id = ${id}`;
+      await sql`delete from app_private.project where id = ${id}`;
+      await sql`delete from app_private.project where id in ${sql(directoryPeers.map((peer) => peer.id))}`;
       await sql`delete from app_private.user where id = ${id}`;
       await sql`delete from app_private.user where id in ${sql(directoryPeers.map((peer) => peer.id))}`;
       if (weekId !== undefined) await sql`delete from app_private.week where id = ${weekId}`;

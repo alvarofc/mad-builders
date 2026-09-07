@@ -1,8 +1,9 @@
+import { getProfileByUserId } from '../../../server/profiles';
 import { eq, isNull, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { db } from '../../../server/db';
 import { allowWrite } from '../../../server/rate-limit';
-import { profile, week } from '../../../server/schema';
+import { project, week } from '../../../server/schema';
 
 export const prerender = false;
 
@@ -15,7 +16,12 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
     return new Response('Too many attempts. Try again in a minute.', { status: 429 });
   }
 
-  const action = String((await request.formData()).get('action') ?? '');
+  const current = await getProfileByUserId(locals.user.id);
+  if (!current) return redirect('/build', 303);
+
+  const data = await request.formData();
+  if (data.get('projectId') !== current.id) return new Response('Your active project changed. Reload before saving.', { status: 409 });
+  const action = String(data.get('action') ?? '');
   if (action !== 'withdraw' && action !== 'restore') {
     return new Response('Unknown action.', { status: 400 });
   }
@@ -28,9 +34,9 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
       .orderBy(week.id)
       .for('update');
     await tx
-      .update(profile)
+      .update(project)
       .set({ withdrawnAt: action === 'withdraw' ? sql`now()` : null, updatedAt: sql`now()` })
-      .where(eq(profile.userId, locals.user!.id));
+      .where(eq(project.id, current.id));
   });
   return redirect('/settings', 303);
 };
