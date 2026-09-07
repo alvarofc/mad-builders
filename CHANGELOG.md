@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.3.1.0] - 2026-09-07
+
+### Changed
+
+- Finish last week’s voting before publishing the next weekly update while voting remains open.
+- Continue publishing when voting closes, no comparisons remain, or you are not eligible to vote.
+
 ## [0.3.0.0] - 2026-09-07
 
 ### Added

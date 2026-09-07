@@ -130,7 +130,7 @@ it('returns a handle conflict for direct and Drizzle-wrapped unique violations',
 });
 
 it('maps known publication failures to recoverable responses', async () => {
-  for (const [code, status] of [['update_locked', 409], ['status_required', 400], ['next_commitment_required', 400], ['week_not_started', 409], ['commitment_not_found', 404]] as const) {
+  for (const [code, status] of [['voting_required', 409], ['update_locked', 409], ['status_required', 400], ['next_commitment_required', 400], ['week_not_started', 409], ['commitment_not_found', 404]] as const) {
     publishResult.mockRejectedValueOnce(new Error(code));
     const response = await publish(context(validUpdate));
     expect(response.status).toBe(status);

@@ -1,5 +1,6 @@
 import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import { auth } from './auth';
+import { blocksWeeklyUpdate, getReviewState } from './ranking';
 import { db } from './db';
 import { account, commitment, profile, result, week } from './schema';
 
@@ -99,6 +100,8 @@ export async function publishResult(input: {
   projectStage: ProjectStage;
   proof: ProofCheck;
 }) {
+  // Finish the review transaction before taking publication locks.
+  const review = await getReviewState(input.userId);
   return db.transaction(async (tx) => {
     if (input.commitmentId) {
       const [owned] = await tx.select({ weekId: commitment.weekId }).from(commitment)
@@ -163,6 +166,7 @@ export async function publishResult(input: {
     const [databaseClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     const clock = { now: new Date(databaseClock.now) };
     if (clock.now < record.week.startsAt) throw new Error('week_not_started');
+    if (blocksWeeklyUpdate(review, record.week.startsAt, clock.now)) throw new Error('voting_required');
     if (existing && clock.now >= record.week.submissionClosesAt) throw new Error('update_locked');
     if (!input.commitmentId && clock.now >= record.week.submissionClosesAt) throw new Error('commitment_not_found');
     if (
