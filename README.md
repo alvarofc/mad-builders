@@ -13,7 +13,7 @@ pnpm build      # production build
 pnpm preview    # test the production build locally
 ```
 
-Deploy this repository to Vercel with the build command `astro build`.
+Deploy this repository to Vercel with the build command `astro build`. `vercel.json` places server functions in Paris (`cdg1`), near the configured database.
 
 ## Proof of work setup
 
@@ -39,6 +39,10 @@ Run `pnpm test` for unit checks. The optional `src/server/results.integration.te
 Use Supabase's session pooler (port 5432) for local `DATABASE_URL` and its direct or session connection for `DATABASE_MIGRATION_URL`. Concurrent page requests can hang with Postgres.js over the transaction pooler (port 6543); verify that connection separately before using it in production. Keep `app_private` out of the Data API's exposed schemas.
 
 With the dev server running, `NAVIGATION_TEST_URL=http://localhost:4321 pnpm exec vitest run src/server/navigation.integration.test.ts` checks concurrent app-page requests.
+
+To investigate slow app navigation, inspect the document response's `Server-Timing` header in browser DevTools. It reports durations in milliseconds for `dependency_load`, `schedule`, `session`, and page data loaders such as `profile`, `build_state`, `review`, and `leaderboard`. Operations that do not run have no entry. `instance` marks the first instrumented request in that process as `first-request`, then `warm`.
+
+`dependency_load` measures the middleware's dynamic imports; it excludes modules already imported by the route and Vercel runtime startup. Database connection setup is included in the first database operation. `page_ready` ends when the page response is available; `server_ready` also includes the middleware work. Both exclude any remaining streamed response body, and their nested durations should not be added together. The header contains fixed operation names, durations, and the instance marker, with no query text, credentials, or user values.
 
 Local `/leaderboard` and `/vote` show demo rankings or comparisons by default. Use `?demo=0` for real data. `/build` always uses real data.
 
