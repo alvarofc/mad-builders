@@ -7,7 +7,7 @@ select cron.schedule(
   '17 * * * *',
   $$
     select net.http_get(
-      url := 'https://www.mad.builders/api/email/cron',
+      url := 'https://mad.builders/api/email/cron',
       headers := jsonb_build_object('Authorization', 'Bearer ' || decrypted_secret),
       timeout_milliseconds := 90000
     )
