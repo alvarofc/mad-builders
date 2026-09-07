@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.4.2.0] - 2026-09-07
+
+### Fixed
+
+- Hide the login button on the homepage and other marketing pages when you are already signed in.
+
 ## [0.4.1.3] - 2026-09-07
 
 ### Fixed
