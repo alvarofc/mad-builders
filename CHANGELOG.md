@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.4.1.0] - 2026-09-07
+
+### Fixed
+
+- Publish weekly updates in Firefox without losing text answers or seeing a misleading character-limit error.
+- Keep text answers in browser drafts when filling out weekly updates in Firefox.
+
 ## [0.3.2.1] - 2026-09-07
 
 ### Fixed
