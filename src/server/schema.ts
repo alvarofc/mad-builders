@@ -116,6 +116,8 @@ export const profile = appPrivate.table(
     uniqueIndex('profile_handle_uidx').on(table.handle),
     index('profile_referred_by_user_id_idx').on(table.referredByUserId),
     index('profile_public_created_at_idx').on(table.isPublic, table.createdAt),
+    index('profile_directory_idx').on(table.createdAt, table.userId)
+      .where(sql`${table.isPublic} = true and ${table.hiddenAt} is null and ${table.withdrawnAt} is null`),
     check('profile_handle_check', sql`${table.handle} ~ '^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$'`),
     check(
       'profile_project_stage_check',
@@ -201,6 +203,8 @@ export const result = appPrivate.table(
     uniqueIndex('result_user_week_uidx').on(table.userId, table.weekId),
     index('result_week_candidate_idx').on(table.weekId, table.onTime, table.status),
     index('result_user_published_at_idx').on(table.userId, table.publishedAt),
+    index('result_recent_public_idx').on(table.publishedAt)
+      .where(sql`${table.hiddenAt} is null and ${table.withdrawnAt} is null`),
     check('result_status_check', sql`${table.status} in ('complete', 'partial', 'missed', 'submitted')`),
     check(
       'result_project_stage_check',
@@ -283,6 +287,7 @@ export const ranking = appPrivate.table(
   (table) => [
     uniqueIndex('ranking_week_result_uidx').on(table.weekId, table.resultId),
     index('ranking_week_rank_idx').on(table.weekId, table.rank),
+    index('ranking_result_id_idx').on(table.resultId),
     check('ranking_denominator_check', sql`${table.scoreDenominator} > 0`),
     check('ranking_rank_check', sql`${table.rank} > 0`),
   ],
