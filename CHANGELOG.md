@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.3.1.1] - 2026-09-07
+
+### Changed
+
+- Explain how weekly peer review and competition help builders push their progress further.
+- Clarify leaderboard scoring and carry the same message into social link previews.
+
 ## [0.3.1.0] - 2026-09-07
 
 ### Changed
