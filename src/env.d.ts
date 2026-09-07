@@ -20,6 +20,7 @@ interface ImportMeta {
 
 declare namespace App {
   interface Locals {
+    timing: ReturnType<typeof import('./server/timing').requestTiming>;
     user: {
       id: string;
       name: string;

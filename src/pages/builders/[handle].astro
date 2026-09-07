@@ -12,14 +12,15 @@ import {
 import { finalizeLatestClosedWeek } from '../../server/ranking';
 
 export const prerender = false;
+const currentUser = Astro.locals.user;
 
 const handle = Astro.params.handle ?? '';
 const abuseEmail = import.meta.env.ABUSE_REPORT_EMAIL;
-const builder = await getPublicProfileByHandle(handle);
-await finalizeLatestClosedWeek();
-const results = builder ? await listPublicResultsByUserId(builder.userId) : [];
-const activity = builder ? await getPublicBuilderActivity(builder.userId) : null;
-const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
+const builder = await Astro.locals.timing.measure('builder', () => getPublicProfileByHandle(handle));
+await Astro.locals.timing.measure('finalize', () => finalizeLatestClosedWeek());
+const results = builder ? await Astro.locals.timing.measure('results', () => listPublicResultsByUserId(builder.userId)) : [];
+const activity = builder ? await Astro.locals.timing.measure('activity', () => getPublicBuilderActivity(builder.userId)) : null;
+const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
 
 Astro.response.headers.set('Cache-Control', 'no-store');
 if (!builder) Astro.response.status = 404;
@@ -55,7 +56,7 @@ const proofLabel = (status: string) =>
   noindex={!builder}
   active={currentProfile?.handle === builder?.handle ? 'profile' : undefined}
   profileHandle={currentProfile?.handle}
-  signedIn={Boolean(Astro.locals.user)}
+  signedIn={Boolean(currentUser)}
   structuredData={structuredData}
 >
   <div class="work-page">
