@@ -10,6 +10,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  uuid,
 } from 'drizzle-orm/pg-core';
 
 export const appPrivate = pgSchema('app_private');
@@ -19,9 +20,21 @@ export const user = appPrivate.table('user', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
+  emailUnsubscribedAt: timestamp('email_unsubscribed_at', { withTimezone: true }),
+  emailUnsubscribeToken: uuid('email_unsubscribe_token').defaultRandom().notNull().unique(),
   image: text('image'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const emailDelivery = appPrivate.table('email_delivery', {
+  key: text('key').primaryKey(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  payload: text('payload').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+  providerId: text('provider_id'),
 });
 
 export const session = appPrivate.table(

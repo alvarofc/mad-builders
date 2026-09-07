@@ -9,6 +9,9 @@ interface ImportMetaEnv {
   readonly GITHUB_CLIENT_SECRET?: string;
   readonly ORGANIZER_GITHUB_IDS?: string;
   readonly ABUSE_REPORT_EMAIL?: string;
+  readonly RESEND_API_KEY?: string;
+  readonly CRON_SECRET?: string;
+  readonly EMAIL_AUTOMATION_START_AT?: string;
 }
 
 interface ImportMeta {
