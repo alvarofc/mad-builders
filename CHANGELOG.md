@@ -9,6 +9,12 @@ Changes to mad.builders.
 - Run app pages in Paris, near the configured database, to reduce network delays.
 - Inspect navigation delays by initialization, session lookup, schedule refresh, and page data loading in browser response timings.
 
+## [0.3.2.1] - 2026-09-07
+
+### Fixed
+
+- Share weekly updates and builder profiles with readable text in their preview images.
+
 ## [0.3.2.0] - 2026-09-07
 
 ### Fixed
