@@ -70,7 +70,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
           </div>
         )}
         {currentUser && (
-          <details class="result-block" id="join-project" open={Astro.url.searchParams.has('requested')}>
+          <details class="result-block" id="join-project" open={Astro.url.searchParams.has('join') || Astro.url.searchParams.has('requested')}>
             <summary>Join an existing startup</summary>
             <p class="work-note">Request co-ownership using its project handle. An existing owner approves requests in settings. Once approved, reload this page and choose the shared project.</p>
             {Astro.url.searchParams.has('requested') && <p class="work-copy" role="status">Request sent. Ask your teammate to approve it in settings.</p>}

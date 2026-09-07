@@ -35,7 +35,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
     if (!validHandle(handle) || !(await requestProjectAccess(locals.user.id, handle))) {
       return new Response('That public project does not exist.', { status: 404 });
     }
-    return redirect('/build?requested=1#this-week', 303);
+    return redirect('/build?requested=1#join-project', 303);
   }
   if (action === 'switch') {
     if (!(await switchProject(locals.user.id, String(data.get('projectId') ?? '')))) return new Response('Project not found.', { status: 404 });

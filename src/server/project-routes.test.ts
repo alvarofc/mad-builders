@@ -7,8 +7,8 @@ vi.mock('./projects', () => ({
 }));
 vi.mock('./rate-limit', () => ({ allowWrite: vi.fn() }));
 import { POST } from '../pages/api/project';
-import { getProfileByUserId } from './profiles';
-import { acceptProjectInvite, createProjectInvite, revokeProjectInvite } from './projects';
+import { normalizeHandle, validHandle, getProfileByUserId } from './profiles';
+import { requestProjectAccess, acceptProjectInvite, createProjectInvite, revokeProjectInvite } from './projects';
 import { allowWrite } from './rate-limit';
 
 const token = 'a'.repeat(64);
@@ -79,4 +79,15 @@ it('accepts an invite as the authenticated user and reports expired or used toke
   expect(response.status).toBe(303);
   expect(response.headers.get('location')).toBe('/build');
   expect(acceptProjectInvite).toHaveBeenLastCalledWith('teammate', token);
+});
+
+
+it('keeps a successful join request at the open join form', async () => {
+  vi.mocked(normalizeHandle).mockReturnValue('startup');
+  vi.mocked(validHandle).mockReturnValue(true);
+  vi.mocked(requestProjectAccess).mockResolvedValue(true);
+  const response = await post({ action: 'request', handle: 'startup' }, 'teammate');
+  expect(requestProjectAccess).toHaveBeenCalledWith('teammate', 'startup');
+  expect(response.status).toBe(303);
+  expect(response.headers.get('location')).toBe('/build?requested=1#join-project');
 });

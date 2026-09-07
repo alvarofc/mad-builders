@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.4.1.3] - 2026-09-07
+
+### Fixed
+
+- Open the join-request form from settings and keep its confirmation visible after submission.
+
 ## [0.4.1.2] - 2026-09-07
 
 ### Fixed
