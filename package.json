@@ -1,7 +1,7 @@
 {
   "name": "mad-builders",
   "type": "module",
-  "version": "0.3.2.0",
+  "version": "0.3.3.0",
   "packageManager": "pnpm@11.1.1",
   "scripts": {
     "dev": "astro dev",
