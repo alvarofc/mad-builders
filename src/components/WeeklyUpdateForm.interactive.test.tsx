@@ -128,3 +128,64 @@ it('allows editing and navigation when browser storage is unavailable', async ()
     set.mockRestore();
   }
 });
+
+it('shows the invalid answer and blocks Next and keyboard navigation until corrected', async () => {
+  await mount();
+  await click('Next');
+  for (const value of ['   ', ' abcd ', 'x'.repeat(1001)]) {
+    const input = await type(value);
+    await click('Next');
+    expect(progress()).toBe('2');
+    expect(active().querySelector('[role="alert"]')!.textContent).toMatch(/answer|characters/);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.getAttribute('aria-describedby')).toBe('summary-error');
+    await act(async () => { input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true })); });
+    expect(progress()).toBe('2');
+  }
+  await type('First line\n' + 'x'.repeat(989));
+  expect(active().querySelector('[role="alert"]')).toBeNull();
+  await click('Next');
+  expect(progress()).toBe('3');
+});
+
+it('blocks invalid restored text and URLs the server would reject', async () => {
+  localStorage.setItem(draftKey, JSON.stringify({ ...initialValues, projectSentence: 'x'.repeat(281) }));
+  await mount();
+  await click('Next');
+  expect(progress()).toBe('1');
+  expect(active().querySelector('[role="alert"]')!.textContent).toContain('281');
+  await type('A useful project');
+  for (let i = 0; i < 4; i++) await click('Next');
+  await click('Skip');
+  for (const url of ['not-a-url', 'http://example.com', 'https://user:secret@example.com', 'https://:secret@example.com', 'https://example.com/' + 'x'.repeat(2029)]) {
+    await type(url);
+    await click('Next');
+    expect(progress()).toBe('6');
+    expect(active().querySelector('[role="alert"]')!.textContent).toContain('https://');
+  }
+  await type('https://example.com/' + 'x'.repeat(2028));
+  await click('Next');
+  expect(progress()).toBe('7');
+});
+
+it('blocks publishing with an invalid proof URL and allows explicitly skipping it', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: false, text: async () => 'Please retry.' });
+  vi.stubGlobal('fetch', fetchMock);
+  await mount();
+  for (let i = 0; i < 4; i++) await click('Next');
+  await type('x'.repeat(501));
+  await click('Next');
+  expect(progress()).toBe('5');
+  expect(active().querySelector('[role="alert"]')!.textContent).toContain('500');
+  await click('Skip');
+  await click('Skip');
+  await click('Next');
+  await type('http://example.com');
+  await click('publish update');
+  expect(progress()).toBe('8');
+  expect(active().querySelector('[role="alert"]')!.textContent).toContain('https://');
+  expect(fetchMock).not.toHaveBeenCalled();
+  await click('Skip and publish update');
+  expect(fetchMock).toHaveBeenCalledOnce();
+  expect((fetchMock.mock.calls[0][1].body as FormData).has('proofUrl')).toBe(false);
+});

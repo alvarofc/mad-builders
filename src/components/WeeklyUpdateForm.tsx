@@ -28,6 +28,26 @@ type Question = {
   type?: 'url';
 };
 
+function answerError(question: Question, answer = '') {
+  if (question.choices) return '';
+  const value = answer.replace(/\r\n?/g, '\n').trim();
+  if (question.required && !value) return 'Write an answer to continue.';
+  if (question.minLength && value.length < question.minLength) {
+    return `Write at least ${question.minLength} characters. You have ${value.length}, excluding surrounding spaces.`;
+  }
+  if (question.maxLength && value.length > question.maxLength) {
+    return `Keep this answer within ${question.maxLength} characters. You have ${value.length}.`;
+  }
+  if (question.type === 'url' && value) {
+    try {
+      const url = new URL(value);
+      if (value.length <= 2048 && url.protocol === 'https:' && !url.username && !url.password) return '';
+    } catch {}
+    return 'Enter a full https:// URL under 2,049 characters, without a username or password.';
+  }
+  return '';
+}
+
 export default function WeeklyUpdateForm(props: Props) {
   const [values, setValues] = useState(props.initialValues);
   const [ready, setReady] = useState(false);
@@ -110,8 +130,10 @@ export default function WeeklyUpdateForm(props: Props) {
       {props.commitmentId ? <input type="hidden" name="commitmentId" value={props.commitmentId} /> : <input type="hidden" name="weekId" value={props.weekId} />}
       {!props.promise && <input type="hidden" name="status" value="submitted" />}
       <Questionnaire.Progress className="work-label" />
-      {questions.map((question) => (
-        <Questionnaire.Item key={question.name} name={question.name} required={question.required} className="questionnaire-item"
+      {questions.map((question) => {
+        const error = answerError(question, values[question.name]);
+        return (
+        <Questionnaire.Item key={question.name} name={question.name} required={question.required} invalid={Boolean(error)} className="questionnaire-item"
           onStatusChange={(status) => {
             if (status === 'skipped') setTimeout(() => { if (formRef.current) saveDraft(formRef.current); }, 0);
           }}
@@ -126,6 +148,7 @@ export default function WeeklyUpdateForm(props: Props) {
               </Questionnaire.Choice>
             )) : (
               <Questionnaire.Input
+                aria-describedby={`${question.name}-error`}
                 aria-label={question.name === 'projectSentence' ? 'Project description' : question.title}
                 value={values[question.name]}
                 onChange={(event) => setValues((current) => ({ ...current, [question.name]: event.target.value }))}
@@ -138,9 +161,10 @@ export default function WeeklyUpdateForm(props: Props) {
               />
             )}
           </Questionnaire.Choices>
-          <Questionnaire.Error className="work-status" />
+          <Questionnaire.Error id={`${question.name}-error`} className="work-status">{error || (question.choices ? 'Choose an answer to continue.' : 'Write an answer or skip this question.')}</Questionnaire.Error>
         </Questionnaire.Item>
-      ))}
+        );
+      })}
       <p className="draft-status">{props.late ? 'Your update is public and locked after publishing.' : 'Your update is public after publishing. You can edit until voting opens.'}</p>
       <div className="questionnaire-actions">
         <Questionnaire.Previous className="work-button secondary" disabled={!ready || saving}>Previous</Questionnaire.Previous>
