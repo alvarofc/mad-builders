@@ -24,7 +24,7 @@ Deploy this repository to Vercel with the build command `astro build`.
 5. Run `pnpm db:migrate` with the migration connection string.
 6. Weekly schedules are created automatically when the app receives a request. Submission closes Sunday at 18:00 Madrid time; voting runs until Monday at 18:00. The next building week starts Monday at 00:00 while voting finishes.
 
-Weekly updates keep the Pioneer questions. Known project details are prefilled. Drafts are saved locally in the browser, scoped to the builder and week, and cleared after publication. Updates can be edited until voting opens; the previous goal stays locked. First updates have no completion grade because there is no earlier goal. Next week's goals remain editable until Monday at 00:00, including after publishing the current update. Catch-up links on `/build` let builders finish earlier updates after rollover; late updates do not enter ranking or extend streaks.
+Weekly updates keep the Pioneer questions and show them one at a time with shadcn's Questionnaire. Known project details are prefilled. Drafts are saved locally in the browser, scoped to the builder and week, and cleared after publication. Updates can be edited until voting opens; the previous goal stays locked. First updates have no completion grade because there is no earlier goal. Next week's goals remain editable until Monday at 00:00, including after publishing the current update. Catch-up links on `/build` let builders finish earlier updates after rollover; late updates do not enter ranking or extend streaks.
 
 Each vote is saved independently. Builders can pause after five comparisons and resume later; ten unlock the provisional leaderboard. Shares and referrals do not affect rank.
 
@@ -105,6 +105,7 @@ things.
 - `src/pages/madrid.astro`: builder's guide to Madrid (stats, communities, calendar, Leaflet map)
 - `src/pages/events/[slug].astro`: photo gallery per event, with lightbox
 - `src/pages/build.astro`: sign-in, profile setup, weekly updates, catch-up, and next-week goals
+- `src/components/WeeklyUpdateForm.tsx`: React island using shadcn's Questionnaire for weekly updates
 - `src/pages/builders/`: public builder directory, profiles, and weekly result pages
 - `src/pages/vote.astro` and `src/pages/leaderboard.astro`: peer comparisons and weekly rankings
 - `src/pages/settings.astro`: profile editing and visibility controls
