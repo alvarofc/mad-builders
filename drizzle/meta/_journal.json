@@ -36,6 +36,13 @@
       "when": 1788626675896,
       "tag": "0004_nasty_eddie_brock",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788768097084,
+      "tag": "0005_company_scale_indexes",
+      "breakpoints": true
     }
   ]
 }

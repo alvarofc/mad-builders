@@ -1,0 +1,33 @@
+---
+interface Props {
+  page: number;
+  hasNext: boolean;
+  path?: string;
+}
+const { page, hasNext, path } = Astro.props;
+const href = (target: number) => {
+  const url = new URL(path ?? Astro.url.pathname, Astro.url);
+  url.search = Astro.url.search;
+  url.searchParams.set('page', String(target));
+  return `${url.pathname}${url.search}`;
+};
+---
+
+{(page > 1 || hasNext) && (
+  <nav class="list-pagination" aria-label="Pagination">
+    {page > 1 && <a class="work-button" href={href(page - 1)} rel="prev">Previous</a>}
+    <span class="work-label">Page {page}</span>
+    {hasNext && <a class="work-button" href={href(page + 1)} rel="next">Next</a>}
+  </nav>
+)}
+
+<style>
+  .list-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .work-label { margin: 0; }
+</style>

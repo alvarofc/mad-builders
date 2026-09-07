@@ -2,6 +2,19 @@
 
 Changes to mad.builders.
 
+## [0.1.3.0] - 2026-09-07
+
+### Changed
+
+- Browse projects and weekly rankings 50 at a time, with previous and next pages.
+- Load less project data when browsing rankings or reviewing pairs.
+
+### Fixed
+
+- Keep voting from building millions of possible pairs in large weeks.
+- Finalize large weekly rankings in batches without exceeding database limits.
+- Give four-digit ranks enough room on desktop and mobile.
+
 ## [0.1.2.1] - 2026-09-07
 
 ### Changed

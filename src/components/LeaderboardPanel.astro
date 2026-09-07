@@ -1,6 +1,7 @@
 ---
 import type { getLatestLeaderboard } from '../server/ranking';
 import { madridDate } from '../server/weeks';
+import Pagination from './Pagination.astro';
 import ProjectMark from './ProjectMark.astro';
 import { listRecentUpdates } from '../server/profiles';
 
@@ -13,7 +14,7 @@ interface Props {
 
 const { board, signedIn = false, demo = false, excludeResultId } = Astro.props;
 const ranked = board?.week && (board.week.rankingStatus === 'final' || board.provisional);
-const recent = (!ranked || !board?.entries.length ? await listRecentUpdates() : [])
+const recent = ((!ranked || !board?.entries.length) && (!board || board.page === 1) ? await listRecentUpdates() : [])
   .filter((entry) => entry.id !== excludeResultId);
 const status = !board
   ? 'not scheduled'
@@ -77,8 +78,8 @@ const status = !board
       </>
     ) : (
       <div class="leaderboard-empty">
-        <p class="app-empty-title">No project has enough decisions yet.</p>
-        <p>Ranks appear after each result has eight peer decisions.</p>
+        <p class="app-empty-title">{board.page > 1 ? 'No projects on this page.' : 'No project has enough decisions yet.'}</p>
+        <p>{board.page > 1 ? 'Use Previous to return to the rankings.' : 'Ranks appear after each result has eight peer decisions.'}</p>
       </div>
     )
   ) : board.week.rankingStatus === 'unranked' ? (
@@ -107,6 +108,7 @@ const status = !board
       )}
     </div>
   )}
+  {ranked && board && <Pagination page={board.page} hasNext={board.hasNext} path="/leaderboard" />}
   {recent.length > 0 && (
     <div class="recent-updates">
       <p class="work-label">Recently published</p>

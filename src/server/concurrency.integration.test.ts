@@ -20,7 +20,7 @@ import { db } from './db';
 import { account, commitment, comparison, profile, ranking, result, user, week } from './schema';
 import { publishResult } from './results';
 import { getBuildState } from './weeks';
-import { getPublicBuilderActivity } from './profiles';
+import { getPublicBuilderActivity, listPublicProfiles } from './profiles';
 import { ensureWeekFinalized, getLatestLeaderboard, getReviewState, submitReview } from './ranking';
 import { allowWrite } from './rate-limit';
 import { POST as withdraw } from '../pages/api/result/visibility';
@@ -130,6 +130,83 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     await module.testConnection.end();
     vi.unstubAllEnvs();
   });
+
+  it('paginates tied ranks and the public directory without duplicates', async () => {
+    const { targetWeek, candidates } = await votingFixture('voting', 103);
+    await db.insert(comparison).values(candidates.flatMap((candidate, index) => {
+      const neighbor = candidates[(index + 1) % candidates.length];
+      const low = Math.min(candidate.id, neighbor.id);
+      const high = Math.max(candidate.id, neighbor.id);
+      return candidates.slice(0, 8).map((voter) => ({
+        weekId: targetWeek.id, voterUserId: voter.userId, candidateLowId: low,
+        candidateHighId: high, presentedFirstId: low, choice: 'tie', decidedAt: new Date(),
+      }));
+    }));
+    const provisional = await Promise.all([1, 2, 3, 4].map((page) => getLatestLeaderboard('candidate-0', page)));
+    expect(provisional.map((board) => board!.entries.length)).toEqual([50, 50, 3, 0]);
+    expect(provisional.map((board) => board!.hasNext)).toEqual([true, true, false, false]);
+    expect(provisional.every((board) => board!.provisional)).toBe(true);
+    expect(new Set(provisional.flatMap((board) => board!.entries.map((entry) => entry.handle))).size).toBe(103);
+    expect(provisional.flatMap((board) => board!.entries).every((entry) => entry.rank === 1)).toBe(true);
+    const finalizedAt = new Date();
+    await db.update(week).set({
+      votingClosesAt: new Date(finalizedAt.getTime() - 1000),
+      rankingStatus: 'final', finalizedAt,
+    }).where(eq(week.id, targetWeek.id));
+    await db.insert(ranking).values(candidates.map((candidate) => ({
+      weekId: targetWeek.id, resultId: candidate.id, scoreNumerator: 8,
+      scoreDenominator: 16, wins: 4, ties: 0, decisions: 8, rank: 1, finalizedAt,
+    })));
+    const boards = await Promise.all([1, 2, 3, 4].map((page) => getLatestLeaderboard(undefined, page)));
+    expect(boards.map((board) => board!.entries.length)).toEqual([50, 50, 3, 0]);
+    expect(boards.map((board) => board!.hasNext)).toEqual([true, true, false, false]);
+    const entries = boards.flatMap((board) => board!.entries);
+    expect(new Set(entries.map((entry) => entry.handle)).size).toBe(103);
+    expect(entries.every((entry) => entry.rank === 1)).toBe(true);
+    const directory = await Promise.all([1, 2, 3].map((page) => listPublicProfiles(page)));
+    expect(directory.map((rows) => rows.length)).toEqual([51, 51, 3]);
+    expect(new Set(directory.flatMap((rows) => rows.slice(0, 50).map((row) => row.handle))).size).toBe(103);
+    await db.update(profile).set({ hiddenAt: new Date() }).where(eq(profile.userId, 'candidate-0'));
+    const visible = await Promise.all([1, 2, 3].map((page) => getLatestLeaderboard(undefined, page)));
+    expect(visible.flatMap((board) => board!.entries)).toHaveLength(102);
+    expect(visible.flatMap((board) => board!.entries).some((entry) => entry.handle === 'candidate-0')).toBe(false);
+  });
+
+  it('finalizes more than one ranking batch without losing or duplicating projects', async () => {
+    const targetWeek = await scheduledWeek('closed');
+    const builders = Array.from({ length: 1001 }, (_, index) => ({
+      id: `batch-${index}`, name: `Builder ${index}`, email: `batch-${index}@example.invalid`,
+    }));
+    await db.insert(user).values(builders);
+    await db.insert(profile).values(builders.map(({ id, name }) => ({
+      userId: id, handle: id, displayName: name, projectName: name,
+    })));
+    const plans = await db.insert(commitment).values(builders.map(({ id }) => ({
+      userId: id, weekId: targetWeek.id, promise: 'Ship a prototype',
+    }))).returning();
+    const candidates = await db.insert(result).values(plans.map((plan) => ({
+      commitmentId: plan.id, userId: plan.userId, weekId: targetWeek.id,
+      status: 'complete' as const, summary: 'Shipped a prototype', onTime: true,
+    }))).returning();
+    // Four decisions on each edge give every project eight counted decisions.
+    await db.insert(comparison).values(candidates.flatMap((candidate, index) => {
+      const neighbor = candidates[(index + 1) % candidates.length];
+      const low = Math.min(candidate.id, neighbor.id);
+      const high = Math.max(candidate.id, neighbor.id);
+      return candidates.slice(0, 6).filter((voter) => voter.id !== low && voter.id !== high).slice(0, 4).map((voter) => ({
+        weekId: targetWeek.id, voterUserId: voter.userId, candidateLowId: low,
+        candidateHighId: high, presentedFirstId: low, choice: 'tie', decidedAt: new Date(),
+      }));
+    }));
+
+    expect(await ensureWeekFinalized(targetWeek.id)).toMatchObject({ rankingStatus: 'final' });
+    const ranks = await db.select().from(ranking).where(eq(ranking.weekId, targetWeek.id));
+    expect(ranks).toHaveLength(1001);
+    expect(new Set(ranks.map((entry) => entry.resultId))).toEqual(new Set(candidates.map((entry) => entry.id)));
+    expect(ranks.every((entry) => entry.rank === 1 && entry.decisions === 8 && entry.ties === 8)).toBe(true);
+    await ensureWeekFinalized(targetWeek.id);
+    expect(await db.select().from(ranking).where(eq(ranking.weekId, targetWeek.id))).toHaveLength(1001);
+  }, 15000);
 
   it('serializes simultaneous first publications and next goals without duplicates', async () => {
     await builder('publisher');

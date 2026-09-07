@@ -13,6 +13,7 @@ import {
 import { db, databaseConfigured } from './db';
 import { commitment, comparison, profile, ranking, result, week } from './schema';
 import { getDatabaseNow } from './weeks';
+import { PAGE_SIZE, pageNumber } from './pagination';
 
 export type CandidateScore = {
   resultId: number;
@@ -106,26 +107,43 @@ export function selectReviewPair(
     }
   }
 
-  const pairs: Array<{ low: number; high: number; least: number; most: number; frequency: number }> = [];
-  for (let left = 0; left < availableIds.length; left += 1) {
-    for (let right = left + 1; right < availableIds.length; right += 1) {
-      const low = Math.min(availableIds[left], availableIds[right]);
-      const high = Math.max(availableIds[left], availableIds[right]);
+  // Shuffle equal-coverage candidates so a new week does not favor low IDs.
+  const ordered = [...availableIds];
+  for (let i = ordered.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+  }
+  ordered.sort((a, b) => coverage.get(a)! - coverage.get(b)!);
+  type Pair = { low: number; high: number; least: number; most: number; frequency: number };
+  const compare = (a: Pair, b: Pair) =>
+    a.least - b.least || a.most - b.most || a.frequency - b.frequency;
+  let best: Pair | null = null;
+  let peers = 0;
+  // ponytail: a dense pair history can still require O(n²) scanning; index pair
+  // availability if weeks approach exhaustive comparisons. No pair array is built.
+  for (let left = 0; left < ordered.length; left++) {
+    const least = coverage.get(ordered[left])!;
+    if (best && least > best.least) break;
+    for (let right = left + 1; right < ordered.length; right++) {
+      const most = coverage.get(ordered[right])!;
+      if (best && least === best.least && most > best.most) break;
+      const low = Math.min(ordered[left], ordered[right]);
+      const high = Math.max(ordered[left], ordered[right]);
       const key = `${low}:${high}`;
       if (used.has(key)) continue;
-      const a = coverage.get(low)!;
-      const b = coverage.get(high)!;
-      pairs.push({ low, high, least: Math.min(a, b), most: Math.max(a, b), frequency: frequency.get(key) ?? 0 });
+      const pair = { low, high, least, most, frequency: frequency.get(key) ?? 0 };
+      if (!best || compare(pair, best) < 0) {
+        best = pair;
+        peers = 1;
+      } else if (compare(pair, best) === 0 && Math.random() < 1 / ++peers) {
+        best = pair;
+      }
+      // The lowest possible coverage and frequency cannot be improved.
+      if (best.least === coverage.get(ordered[0]) &&
+          best.most === coverage.get(ordered[1]) && best.frequency === 0) return best;
     }
   }
-  // Cover the least-reviewed participant first, then the opponent, then vary pairings.
-  const compare = (a: (typeof pairs)[number], b: (typeof pairs)[number]) =>
-    a.least - b.least || a.most - b.most || a.frequency - b.frequency;
-  pairs.sort(compare);
-  const best = pairs[0];
-  if (!best) return null;
-  const peers = pairs.filter((pair) => compare(pair, best) === 0);
-  return peers[Math.floor(Math.random() * peers.length)];
+  return best;
 }
 
 const candidateColumns = {
@@ -145,7 +163,8 @@ export async function getReviewState(userId: string) {
   if (!databaseConfigured) return { state: 'closed' as const };
 
   return db.transaction(async (tx) => {
-    // The week lock serializes reviews; a user lock would conflict with publication FKs.
+    // ponytail: the week lock serializes reviews; use coordinated per-voter locks
+    // if measured lock waits limit throughput. Publication FKs share this lock.
     const [databaseClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     const clock = { now: new Date(databaseClock.now) };
     const [votingWeek] = await tx
@@ -183,9 +202,8 @@ export async function getReviewState(userId: string) {
     if (!voterResult) return { state: 'ineligible' as const, week: votingWeek };
 
     const candidates = await tx
-      .select(candidateColumns)
+      .select({ id: result.id, userId: result.userId })
       .from(result)
-      .innerJoin(commitment, eq(result.commitmentId, commitment.id))
       .innerJoin(profile, eq(result.userId, profile.userId))
       .where(
         and(
@@ -200,6 +218,10 @@ export async function getReviewState(userId: string) {
         ),
       );
     if (candidates.length < 6) return { state: 'unranked' as const, week: votingWeek };
+
+    const loadCards = (ids: number[]) => tx.select(candidateColumns).from(result)
+      .innerJoin(commitment, eq(result.commitmentId, commitment.id))
+      .where(inArray(result.id, ids));
 
     const assignments = await tx
       .select()
@@ -216,7 +238,10 @@ export async function getReviewState(userId: string) {
 
     const unfinished = activeAssignments.find((assignment) => assignment.choice === null);
     if (unfinished) {
-      const byId = new Map(candidates.map((card) => [card.id, card]));
+      const ids = new Set(candidates.map((card) => card.id));
+      const cards = ids.has(unfinished.candidateLowId) && ids.has(unfinished.candidateHighId)
+        ? await loadCards([unfinished.candidateLowId, unfinished.candidateHighId]) : [];
+      const byId = new Map(cards.map((card) => [card.id, card]));
       const first = byId.get(unfinished.presentedFirstId);
       const second = byId.get(
         unfinished.presentedFirstId === unfinished.candidateLowId
@@ -272,7 +297,7 @@ export async function getReviewState(userId: string) {
         presentedFirstId,
       })
       .returning();
-    const byId = new Map(available.map((card) => [card.id, card]));
+    const byId = new Map((await loadCards([picked.low, picked.high])).map((card) => [card.id, card]));
 
     return {
       state: 'pair' as const,
@@ -381,7 +406,7 @@ export async function ensureWeekFinalized(weekId: number) {
     }
 
     const choices = await tx
-      .select()
+      .select({ candidateLowId: comparison.candidateLowId, candidateHighId: comparison.candidateHighId, choice: comparison.choice })
       .from(comparison)
       .where(
         and(
@@ -393,9 +418,10 @@ export async function ensureWeekFinalized(weekId: number) {
     const ranked = rankCandidateScores(
       scoreCandidateChoices(candidates.map((candidate) => candidate.id), choices),
     );
-    if (ranked.length) {
+    // Keep each insert below the PostgreSQL bind-parameter limit.
+    for (let offset = 0; offset < ranked.length; offset += 1000) {
       await tx.insert(ranking).values(
-        ranked.map((entry) => ({
+        ranked.slice(offset, offset + 1000).map((entry) => ({
           weekId,
           resultId: entry.resultId,
           scoreNumerator: entry.scoreNumerator,
@@ -417,7 +443,7 @@ export async function ensureWeekFinalized(weekId: number) {
   });
 }
 
-async function getProvisionalLeaderboard(userId: string, now: Date) {
+async function getProvisionalLeaderboard(userId: string, now: Date, page: number) {
   const [votingWeek] = await db
     .select()
     .from(week)
@@ -441,20 +467,9 @@ async function getProvisionalLeaderboard(userId: string, now: Date) {
   if (reviewed.length < 10) return null;
 
   const candidates = await db
-    .select({
-      id: result.id,
-      handle: profile.handle,
-      displayName: profile.displayName,
-      projectName: profile.projectName,
-      projectUrl: profile.projectUrl,
-      promise: commitment.promise,
-      summary: result.summary,
-      weekStartDate: week.weekStartDate,
-    })
+    .select({ id: result.id, handle: profile.handle })
     .from(result)
-    .innerJoin(commitment, eq(result.commitmentId, commitment.id))
     .innerJoin(profile, eq(result.userId, profile.userId))
-    .innerJoin(week, eq(result.weekId, week.id))
     .where(
       and(
         eq(result.weekId, votingWeek.id),
@@ -468,37 +483,49 @@ async function getProvisionalLeaderboard(userId: string, now: Date) {
       ),
     );
   if (candidates.length < 6) {
-    return { week: { ...votingWeek, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const };
+    return { week: { ...votingWeek, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const, page, hasNext: false };
   }
   const choices = await db
-    .select()
+    .select({ candidateLowId: comparison.candidateLowId, candidateHighId: comparison.candidateHighId, choice: comparison.choice })
     .from(comparison)
-    .where(
-      and(
-        eq(comparison.weekId, votingWeek.id),
-        isNotNull(comparison.choice),
-        isNull(comparison.invalidatedAt),
-      ),
-    );
+    .where(and(eq(comparison.weekId, votingWeek.id), isNotNull(comparison.choice), isNull(comparison.invalidatedAt)));
   const ranked = rankCandidateScores(
     scoreCandidateChoices(candidates.map((candidate) => candidate.id), choices),
   );
-  const scores = new Map(ranked.map((entry) => [entry.resultId, entry]));
-  const entries = candidates
-    .flatMap((candidate) => {
-      const score = scores.get(candidate.id);
-      return score ? [{ ...candidate, ...score }] : [];
-    })
-    .sort((a, b) => a.rank - b.rank || a.handle.localeCompare(b.handle));
-
-  return { week: votingWeek, now, entries, provisional: true as const };
+  const handles = new Map(candidates.map((candidate) => [candidate.id, candidate.handle]));
+  ranked.sort((a, b) => a.rank - b.rank || handles.get(a.resultId)!.localeCompare(handles.get(b.resultId)!));
+  const offset = (page - 1) * PAGE_SIZE;
+  const selected = ranked.slice(offset, offset + PAGE_SIZE);
+  const details = selected.length ? await db.select({
+    id: result.id,
+    handle: profile.handle,
+    displayName: profile.displayName,
+    projectName: profile.projectName,
+    projectUrl: profile.projectUrl,
+    promise: commitment.promise,
+    summary: result.summary,
+    weekStartDate: week.weekStartDate,
+  }).from(result)
+    .innerJoin(commitment, eq(result.commitmentId, commitment.id))
+    .innerJoin(profile, eq(result.userId, profile.userId))
+    .innerJoin(week, eq(result.weekId, week.id))
+    .where(and(inArray(result.id, selected.map((entry) => entry.resultId)),
+      eq(profile.isPublic, true), isNull(profile.hiddenAt), isNull(profile.withdrawnAt),
+      isNull(result.hiddenAt), isNull(result.withdrawnAt))) : [];
+  const byId = new Map(details.map((entry) => [entry.id, entry]));
+  const entries = selected.flatMap((score) => {
+    const detail = byId.get(score.resultId);
+    return detail ? [{ ...detail, ...score }] : [];
+  });
+  return { week: votingWeek, now, entries, provisional: true as const, page, hasNext: ranked.length > offset + PAGE_SIZE };
 }
 
-export async function getLatestLeaderboard(userId?: string) {
+export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
+  const page = pageNumber(requestedPage);
   if (!databaseConfigured) return null;
   const now = await getDatabaseNow();
   if (userId) {
-    const provisional = await getProvisionalLeaderboard(userId, now);
+    const provisional = await getProvisionalLeaderboard(userId, now, page);
     if (provisional) return provisional;
   }
   const [latestClosedWeek] = await db
@@ -556,9 +583,10 @@ export async function getLatestLeaderboard(userId?: string) {
           ),
         )
         .orderBy(asc(ranking.rank), asc(profile.handle))
+        .limit(PAGE_SIZE + 1).offset((page - 1) * PAGE_SIZE)
     : [];
 
-  return { week: finalWeek, now, entries, provisional: false as const };
+  return { week: finalWeek, now, entries: entries.slice(0, PAGE_SIZE), provisional: false as const, page, hasNext: entries.length > PAGE_SIZE };
 }
 
 export async function finalizeLatestClosedWeek() {

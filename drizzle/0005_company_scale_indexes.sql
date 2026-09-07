@@ -1,0 +1,3 @@
+CREATE INDEX "profile_directory_idx" ON "app_private"."profile" USING btree ("created_at","user_id") WHERE "app_private"."profile"."is_public" = true and "app_private"."profile"."hidden_at" is null and "app_private"."profile"."withdrawn_at" is null;--> statement-breakpoint
+CREATE INDEX "ranking_result_id_idx" ON "app_private"."ranking" USING btree ("result_id");--> statement-breakpoint
+CREATE INDEX "result_recent_public_idx" ON "app_private"."result" USING btree ("published_at") WHERE "app_private"."result"."hidden_at" is null and "app_private"."result"."withdrawn_at" is null;

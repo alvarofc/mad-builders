@@ -97,3 +97,59 @@ describe('review coverage', () => {
     expect(scoreCandidateChoices(ids, history).every((score) => score.decisions >= 8)).toBe(true);
   });
 });
+
+it('assigns a pair from 5,000 equally covered projects without enumerating pairs', () => {
+  const random = vi.spyOn(Math, 'random').mockReturnValue(0.25);
+  try {
+    const ids = Array.from({ length: 5000 }, (_, index) => index + 1);
+    const pair = selectReviewPair(ids, ids, new Set(), [], new Date())!;
+    expect(pair.low).toBeLessThan(pair.high);
+    expect(pair.least).toBe(0);
+    expect(pair.frequency).toBe(0);
+    // One shuffle and the first optimal pair, rather than millions of pair ties.
+    expect(random.mock.calls.length).toBeLessThan(5010);
+  } finally {
+    random.mockRestore();
+  }
+});
+
+it('matches exhaustive coverage and frequency priorities across mixed histories', () => {
+  let seed = 137;
+  const random = vi.spyOn(Math, 'random').mockImplementation(() => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 2 ** 32;
+  });
+  try {
+    const now = new Date();
+    const ids = Array.from({ length: 12 }, (_, index) => index + 1);
+    for (let trial = 0; trial < 100; trial++) {
+      const assignments = Array.from({ length: 60 }, () => {
+        const a = 1 + Math.floor(Math.random() * 12);
+        const b = a % 12 + 1;
+        return { candidateLowId: Math.min(a, b), candidateHighId: Math.max(a, b), choice: 'tie', assignedAt: now };
+      });
+      const coverage = new Map(scoreCandidateChoices(ids, assignments).map((score) => [score.resultId, score.decisions]));
+      const used = new Set<string>();
+      const priorities: number[][] = [];
+      for (const low of ids) for (const high of ids) {
+        if (low >= high) continue;
+        if (Math.random() < 0.6) { used.add(`${low}:${high}`); continue; }
+        priorities.push([
+          Math.min(coverage.get(low)!, coverage.get(high)!),
+          Math.max(coverage.get(low)!, coverage.get(high)!),
+          assignments.filter((pair) => pair.candidateLowId === low && pair.candidateHighId === high).length,
+        ]);
+      }
+      priorities.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+      const pair = selectReviewPair(ids, ids, used, assignments, now);
+      if (!priorities.length) expect(pair).toBeNull();
+      else {
+        expect(pair).not.toBeNull();
+        expect(used.has(`${pair!.low}:${pair!.high}`)).toBe(false);
+        expect([pair!.least, pair!.most, pair!.frequency]).toEqual(priorities[0]);
+      }
+    }
+  } finally {
+    random.mockRestore();
+  }
+});

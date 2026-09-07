@@ -28,6 +28,12 @@ Weekly updates keep the Pioneer questions. Known project details are prefilled. 
 
 Each vote is saved independently. Builders can pause after five comparisons and resume later; ten unlock the provisional leaderboard. Shares and referrals do not affect rank.
 
+The project directory and leaderboard show up to 50 projects per page. Previous and Next links use `?page=2` and preserve other query parameters. Rankings keep their overall position across pages; the leaderboard on `/build` shows the first page and links to `/leaderboard` for more.
+
+Apply `drizzle/0005_company_scale_indexes.sql` through `pnpm db:migrate` for directory and ranking lookup indexes. After a large import, run `ANALYZE` on the affected tables so Postgres plans queries using current row counts. Stale statistics caused very slow leaderboard reads in the local 5,000-project smoke test; this is import maintenance, not work for each page request.
+
+Pagination bounds rendered rows and full project details, but provisional rankings still recalculate scores from the week's candidates and votes on each request. Voting still uses a shared week lock. Load-test those paths before increasing concurrent voting traffic; the local final-leaderboard smoke test does not establish their capacity.
+
 Run `pnpm test` for unit checks. The optional `src/server/results.integration.test.ts` runs when `DATABASE_TEST_URL` is set. It exercises publication, editing, and voting against PostgreSQL inside a transaction that always rolls back its test records. It needs an active submission week.
 
 Use Supabase's session pooler (port 5432) for local `DATABASE_URL` and its direct or session connection for `DATABASE_MIGRATION_URL`. Concurrent page requests can hang with Postgres.js over the transaction pooler (port 6543); verify that connection separately before using it in production. Keep `app_private` out of the Data API's exposed schemas.

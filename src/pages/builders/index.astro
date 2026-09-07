@@ -1,11 +1,15 @@
 ---
 import ProductLayout from '../../layouts/ProductLayout.astro';
+import Pagination from '../../components/Pagination.astro';
+import { PAGE_SIZE, pageNumber } from '../../server/pagination';
 import ProjectMark from '../../components/ProjectMark.astro';
 import { getProfileByUserId, listPublicProfiles } from '../../server/profiles';
 
 export const prerender = false;
 
-const profiles = await listPublicProfiles();
+const page = pageNumber(Astro.url.searchParams.get('page'));
+const rows = await listPublicProfiles(page);
+const profiles = rows.slice(0, PAGE_SIZE);
 const currentProfile = Astro.locals.user ? await getProfileByUserId(Astro.locals.user.id) : null;
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---
@@ -41,11 +45,12 @@ Astro.response.headers.set('Cache-Control', 'no-store');
           </div>
         ) : (
           <div class="empty-ledger">
-            <h2 class="work-heading">The first page is still blank.</h2>
-            <p class="work-copy">Put your project on it.</p>
-            <a class="work-button" href="/build">add your project</a>
+            <h2 class="work-heading">{page > 1 ? 'No projects on this page.' : 'The first page is still blank.'}</h2>
+            <p class="work-copy">{page > 1 ? 'Use Previous to return to the projects.' : 'Put your project on it.'}</p>
+            {page === 1 && <a class="work-button" href="/build">add your project</a>}
           </div>
         )}
+        <Pagination page={page} hasNext={rows.length > PAGE_SIZE} />
       </div>
     </section>
   </div>
