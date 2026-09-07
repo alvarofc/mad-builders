@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { readdirSync } from 'node:fs';
 
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
@@ -15,6 +16,9 @@ export default defineConfig({
       { hostname: 'mad.builders', protocol: 'https' },
     ],
   },
-  adapter: vercel(),
+  adapter: vercel({
+    includeFiles: readdirSync(new URL('./src/server/fonts/', import.meta.url))
+      .map((file) => `src/server/fonts/${file}`),
+  }),
   integrations: [sitemap(), react()]
 });
