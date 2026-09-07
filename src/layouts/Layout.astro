@@ -101,6 +101,30 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     {!Astro.url.searchParams.has('invite') && <Analytics />}
 
     <script>
+      const loginButton = document.querySelector<HTMLAnchorElement>('.login-button');
+      if (loginButton) {
+        const refreshLoginButton = async () => {
+          loginButton.style.visibility = 'hidden';
+          try {
+            const response = await fetch('/api/auth/get-session', { cache: 'no-store' });
+            if (response.ok) {
+              const session = await response.json();
+              loginButton.hidden = Boolean(session?.user);
+            }
+          } catch {
+            // Keep the login link available when the session service is unreachable.
+          } finally {
+            loginButton.style.visibility = '';
+          }
+        };
+        void refreshLoginButton();
+        window.addEventListener('pageshow', (event) => {
+          if (event.persisted) void refreshLoginButton();
+        });
+      }
+    </script>
+
+    <script>
       const brandMenu = document.querySelector<HTMLElement>('#brand-menu');
 
       document.querySelectorAll<HTMLElement>('[data-brand-menu-trigger]').forEach((wordmark) => {
@@ -227,6 +251,9 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
   .links .login-button:hover {
     color: var(--cream);
     background: transparent;
+  }
+  .links .login-button[hidden] {
+    display: none;
   }
   @media (max-width: 640px) {
     .links {
