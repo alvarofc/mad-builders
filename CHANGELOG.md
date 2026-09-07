@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.3.2.1] - 2026-09-07
+
+### Fixed
+
+- Share weekly updates and builder profiles with readable text in their preview images.
+
 ## [0.3.2.0] - 2026-09-07
 
 ### Fixed

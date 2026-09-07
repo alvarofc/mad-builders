@@ -1,5 +1,9 @@
 import sharp from 'sharp';
+import { resolve } from 'node:path';
 import globalCss from '../styles/global.css?raw';
+
+// SVG text uses Fontconfig, not the web fonts loaded by the page.
+process.env.FONTCONFIG_FILE = resolve('src/server/fonts/fonts.conf');
 
 const token = (name: string) => {
   const match = globalCss.match(new RegExp(`--${name}:\\s*([^;]+)`));

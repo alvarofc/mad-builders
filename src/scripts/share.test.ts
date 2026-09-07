@@ -105,6 +105,26 @@ it('puts company descriptions in both OG cards', async () => {
   }
 });
 
+it('renders distinct letter shapes with bundled fonts instead of missing-glyph boxes', async () => {
+  for (const family of ['Archivo', 'IBM Plex Mono', 'Bricolage Grotesque']) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="100"><text x="10" y="70" font-family="${family}" font-size="48" fill="white">Hello Madrid</text></svg>`;
+    const { info } = await sharp(Buffer.from(svg)).trim().png().toBuffer({ resolveWithObject: true });
+    // Missing-font boxes collapse to tiny glyphs even when the SVG requests large text.
+    expect(info.height, family).toBeGreaterThan(30);
+  }
+  const builder = { displayName: 'Ana', projectName: 'III', handle: 'ana' };
+  const result = { ...builder, summary: 'Shipped.', status: 'complete', weekStartDate: '2026-09-07', proofStatus: 'proof_linked', streak: 1 };
+  for (const [narrow, wide] of [
+    [await renderProfileOg(builder), await renderProfileOg({ ...builder, projectName: 'WWW' })],
+    [await renderResultOg(result), await renderResultOg({ ...result, projectName: 'WWW' })],
+  ]) {
+    const title = { left: 72, top: 145, width: 900, height: 85 };
+    const actual = await sharp(narrow).extract(title).raw().toBuffer();
+    const differentLetters = await sharp(wide).extract(title).raw().toBuffer();
+    expect(actual.equals(differentLetters)).toBe(false);
+  }
+});
+
 it('positions the popover above a low trigger and keeps it inside the viewport', () => {
   let toggle!: () => void;
   const popover = {
