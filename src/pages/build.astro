@@ -12,10 +12,10 @@ export const prerender = false;
 Astro.response.headers.set('Cache-Control', 'no-store');
 
 const currentUser = Astro.locals.user;
-const currentProfile = currentUser ? await getProfileByUserId(currentUser.id) : null;
+const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
 const selectedWeekDate = Astro.url.searchParams.get('week');
-const buildState = currentProfile ? await getBuildState(currentProfile.userId, selectedWeekDate) : null;
-const review = currentProfile && buildState?.currentWeek ? await getReviewState(currentProfile.userId) : null;
+const buildState = currentProfile ? await Astro.locals.timing.measure('build_state', () => getBuildState(currentProfile.userId, selectedWeekDate)) : null;
+const review = currentProfile && buildState?.currentWeek ? await Astro.locals.timing.measure('review', () => getReviewState(currentProfile.userId)) : null;
 const votingRequired = review && buildState?.currentWeek && blocksWeeklyUpdate(review, buildState.currentWeek.startsAt, buildState.now);
 const unavailableWeek = Boolean(currentProfile && selectedWeekDate && !buildState);
 if (unavailableWeek) Astro.response.status = 404;
