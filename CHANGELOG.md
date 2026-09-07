@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.3.2.0] - 2026-09-07
+
+### Fixed
+
+- Publish multiline weekly answers within the character limit without line breaks inflating the count.
+- See specific errors beside invalid weekly answers and correct them before moving to the next question.
+
 ## [0.3.1.2] - 2026-09-07
 
 ### Fixed

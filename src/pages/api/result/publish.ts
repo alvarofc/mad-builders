@@ -21,11 +21,12 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   const commitmentId = Number.isSafeInteger(parsedCommitmentId) && parsedCommitmentId > 0 ? parsedCommitmentId : null;
   const weekId = Number.isSafeInteger(parsedWeekId) && parsedWeekId > 0 ? parsedWeekId : null;
   const status = String(data.get('status') ?? '');
-  const summary = String(data.get('summary') ?? '').trim();
-  const feedbackRequest = String(data.get('feedbackRequest') ?? '').trim();
+  // Multipart forms encode textarea line breaks as CRLF; browsers count them as LF.
+  const summary = String(data.get('summary') ?? '').replace(/\r\n?/g, '\n').trim();
+  const feedbackRequest = String(data.get('feedbackRequest') ?? '').replace(/\r\n?/g, '\n').trim();
   const proofUrl = String(data.get('proofUrl') ?? '').trim();
-  const nextPromise = String(data.get('nextPromise') ?? '').trim();
-  const projectSentence = String(data.get('projectSentence') ?? builder.bio).trim();
+  const nextPromise = String(data.get('nextPromise') ?? '').replace(/\r\n?/g, '\n').trim();
+  const projectSentence = String(data.get('projectSentence') ?? builder.bio).replace(/\r\n?/g, '\n').trim();
   const projectStage = String(data.get('projectStage') ?? '');
 
   if (!commitmentId && !weekId) return fail('That commitment does not exist.');
