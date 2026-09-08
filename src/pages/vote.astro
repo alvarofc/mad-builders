@@ -50,7 +50,7 @@ const proofLabel = (status: string) =>
             <p class="work-label">sign in required</p>
             <h2 class="work-heading">Startups vote.</h2>
             <p class="work-copy">Sign in with GitHub, create or join a project, and publish on time to review this week's work.</p>
-            <a class="work-button" href="/build">continue with GitHub</a>
+            <a class="work-button" href="/login?next=/vote">continue with GitHub</a>
           </>
         ) : review.state === 'profile_required' ? (
           <>

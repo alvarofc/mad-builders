@@ -8,10 +8,11 @@ import { listRecentUpdates } from '../server/profiles';
 interface Props {
   board: Awaited<ReturnType<typeof getLatestLeaderboard>>;
   signedIn?: boolean;
+  hasProject?: boolean;
   demo?: boolean;
 }
 
-const { board, signedIn = false, demo = false } = Astro.props;
+const { board, signedIn = false, hasProject = false, demo = false } = Astro.props;
 const ranked = board?.week && (board.week.rankingStatus === 'final' || board.provisional);
 const recent = (!ranked || !board?.entries.length) && (!board || board.page === 1) ? await listRecentUpdates() : [];
 const status = !board
@@ -41,16 +42,12 @@ const status = !board
     </div>
   </header>
 
-  <p class="work-copy">
-    You push harder when other builders are watching. Each week, they review your
-    progress and you see how you stack up. A little competition gives you a reason
-    to go further next week.
-  </p>
-  <p class="work-copy">
-    Publish on time to enter. Builders compare results head to head: your score is
-    your win percentage, with ties worth half a win. Eight votes unlock a rank.
-    Ranks become final when voting closes.
-  </p>
+  {!hasProject && (
+    <aside class="leaderboard-join">
+      <p class="app-empty-title">Building something cool? Get on the board.</p>
+      <a class="work-button" href={signedIn ? '/build' : '/login'}>add your project</a>
+    </aside>
+  )}
 
   {!board ? (
     <div class="leaderboard-empty">
@@ -130,4 +127,18 @@ const status = !board
       ))}
     </div>
   )}
+
+  <div class="leaderboard-about">
+    <p class="work-label">how the rank works</p>
+    <p class="work-copy">
+      You push harder when other builders are watching. Each week, they review your
+      progress and you see how you stack up. A little competition gives you a reason
+      to go further next week.
+    </p>
+    <p class="work-copy">
+      Publish on time to enter. Builders compare results head to head: your score is
+      your win percentage, with ties worth half a win. Eight votes unlock a rank.
+      Ranks become final when voting closes.
+    </p>
+  </div>
 </section>

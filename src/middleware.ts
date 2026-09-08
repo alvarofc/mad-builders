@@ -9,9 +9,25 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const timing = context.locals.timing = requestTiming();
 
   const path = context.url.pathname.replace(/\/+$/, '') || '/';
-  if (import.meta.env.DEV && context.url.searchParams.get('demo') !== '0' && ['/vote', '/leaderboard'].includes(path)) return next();
+  // The dev demo pages render fixtures without a database, but still read the
+  // session when one is available. Without this a signed-in builder looks like
+  // a stranger locally, so signed-out prompts show up for people who are in.
+  if (import.meta.env.DEV && context.url.searchParams.get('demo') !== '0' && ['/vote', '/leaderboard'].includes(path)) {
+    try {
+      const { auth, authConfigured } = await import('./server/auth');
+      if (authConfigured) {
+        const session = await auth.api.getSession({ headers: context.request.headers });
+        context.locals.user = session?.user ?? null;
+        context.locals.session = session?.session ?? null;
+      }
+    } catch {
+      // No credentials or no database in this checkout. Browse signed out.
+    }
+    return next();
+  }
   const needsSession =
     path === '/build' ||
+    path === '/login' ||
     path === '/vote' ||
     path === '/leaderboard' ||
     path === '/settings' ||

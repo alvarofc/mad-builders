@@ -7,7 +7,9 @@ import { expect, it, vi } from 'vitest';
 const page = readFileSync(new URL('../pages/build.astro', import.meta.url), 'utf8');
 const submitScript = stripTypeScriptTypes(readFileSync(new URL('./submit-api-form.ts', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace('export async function', 'async function'));
-const script = submitScript + '\n' + stripTypeScriptTypes(page.split('<script>')[1].split('</script>')[0]
+const signInScript = stripTypeScriptTypes(readFileSync(new URL('./github-sign-in.ts', import.meta.url), 'utf8')
+  .replace(/^import .*;$/gm, '').replace('export function', 'function'));
+const script = submitScript + '\n' + signInScript + '\n' + stripTypeScriptTypes(page.split('<script>')[1].split('</script>')[0]
   .replace(/^\s*import .*;$/gm, ''));
 
 it('provides an independent next-goal form after publication, gated by its own deadline', () => {

@@ -710,6 +710,28 @@
   font-variant-numeric: tabular-nums;
 }
 
+.leaderboard-join {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 32px;
+  border: 1px solid var(--green-line);
+  border-radius: 12px;
+  padding: 18px 24px;
+  background: rgba(26, 52, 43, 0.04);
+}
+
+.leaderboard-join .app-empty-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.leaderboard-join .work-button {
+  flex: none;
+}
+
 .leaderboard-empty {
   border-top: 1px solid var(--green-line);
   padding: 40px 0;
@@ -735,11 +757,74 @@
   gap: 32px;
 }
 
+.leaderboard-about {
+  max-width: 620px;
+  margin-top: 40px;
+  border-top: 1px solid var(--green-line);
+  padding-top: 28px;
+}
+
+.leaderboard-about .work-copy {
+  margin-bottom: 16px;
+  color: var(--green-dim);
+  font-size: 0.9375rem;
+}
+
+.leaderboard-about .work-copy:last-child {
+  margin-bottom: 0;
+}
+
 .leaderboard-caveat {
   margin: 16px 0 0;
   color: var(--green-faint);
   font-family: var(--font-mono);
   font-size: 0.6875rem;
+}
+
+.login-shell {
+  max-width: 620px;
+  padding-top: 40px;
+  padding-bottom: 72px;
+}
+
+.login-shell .app-section-title {
+  margin-bottom: 20px;
+  letter-spacing: -0.035em;
+}
+
+.login-shell .work-status {
+  margin-bottom: 14px;
+}
+
+.login-shell .work-note {
+  max-width: 520px;
+  margin-bottom: 0;
+}
+
+.login-steps {
+  margin-top: 44px;
+  border-top: 1px solid var(--green-line);
+  padding-top: 28px;
+}
+
+.login-step-list {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+  color: var(--green-dim);
+  font-size: 0.8125rem;
+}
+
+.login-step-list li {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.login-step-list span {
+  color: var(--green-faint);
 }
 
 .week-section {
@@ -884,8 +969,24 @@
     display: none;
   }
 
+  .leaderboard-join {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px 20px;
+  }
+
   .leaderboard-empty-action {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .login-shell {
+    padding-top: 24px;
+    padding-bottom: 48px;
+  }
+
+  .login-steps {
+    margin-top: 32px;
   }
 }
