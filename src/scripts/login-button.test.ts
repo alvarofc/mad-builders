@@ -8,7 +8,7 @@ const script = layout.split('<script is:inline>')[1].split('</script>')[0];
 it('hides login for a session, restores it after logout and keeps it available on failure', async () => {
   for (const result of [{ user: { id: 'builder' } }, null, 'http-error', 'offline']) {
     expect(layout).toContain('class="login-button" hidden');
-    expect(layout).toContain('<noscript><a href="/build#this-week" class="login-button">log in</a></noscript>');
+    expect(layout).toContain('<noscript><a href="/login" class="login-button">log in</a></noscript>');
     const button = { hidden: true };
     const fetch = vi.fn(async () => {
       if (result === 'offline') throw new Error('Offline');

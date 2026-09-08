@@ -296,28 +296,10 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
 </ProductLayout>
 
 <script>
-  import { createAuthClient } from 'better-auth/client';
+  import { attachGithubSignIn } from '../scripts/github-sign-in';
   import { submitApiForm } from '../scripts/submit-api-form';
 
-  const signInButton = document.querySelector<HTMLButtonElement>('[data-github-sign-in]');
-  const authStatus = document.querySelector<HTMLElement>('[data-auth-status]');
-
-  signInButton?.addEventListener('click', async () => {
-    signInButton.disabled = true;
-    if (authStatus) authStatus.textContent = 'Opening GitHub...';
-
-    try {
-      const authClient = createAuthClient();
-      const { error } = await authClient.signIn.social({
-        provider: 'github',
-        callbackURL: signInButton.dataset.callback || '/build',
-      });
-      if (error) throw error;
-    } catch {
-      signInButton.disabled = false;
-      if (authStatus) authStatus.textContent = 'GitHub sign-in failed. Try again.';
-    }
-  });
+  attachGithubSignIn();
 
   document.querySelectorAll<HTMLFormElement>('[data-api-form]').forEach((form) => {
     form.addEventListener('submit', async (event) => {

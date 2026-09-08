@@ -1,0 +1,70 @@
+---
+import ProductLayout from '../layouts/ProductLayout.astro';
+import { authConfigured } from '../server/auth';
+import { safeReturnPath } from '../server/return-path';
+
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const next = safeReturnPath(Astro.url.searchParams.get('next'));
+// Signed-in builders have nothing to do here. Send them where they were headed.
+if (Astro.locals.user) return Astro.redirect(next);
+---
+
+<ProductLayout
+  title="Log in - mad.builders"
+  description="One GitHub account gets you into the weekly build loop: add your project, promise one thing, publish what shipped."
+>
+  <div class="work-page">
+    <div class="wrap app-shell">
+      <div class="app-context mono">
+        <span>mad builders / account</span>
+        <div class="app-context-actions">
+          <a href="/leaderboard">leaderboard →</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="week-section">
+      <div class="wrap login-shell">
+        <p class="work-label">one account per builder</p>
+        <h1 class="app-section-title">Log in or create your account.</h1>
+        {authConfigured ? (
+          <>
+            <p class="work-copy">
+              Same button either way. GitHub gives every builder one identity, and it lets
+              us match public commit links to the account that signed in. First time here?
+              This creates your account.
+            </p>
+            <button class="work-button" type="button" data-github-sign-in data-callback={next}>
+              continue with GitHub
+            </button>
+            <p class="work-status" data-auth-status aria-live="polite"></p>
+            <p class="work-note">We read your public profile and email. Nothing is posted on your behalf.</p>
+
+            <div class="login-steps">
+              <p class="work-label">what happens next</p>
+              <ol class="login-step-list mono">
+                <li><span aria-hidden="true">01</span>Add your project. Name, one sentence, a link.</li>
+                <li><span aria-hidden="true">02</span>Promise one thing for the week.</li>
+                <li><span aria-hidden="true">03</span>Publish what shipped. Other builders review it and you get a rank.</li>
+              </ol>
+              <p class="work-note">Prefer to look around first? <a href="/leaderboard">See this week's leaderboard</a>.</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <p class="work-copy">GitHub sign-in still needs its deployment credentials. Try again later.</p>
+            <a class="work-button secondary" href="/leaderboard">see the leaderboard</a>
+          </>
+        )}
+      </div>
+    </section>
+  </div>
+</ProductLayout>
+
+<script>
+  import { attachGithubSignIn } from '../scripts/github-sign-in';
+
+  attachGithubSignIn();
+</script>

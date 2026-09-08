@@ -25,7 +25,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
   <div class="work-page">
     <div class="wrap app-shell">
       {demo && <p class="work-note">Local demo. Fictional projects and sample scores. <a href="/vote?demo=1">Try voting →</a> · <a href="/leaderboard?demo=0">Show real data</a></p>}
-      <LeaderboardPanel board={board} signedIn={Boolean(currentUser)} demo={demo} />
+      <LeaderboardPanel board={board} signedIn={Boolean(currentUser)} hasProject={Boolean(currentProfile)} demo={demo} />
       <p class="leaderboard-caveat">One useful weekly signal, not a universal founder score.</p>
       {demo && demoProjects.map((project) => (
         <article class="result-block" id={project.handle}>

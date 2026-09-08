@@ -140,6 +140,7 @@ things.
 - `src/pages/index.astro`: home (hero, events, residents, projects, friends, madrid teaser)
 - `src/pages/madrid.astro`: builder's guide to Madrid (stats, communities, calendar, Leaflet map)
 - `src/pages/events/[slug].astro`: photo gallery per event, with lightbox
+- `src/pages/login.astro`: GitHub sign-in and account creation
 - `src/pages/build.astro`: sign-in, profile setup, weekly updates, catch-up, and next-week goals
 - `src/components/WeeklyUpdateForm.tsx`: React island using shadcn's Questionnaire for weekly updates
 - `src/pages/builders/`: public builder directory, profiles, and weekly result pages
