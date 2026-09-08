@@ -2,6 +2,17 @@
 
 Changes to mad.builders.
 
+## [0.5.0.0] - 2026-09-08
+
+### Added
+
+- Sign in or create an account from a dedicated login page before adding a project.
+
+### Changed
+
+- Show a clear add-project button on the leaderboard for builders without a project.
+- Hide the button for builders who already have a project and move the ranking explanation below the board.
+
 ## [0.4.2.0] - 2026-09-07
 
 ### Fixed
