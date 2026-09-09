@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.5.1.0] - 2026-09-09
+
+### Changed
+
+- Reuse unchanged calendar thumbnails across builds when the build cache is restored.
+
 ## [0.5.0.0] - 2026-09-08
 
 ### Added
