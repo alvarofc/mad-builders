@@ -53,7 +53,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       <div class="wrap nav-inner">
         <a href="/" class="wordmark" data-brand-menu-trigger aria-haspopup="menu">mad<span>.builders</span></a>
         <nav class="links mono">
-          <a href="/madrid" class="nav-secondary">Madrid</a>
+          <a href="/madrid" class="nav-madrid">Madrid</a>
           <a href="/builders" class="nav-projects">Projects</a>
           <a href={site.whatsapp} class="nav-secondary">WhatsApp</a>
           <a href="/leaderboard" class="cta">rankings →</a>
@@ -259,23 +259,29 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     display: none;
   }
   @media (max-width: 640px) {
+    .nav-inner {
+      gap: 12px;
+    }
     .links {
       gap: 12px;
       font-size: 12px;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
     .wordmark {
       white-space: nowrap;
     }
-    .links .nav-secondary {
+    .links .nav-secondary,
+    .links .nav-projects,
+    .links .login-button {
       display: none;
     }
-    .links .cta,
-    .links .login-button {
+    .links .cta {
       padding: 7px 10px;
     }
   }
-  @media (max-width: 460px) {
-    .links .nav-projects {
+  @media (max-width: 359px) {
+    .links .cta {
       display: none;
     }
   }

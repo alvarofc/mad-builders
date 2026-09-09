@@ -993,7 +993,7 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents.map((e) => ({
     }
     .cal-cell {
       min-height: 64px;
-      padding: 5px;
+      padding: 3px;
     }
     .cal-chip-title {
       display: none;
@@ -1005,8 +1005,20 @@ const calendarEvents = [...madbuildersEvents, ...externalEvents.map((e) => ({
     .cal-chip-image {
       aspect-ratio: 1;
     }
-    .cal-chip-time {
+    .cal-chip .cal-chip-meta {
+      min-width: 0;
+      max-width: 100%;
+      gap: 2px;
+    }
+    .cal-chip .cal-chip-time {
       font-size: 8px;
+      letter-spacing: 0;
+      line-height: 1.25;
+      white-space: nowrap;
+      min-width: 0;
+      max-width: 100%;
+      flex-shrink: 1;
+      overflow: hidden;
     }
   }
 

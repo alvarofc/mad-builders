@@ -31,6 +31,17 @@ export interface CommunityEvent {
 
 export const events: CommunityEvent[] = [
   {
+    slug: 'grok-bot-madrid',
+    title: 'Grok Bot Madrid Meetup',
+    date: '2026-09-29',
+    time: '17:30',
+    endTime: '21:30',
+    location: 'Plaza del Callao, Centro',
+    luma: 'https://luma.com/grokbotmadrid1',
+    blurb:
+      'Taller práctico para probar Grok Bot y construir bots que resuelvan un reto o automaticen una tarea. Trae portátil o móvil; habrá créditos para usar durante el evento, demos de la comunidad y picoteo al terminar.',
+  },
+  {
     slug: 'spec-kitty',
     title: 'Spec Kitty: Structured AI Coding for Real Teams',
     date: '2026-09-22',

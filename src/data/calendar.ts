@@ -251,6 +251,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Ilona Limonta-Volkova and Miguel Sánchez Monjo discuss what MiCA means in practice for crypto companies in Europe, from authorisation to enforcement and investment. The conversation is in English, with audience questions, wine and cheese, and drinks afterwards.',
   },
   {
+    title: 'DevMad! Talks - September 2026',
+    date: '2026-09-14',
+    time: '18:30',
+    endTime: '21:00',
+    location: 'Puerta Innovación, Toledo 110, La Latina',
+    url: 'https://www.meetup.com/devmad/events/316450466/',
+    image: '/events/devmad-september-2026.jpg',
+    description:
+      'Rocío Tomé introduces game development, from choosing an engine to the roles involved in making a game. Arturo Serrano Martínez covers VR locomotion and interaction, including accessibility, followed by food, drinks and networking. Both talks are in English.',
+  },
+  {
     title: 'Activos digitales 2026: innovación virtual, impacto real',
     date: '2026-09-15',
     time: '09:00',
@@ -422,5 +433,16 @@ export const calendarEvents: CalendarEvent[] = [
     image: '/events/claude-code-hackathon-madrid.png',
     description:
       "A 48-hour Claude Code hackathon on agent-to-agent infrastructure, run with Nova Talent and Causa Prima. Around 50 participants will build in teams from Friday evening to Sunday, with three short talks during the weekend.",
+  },
+  {
+    title: 'DevFest Madrid 2026',
+    date: '2026-11-27',
+    time: '15:30',
+    endTime: '21:30',
+    location: 'Celonis, Plaza de Manuel Gómez-Moreno 2, Tetuán',
+    url: 'https://gdg.community.dev/events/details/google-gdg-madrid-presents-devfest-madrid-2026/',
+    image: '/events/devfest-madrid-2026.png',
+    description:
+      'Encuentro de GDG Madrid para aprender sobre desarrollo y conocer a otros profesionales de la comunidad en las oficinas de Celonis. La agenda y los ponentes se anunciarán próximamente.',
   },
 ];
