@@ -130,7 +130,7 @@ const proofLabel = (status: string) =>
           <>
             <p class="work-label">voting closed</p>
             <h2 class="work-heading">No pairs right now.</h2>
-            <p class="work-copy">{'opensAt' in review && review.opensAt ? `Voting opens ${madridDate(review.opensAt)} and stays open for 24 hours.` : 'The next voting window will appear here once scheduled.'}</p>
+            <p class="work-copy">{'opensAt' in review && review.opensAt && review.closesAt ? `Voting opens ${madridDate(review.opensAt)} and closes ${madridDate(review.closesAt)}.` : 'The next voting window will appear here once scheduled.'}</p>
             <a class="work-button" href="/builders">discover projects</a>
           </>
         )}

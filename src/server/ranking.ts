@@ -196,7 +196,7 @@ export async function getReviewState(
     if (!votingWeek) {
       const [upcoming] = await tx.select().from(week)
         .where(gt(week.submissionClosesAt, clock.now)).orderBy(asc(week.submissionClosesAt)).limit(1);
-      return { state: 'closed' as const, opensAt: upcoming?.submissionClosesAt };
+      return { state: 'closed' as const, opensAt: upcoming?.submissionClosesAt, closesAt: upcoming?.votingClosesAt };
     }
 
     const [lockedClock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
