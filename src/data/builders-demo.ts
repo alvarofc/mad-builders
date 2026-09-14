@@ -32,10 +32,11 @@ export const demoLeaderboard: NonNullable<Awaited<ReturnType<typeof getLatestLea
 };
 
 export function demoReview(rawRound: string | null): Awaited<ReturnType<typeof getReviewState>> {
+  const total = Math.floor(demoProjects.length / 2);
   const parsed = Number(rawRound);
-  const reviewed = Number.isInteger(parsed) ? Math.max(0, Math.min(10, parsed)) : 0;
-  if (reviewed === 10) return { state: 'complete', week: demoWeek, reviewed };
-  const pairs = demoProjects.flatMap((first, index) =>
-    demoProjects.slice(index + 1).map((second) => ({ first, second })));
-  return { state: 'pair', week: demoWeek, reviewed, assignmentId: reviewed + 1, ...pairs[reviewed] };
+  const reviewed = Number.isInteger(parsed) ? Math.max(0, Math.min(total, parsed)) : 0;
+  if (reviewed === total) return { state: 'complete', week: demoWeek, reviewed, total };
+  const first = demoProjects[reviewed * 2];
+  const second = demoProjects[reviewed * 2 + 1];
+  return { state: 'pair', week: demoWeek, reviewed, total, assignmentId: reviewed + 1, first, second };
 }

@@ -56,9 +56,9 @@ export function scoreCandidateChoices(candidateIds: number[], choices: ScoredCho
   return [...scores.values()];
 }
 
-export function rankCandidateScores(scores: CandidateScore[]) {
+export function rankCandidateScores(scores: CandidateScore[], minimumDecisions = 8) {
   const ranked = scores
-    .filter((score) => score.decisions >= 8)
+    .filter((score) => score.decisions >= minimumDecisions)
     .map((score) => ({
       ...score,
       scoreNumerator: score.wins * 2 + score.ties,
@@ -80,6 +80,15 @@ export function rankCandidateScores(scores: CandidateScore[]) {
   }, []);
 }
 
+// Rotate the unpaired update so full participation gives equal exposure when
+// each startup owns one eligible result. Shared-owner conflicts can reduce coverage.
+export function reviewCandidateIds(candidateIds: number[], excludedIds: Set<number>, voterResultId: number) {
+  const available = candidateIds.filter((id) => !excludedIds.has(id)).sort((a, b) => a - b);
+  if (available.length % 2 === 0) return available;
+  const unpaired = available.find((id) => id > voterResultId) ?? available[0];
+  return available.filter((id) => id !== unpaired);
+}
+
 // Pending pairs reserve coverage briefly; returning voters can still finish older pairs.
 const PAIR_RESERVATION_MS = 10 * 60 * 1000;
 
@@ -98,7 +107,7 @@ export function selectReviewPair(
     const { candidateLowId: low, candidateHighId: high, choice } = assignment;
     if (!coverage.has(low) || !coverage.has(high)) continue;
     const pending = choice === null && now.getTime() - assignment.assignedAt.getTime() < PAIR_RESERVATION_MS;
-    if (pending) {
+    if (pending || choice === 'pass') {
       coverage.set(low, coverage.get(low)! + 1);
       coverage.set(high, coverage.get(high)! + 1);
     }
@@ -109,7 +118,8 @@ export function selectReviewPair(
   }
 
   // Shuffle equal-coverage candidates so a new week does not favor low IDs.
-  const ordered = [...availableIds];
+  const seen = new Set([...used].flatMap((pair) => pair.split(':').map(Number)));
+  const ordered = availableIds.filter((id) => !seen.has(id));
   for (let i = ordered.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
@@ -250,11 +260,21 @@ export async function getReviewState(
       );
     const activeAssignments = assignments.filter((assignment) => !assignment.invalidatedAt);
     const reviewed = activeAssignments.filter((assignment) => assignment.choice !== null).length;
-    if (reviewed >= 10) return { state: 'complete' as const, week: votingWeek, reviewed };
 
+    const availableIds = reviewCandidateIds(
+      candidates.map((candidate) => candidate.id),
+      new Set(candidates.filter((candidate) => conflicts.has(candidate.projectId)).map((candidate) => candidate.id)),
+      voterResult.id,
+    );
+    const used = new Set(assignments.map((assignment) => `${assignment.candidateLowId}:${assignment.candidateHighId}`));
+    const assignedIds = new Set(assignments.flatMap((assignment) => [assignment.candidateLowId, assignment.candidateHighId]));
+    const remainingPairs = Math.floor(availableIds.filter((id) => !assignedIds.has(id)).length / 2);
+
+    const seen = new Set(assignments.filter((assignment) => assignment.choice !== null || assignment.invalidatedAt)
+      .flatMap((assignment) => [assignment.candidateLowId, assignment.candidateHighId]));
     const unfinished = activeAssignments.find((assignment) => assignment.choice === null);
     if (unfinished) {
-      const ids = new Set(candidates.map((card) => card.id));
+      const ids = new Set(availableIds);
       const cards = ids.has(unfinished.candidateLowId) && ids.has(unfinished.candidateHighId)
         ? await loadCards([unfinished.candidateLowId, unfinished.candidateHighId]) : [];
       const byId = new Map(cards.map((card) => [card.id, card]));
@@ -264,11 +284,13 @@ export async function getReviewState(
           ? unfinished.candidateHighId
           : unfinished.candidateLowId,
       );
-      if (first && second && !conflicts.has(first.projectId) && !conflicts.has(second.projectId)) {
+      if (first && second && !seen.has(first.id) && !seen.has(second.id) &&
+          !conflicts.has(first.projectId) && !conflicts.has(second.projectId)) {
         return {
           state: 'pair' as const,
           week: votingWeek,
           reviewed,
+          total: reviewed + 1 + remainingPairs,
           assignmentId: unfinished.id,
           first,
           second,
@@ -280,11 +302,6 @@ export async function getReviewState(
         .where(eq(comparison.id, unfinished.id));
     }
 
-    const available = candidates.filter((candidate) => !conflicts.has(candidate.projectId));
-    const used = new Set(
-      assignments
-        .map((assignment) => `${assignment.candidateLowId}:${assignment.candidateHighId}`),
-    );
     const allAssignments = await tx
       .select({
         candidateLowId: comparison.candidateLowId,
@@ -296,12 +313,12 @@ export async function getReviewState(
       .where(and(eq(comparison.weekId, votingWeek.id), isNull(comparison.invalidatedAt)));
     const picked = selectReviewPair(
       candidates.map((candidate) => candidate.id),
-      available.map((candidate) => candidate.id),
+      availableIds,
       used,
       allAssignments,
       clock.now,
     );
-    if (!picked) return { state: 'exhausted' as const, week: votingWeek, reviewed };
+    if (!picked) return { state: 'complete' as const, week: votingWeek, reviewed, total: reviewed };
     const presentedFirstId = Math.random() < 0.5 ? picked.low : picked.high;
     const [assignment] = await tx
       .insert(comparison)
@@ -319,6 +336,7 @@ export async function getReviewState(
       state: 'pair' as const,
       week: votingWeek,
       reviewed,
+      total: reviewed + remainingPairs,
       assignmentId: assignment.id,
       first: byId.get(presentedFirstId)!,
       second: byId.get(presentedFirstId === picked.low ? picked.high : picked.low)!,
@@ -455,6 +473,7 @@ export async function ensureWeekFinalized(weekId: number) {
       );
     const ranked = rankCandidateScores(
       scoreCandidateChoices(candidates.map((candidate) => candidate.id), choices),
+      Math.min(8, 2 * Math.floor((candidates.length - 1) / 2)),
     );
     // Keep each insert below the PostgreSQL bind-parameter limit.
     for (let offset = 0; offset < ranked.length; offset += 1000) {
@@ -482,30 +501,12 @@ export async function ensureWeekFinalized(weekId: number) {
 }
 
 async function getProvisionalLeaderboard(userId: string, now: Date, page: number) {
-  const ownedProject = await getProfileByUserId(userId);
-  if (!ownedProject) return null;
-  const projectId = ownedProject.id;
-  const [votingWeek] = await db
-    .select()
-    .from(week)
-    .where(and(lte(week.submissionClosesAt, now), gt(week.votingClosesAt, now)))
-    .orderBy(desc(week.startsAt))
-    .limit(1);
-  if (!votingWeek) return null;
-
-  const reviewed = await db
-    .select({ id: comparison.id })
-    .from(comparison)
-    .where(
-      and(
-        eq(comparison.weekId, votingWeek.id),
-        eq(comparison.voterProjectId, projectId),
-        isNotNull(comparison.choice),
-        isNull(comparison.invalidatedAt),
-      ),
-    )
-    .limit(10);
-  if (reviewed.length < 10) return null;
+  const review = await getReviewState(userId);
+  if (review.state === 'unranked') {
+    return { week: { ...review.week, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const, page, hasNext: false };
+  }
+  if (review.state !== 'complete') return null;
+  const votingWeek = review.week;
 
   const candidates = await db
     .select({ id: result.id, handle: project.handle })
@@ -532,6 +533,7 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
     .where(and(eq(comparison.weekId, votingWeek.id), isNotNull(comparison.choice), isNull(comparison.invalidatedAt)));
   const ranked = rankCandidateScores(
     scoreCandidateChoices(candidates.map((candidate) => candidate.id), choices),
+    Math.min(8, 2 * Math.floor((candidates.length - 1) / 2)),
   );
   const handles = new Map(candidates.map((candidate) => [candidate.id, candidate.handle]));
   ranked.sort((a, b) => a.rank - b.rank || handles.get(a.resultId)!.localeCompare(handles.get(b.resultId)!));

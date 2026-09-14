@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { rankCandidateScores, scoreCandidateChoices, selectReviewPair } from './ranking';
+import { rankCandidateScores, reviewCandidateIds, scoreCandidateChoices, selectReviewPair } from './ranking';
 
 describe('weekly ranking', () => {
   it('uses exact ratios, ignores thin coverage, and assigns competition ranks', () => {
@@ -41,15 +41,15 @@ describe('review coverage', () => {
 
   it('prioritizes the least-reviewed participant over new pairs and combined exposure', () => {
     // 1 has one decision, 2 has five, and 3/4 have two each.
-    // Only 1:2 and 3:4 remain; the old selector preferred the unseen 3:4 pair.
+    // Prefer including 1 even though its opponent has more coverage.
     const history = [assignment(1, 2), ...Array.from({ length: 4 }, () => assignment(2, 5)),
       assignment(3, 5), assignment(3, 5), assignment(4, 5), assignment(4, 5)];
     expect(selectReviewPair([1, 2, 3, 4, 5], [1, 2, 3, 4],
-      new Set(['1:3', '1:4', '2:3', '2:4']), history, now)).toMatchObject({ low: 1, high: 2 });
+      new Set(), history, now)).toMatchObject({ low: 1, least: 1, most: 2 });
   });
 
-  it('ignores skips, expired reservations, and decisions involving removed participants', () => {
-    const history = [assignment(3, 4), assignment(1, 2, 'pass'),
+  it('ignores expired reservations and decisions involving removed participants', () => {
+    const history = [assignment(3, 4),
       assignment(1, 2, null, 10 * 60 * 1000), assignment(1, 99), assignment(2, 99)];
     expect(selectReviewPair([1, 2, 3, 4], [1, 2, 3, 4], new Set(), history, now))
       .toMatchObject({ low: 1, high: 2 });
@@ -84,6 +84,11 @@ describe('review coverage', () => {
         const pair = selectReviewPair(ids, ids.filter((id) => id !== voter), used.get(voter)!, history, roundTime)!;
         expect(pair).not.toBeNull();
         expect([pair.low, pair.high]).not.toContain(voter);
+        for (const previous of used.get(voter)!) {
+          const seen = previous.split(':').map(Number);
+          expect(seen).not.toContain(pair.low);
+          expect(seen).not.toContain(pair.high);
+        }
         const key = `${pair.low}:${pair.high}`;
         expect(used.get(voter)!.has(key)).toBe(false);
         used.get(voter)!.add(key);
@@ -133,7 +138,11 @@ it('matches exhaustive coverage and frequency priorities across mixed histories'
       const priorities: number[][] = [];
       for (const low of ids) for (const high of ids) {
         if (low >= high) continue;
-        if (Math.random() < 0.6) { used.add(`${low}:${high}`); continue; }
+        if (Math.random() < 0.03) used.add(`${low}:${high}`);
+      }
+      const seen = new Set([...used].flatMap((key) => key.split(':').map(Number)));
+      for (const low of ids) for (const high of ids) {
+        if (low >= high || seen.has(low) || seen.has(high)) continue;
         priorities.push([
           Math.min(coverage.get(low)!, coverage.get(high)!),
           Math.max(coverage.get(low)!, coverage.get(high)!),
@@ -152,4 +161,59 @@ it('matches exhaustive coverage and frequency priorities across mixed histories'
   } finally {
     random.mockRestore();
   }
+});
+
+it('excludes both results from previous votes and stops with one unseen result', () => {
+  const now = new Date();
+  expect(selectReviewPair([1, 2, 3, 4], [1, 2, 3, 4], new Set(['1:2']), [], now))
+    .toMatchObject({ low: 3, high: 4 });
+  expect(selectReviewPair([1, 2, 3], [1, 2, 3], new Set(['1:2']), [], now)).toBeNull();
+});
+
+it.each([6, 7, 26, 27])('finishes all pairs with equal exposure and no repeats for %i updates', (count) => {
+  const ids = Array.from({ length: count }, (_, index) => index + 1);
+  const now = new Date();
+  const history: Array<{ candidateLowId: number; candidateHighId: number; choice: string; assignedAt: Date }> = [];
+  const appearances = new Map(ids.map((id) => [id, 0]));
+  for (const voter of ids) {
+    const available = reviewCandidateIds(ids, new Set([voter]), voter);
+    const used = new Set<string>();
+    const seen = new Set<number>();
+    for (let round = 0; round < Math.floor((count - 1) / 2); round++) {
+      const pair = selectReviewPair(ids, available, used, history, now)!;
+      expect(pair).not.toBeNull();
+      for (const id of [pair.low, pair.high]) {
+        expect(id).not.toBe(voter);
+        expect(seen.has(id)).toBe(false);
+        seen.add(id);
+        appearances.set(id, appearances.get(id)! + 1);
+      }
+      used.add(`${pair.low}:${pair.high}`);
+      history.push({ candidateLowId: pair.low, candidateHighId: pair.high, choice: 'tie', assignedAt: now });
+    }
+    expect(selectReviewPair(ids, available, used, history, now)).toBeNull();
+  }
+  expect(new Set(appearances.values())).toEqual(new Set([2 * Math.floor((count - 1) / 2)]));
+});
+
+it('counts skipped comparisons as exposure without counting them as ranking decisions', () => {
+  const now = new Date();
+  const history = [{ candidateLowId: 1, candidateHighId: 2, choice: 'pass', assignedAt: now }];
+  expect(selectReviewPair([1, 2, 3, 4], [1, 2, 3, 4], new Set(), history, now))
+    .toMatchObject({ low: 3, high: 4 });
+  expect(scoreCandidateChoices([1, 2], history).every((score) => score.decisions === 0)).toBe(true);
+});
+
+it('ranks a small week using its attainable coverage threshold', () => {
+  expect(rankCandidateScores([
+    { resultId: 1, wins: 3, ties: 0, decisions: 4 },
+    { resultId: 2, wins: 2, ties: 0, decisions: 3 },
+  ], 4).map((score) => score.resultId)).toEqual([1]);
+});
+
+it('keeps shared-owner results out and leaves an even number of candidates', () => {
+  const available = reviewCandidateIds([1, 2, 3, 4, 5, 6, 7], new Set([1, 2]), 1);
+  expect(available).toEqual([4, 5, 6, 7]);
+  expect(reviewCandidateIds([1, 2], new Set([1, 2]), 1)).toEqual([]);
+  expect(reviewCandidateIds([1, 2], new Set([1]), 1)).toEqual([]);
 });
