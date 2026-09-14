@@ -42,3 +42,9 @@ it('escapes unsubscribe URLs in HTML while preserving the plain-text URL', () =>
   expect(email.text).toContain(url);
   expect(() => renderEmail('welcome', { unsubscribeUrl: 'javascript:alert(1)' })).toThrow('HTTPS');
 });
+
+it('keeps voting copy independent of the number of available comparisons', () => {
+  const email = renderEmail('voting', { unsubscribeUrl });
+  expect(email.subject).toBe('Review this week’s updates');
+  expect(email.text).not.toMatch(/\b(ten|10)\b/i);
+});

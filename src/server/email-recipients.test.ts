@@ -68,20 +68,29 @@ it.skipIf(!process.env.DATABASE_EMAIL_TEST_URL)('selects only actionable reminde
       await db.execute(sql`update app_private."user" set email_unsubscribed_at = now() where id = ${owner}`);
       expect((await recipients('voting')).some((r) => r.userId === owner)).toBe(false);
       await db.execute(sql`update app_private."user" set email_unsubscribed_at = null where id = ${owner}`);
-      // Invalidated historical pairs stay used; a valid pending pair remains actionable.
-      for (let low = 1; low < 6; low++) {
-        for (let high = low + 1; high < 6; high++) {
-          await db.execute(sql`insert into app_private.comparison
-            (week_id, voter_project_id, candidate_low_id, candidate_high_id, presented_first_id, choice, invalidated_at)
-            values (${w.id}, ${owner}, ${ids[low]}, ${ids[high]}, ${ids[low]}, 'pass', now())`);
-        }
+      // Six updates give this voter two pairs; the next result is its rotated bye.
+      for (const [low, high] of [[2, 3], [4, 5]]) {
+        await db.execute(sql`insert into app_private.comparison
+          (week_id, voter_project_id, candidate_low_id, candidate_high_id, presented_first_id, choice)
+          values (${w.id}, ${owner}, ${ids[low]}, ${ids[high]}, ${ids[low]}, 'pass')`);
       }
       expect((await recipients('voting')).some((r) => r.userId === owner)).toBe(false);
-      await db.execute(sql`update app_private.comparison set choice = null, invalidated_at = null
-        where voter_project_id = ${owner} and candidate_low_id = ${ids[1]} and candidate_high_id = ${ids[2]}`);
+      await db.execute(sql`update app_private.comparison set choice = null
+        where voter_project_id = ${owner} and candidate_low_id = ${ids[2]}`);
       expect((await recipients('voting')).some((r) => r.userId === owner)).toBe(true);
-      await db.execute(sql`update app_private.comparison set choice = 'pass', invalidated_at = null where voter_project_id = ${owner}`);
+      await db.execute(sql`update app_private.comparison set candidate_low_id = ${ids[1]}, presented_first_id = ${ids[1]}
+        where voter_project_id = ${owner} and choice is null`);
+      expect((await recipients('voting')).some((r) => r.userId === owner)).toBe(false); // Pending bye is unavailable.
+      await db.execute(sql`update app_private.comparison set candidate_low_id = ${ids[2]}, presented_first_id = ${ids[2]}, candidate_high_id = ${ids[4]}
+        where voter_project_id = ${owner} and choice is null`);
+      expect((await recipients('voting')).some((r) => r.userId === owner)).toBe(false); // Pending result was already seen.
+      await db.execute(sql`update app_private.comparison set candidate_high_id = ${ids[3]}
+        where voter_project_id = ${owner} and choice is null`);
+      // Invalidated results remain seen, and one leftover result cannot form a pair.
+      await db.execute(sql`update app_private.comparison set invalidated_at = now()
+        where voter_project_id = ${owner} and candidate_low_id = ${ids[2]}`);
       expect((await recipients('voting')).some((r) => r.userId === owner)).toBe(false);
+      await db.execute(sql`update app_private.comparison set choice = 'pass', invalidated_at = null where voter_project_id = ${owner}`);
       // Co-owners receive reminders for their active project and share completed voting work.
       const teammate = `${prefix}-teammate`;
       await db.execute(sql`insert into app_private."user" (id, name, email)
@@ -91,11 +100,11 @@ it.skipIf(!process.env.DATABASE_EMAIL_TEST_URL)('selects only actionable reminde
       expect(await getReminderRecipients('checkin', sunday, teammate)).toEqual([]);
       expect(await getReminderRecipients('voting', monday, teammate)).toEqual([]);
       await db.execute(sql`update app_private.comparison set choice = null
-        where voter_project_id = ${owner} and candidate_low_id = ${ids[1]} and candidate_high_id = ${ids[2]}`);
+        where voter_project_id = ${owner} and candidate_low_id = ${ids[2]} and candidate_high_id = ${ids[3]}`);
       expect(await getReminderRecipients('voting', monday, teammate)).toHaveLength(1);
       // Even an inactive ownership excludes that project for every co-owner.
       await db.execute(sql`insert into app_private.project_owner (project_id, user_id, active)
-        values (${`${prefix}-1`}, ${teammate}, false)`);
+        values (${`${prefix}-2`}, ${teammate}, false)`);
       expect(await getReminderRecipients('voting', monday, owner)).toEqual([]);
       expect(await getReminderRecipients('voting', monday, teammate)).toEqual([]);
       const key = `voting:${prefix}-1:${w.id}`;
@@ -108,6 +117,26 @@ it.skipIf(!process.env.DATABASE_EMAIL_TEST_URL)('selects only actionable reminde
       expect(await getReminderRecipients('voting', monday, `${prefix}-1`)).toHaveLength(1);
       await db.execute(sql`update app_private.email_delivery set sent_at = null, created_at = ${monday.toISOString()}::timestamptz - interval '23 hours' where key = ${key}`);
       expect((await recipients('voting')).some((r) => r.userId === `${prefix}-1`)).toBe(false);
+      // A larger week keeps reminders active after ten votes and stops at completion.
+      await db.execute(sql`delete from app_private.project_owner where project_id = ${`${prefix}-2`} and user_id = ${teammate}`);
+      await db.execute(sql`delete from app_private.comparison where voter_project_id = ${owner}`);
+      for (let index = 6; index < 27; index++) {
+        const id = `${prefix}-${index}`;
+        await db.execute(sql`insert into app_private.project (id, handle, project_name)
+          values (${id}, ${`email-${prefix.slice(0, 8)}-${index}`}, 'Test project')`);
+        const [c] = await db.execute<{ id: number }>(sql`insert into app_private.commitment (project_id, week_id, promise)
+          values (${id}, ${w.id}, 'Ship') returning id`);
+        const [r] = await db.execute<{ id: number }>(sql`insert into app_private.result (commitment_id, project_id, week_id, status, summary, on_time)
+          values (${c.id}, ${id}, ${w.id}, 'submitted', 'Shipped', true) returning id`);
+        ids.push(Number(r.id));
+      }
+      for (let low = 1; low < 27; low += 2) {
+        if (low === 21) expect(await getReminderRecipients('voting', monday, owner)).toHaveLength(1);
+        await db.execute(sql`insert into app_private.comparison
+          (week_id, voter_project_id, candidate_low_id, candidate_high_id, presented_first_id, choice)
+          values (${w.id}, ${owner}, ${ids[low]}, ${ids[low + 1]}, ${ids[low]}, 'pass')`);
+      }
+      expect(await getReminderRecipients('voting', monday, owner)).toEqual([]);
       throw rollback;
     });
   } catch (error) {

@@ -9,6 +9,15 @@ Changes to mad.builders.
 - Upload a project logo during setup or in Settings, replace it later, or switch back to the website favicon.
 - Show your chosen logo on project pages, in the directory and leaderboard, and in social previews.
 
+## [0.5.2.0] - 2026-09-14
+
+### Fixed
+
+- Review each weekly result at most once, including results you chose or skipped.
+- Complete all available pairs instead of a fixed ten. Odd leftovers rotate across voters so each update gets equal exposure when everyone finishes and projects have no shared owners.
+- Open the early leaderboard when your available comparisons are finished, and let smaller weeks qualify for rankings with the reviews available to them.
+- Receive voting reminders only while comparisons remain, with no fixed ten-vote requirement.
+
 ## [0.5.1.1] - 2026-09-14
 
 ### Changed

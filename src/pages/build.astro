@@ -192,7 +192,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 <div class="work-actions">
                   <ShareButton path={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}?ref=${currentProfile.handle}`} title={[`Weekly update · week of ${buildState.currentWeek?.weekStartDate}\n\nThis week I worked on ${currentProfile.projectName}:\n${buildState.currentResult.summary}`, buildState.currentResult.feedbackRequest].filter(Boolean).join("\n\n")} expanded eventName="weekly_result_shared" handle={currentProfile.handle} />
                   {buildState.phase === 'active' && <a class="work-button secondary" href="/build?edit#this-week">edit update</a>}
-                  {buildState.phase === 'voting' && <a class="work-button" href="/vote">review ten pairs</a>}
+                  {buildState.phase === 'voting' && <a class="work-button" href="/vote">review weekly updates</a>}
                   <a
                     class={`work-button ${buildState.phase === 'voting' ? 'secondary' : ''}`}
                     href={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}`}
@@ -221,7 +221,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
               </>
             ) : votingRequired && review?.state === 'pair' ? (
               <>
-                <p class="work-label">{review.reviewed} of 10 reviewed</p>
+                <p class="work-label">{review.reviewed} of {review.total} reviewed</p>
                 <h2 class="work-heading">Finish last week's voting first.</h2>
                 <p class="work-copy">Review the remaining pairs before publishing this week's update. Your saved draft will be here when you return.</p>
                 <a class="work-button" href="/vote?demo=0">continue voting</a>

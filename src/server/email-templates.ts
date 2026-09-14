@@ -30,8 +30,8 @@ export function renderEmail(kind: EmailKind, {
       note: needsResult ? 'Post by Sunday, 18:00 Madrid for this week’s ranking.' : 'One week at a time.',
     },
     voting: {
-      subject: 'Ten comparisons, then the leaderboard', label: 'Your weekly vote',
-      paragraphs: ['Other builders posted their work. You pick which of two got further, ten times.', 'Finish your comparisons and the early leaderboard opens up.'],
+      subject: 'Review this week’s updates', label: 'Your weekly vote',
+      paragraphs: ['Other builders posted their work. Compare their updates and pick who got further.', 'Finish your comparisons and the early leaderboard opens up.'],
       cta: 'Start voting', path: '/vote', note: 'Voting closes Monday, 18:00 Madrid.',
     },
   };
