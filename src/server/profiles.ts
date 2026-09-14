@@ -41,6 +41,7 @@ const publicColumns = {
   bio: project.bio,
   projectName: project.projectName,
   projectUrl: project.projectUrl,
+  logo: project.logo,
   projectStage: project.projectStage,
   image: sql<string | null>`null`,
   joinedAt: project.createdAt,
@@ -224,6 +225,7 @@ export async function createProfile(input: {
   bio: string;
   projectName: string;
   projectUrl: string | null;
+  logo?: string | null;
   referredByUserId: string | null;
 }) {
   return db.transaction(async (tx) => {
@@ -247,6 +249,7 @@ export async function updateProfile(input: {
   bio: string;
   projectName: string;
   projectUrl: string | null;
+  logo?: string | null;
 }) {
   const current = await getProfileByUserId(input.userId);
   if (!current || current.id !== input.projectId) return null;
@@ -254,7 +257,7 @@ export async function updateProfile(input: {
     await tx.update(user).set({ name: input.displayName }).where(eq(user.id, input.userId));
     const [updated] = await tx.update(project).set({
       location: input.location, bio: input.bio, projectName: input.projectName,
-      projectUrl: input.projectUrl, updatedAt: new Date(),
+      projectUrl: input.projectUrl, logo: input.logo, updatedAt: new Date(),
     }).where(eq(project.id, current.id)).returning();
     return updated;
   });
