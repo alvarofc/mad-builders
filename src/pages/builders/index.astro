@@ -37,7 +37,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
           <div class="profile-list">
             {profiles.map((profile) => (
               <a class="profile-row" href={`/builders/${profile.handle}`}>
-                <ProjectMark name={profile.projectName} url={profile.projectUrl} />
+                <ProjectMark name={profile.projectName} url={profile.projectUrl} logo={profile.logo} />
                 <span class="profile-name">{profile.projectName}</span>
                 <span class="profile-project">by {profile.displayName} · @{profile.handle}</span>
                 <span class="profile-arrow" aria-hidden="true">→</span>

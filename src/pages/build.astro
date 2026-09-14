@@ -117,7 +117,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
             <p class="work-label">step 02 / add your project</p>
             <h2 class="work-heading">What are you building?</h2>
             <p class="work-copy">Keep it plain. You can make it prettier after you've shipped something.</p>
-            <form class="work-form" method="post" action="/api/profile" data-api-form>
+            <form class="work-form" method="post" action="/api/profile" enctype="multipart/form-data" data-api-form>
               <input type="hidden" name="ref" value={safeRef} />
               <label class="work-field">
                 <span>your name</span>
@@ -155,6 +155,11 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
               <label class="work-field">
                 <span>project URL</span>
                 <input name="projectUrl" type="url" placeholder="https://" inputmode="url" />
+              </label>
+              <label class="work-field">
+                <span>project logo</span>
+                <input name="logo" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="logo-help" />
+                <small id="logo-help">We use your website favicon by default. Upload a PNG, JPEG or WebP up to 2 MB to replace it.</small>
               </label>
               <label class="work-field">
                 <span>What are you building in a sentence?</span>

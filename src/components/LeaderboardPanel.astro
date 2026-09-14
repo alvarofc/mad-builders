@@ -65,7 +65,7 @@ const status = !board
             <li class="leaderboard-row">
               <span class="leaderboard-rank">#{entry.rank}</span>
               <a class="leaderboard-project" href={demo ? `/leaderboard?demo=1#${entry.handle}` : `/builders/${entry.handle}`}>
-                <ProjectMark name={entry.projectName} url={entry.projectUrl} />
+                <ProjectMark name={entry.projectName} url={entry.projectUrl} logo={entry.logo} />
                 <span class="leaderboard-project-copy">
                   <strong>{entry.projectName}</strong>
                   <span>by {entry.displayName} · @{entry.handle}</span>
@@ -120,7 +120,7 @@ const status = !board
       <p class="work-label">Recently published</p>
       {recent.map((entry) => (
         <a class="recent-update" href={`/builders/${entry.handle}/weeks/${entry.weekStartDate}`}>
-          <ProjectMark name={entry.projectName} url={entry.projectUrl} />
+          <ProjectMark name={entry.projectName} url={entry.projectUrl} logo={entry.logo} />
           <span><strong>{entry.projectName}</strong><span>{entry.summary}</span></span>
           <span aria-hidden="true">→</span>
         </a>
