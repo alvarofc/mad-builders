@@ -1,4 +1,5 @@
 ---
+import ProjectMark from '../components/ProjectMark.astro';
 import ProductLayout from '../layouts/ProductLayout.astro';
 import { getProjectTeam, listOwnedProjects } from '../server/projects';
 import { getProfileByUserId, listResultsForProject } from '../server/profiles';
@@ -51,7 +52,7 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
       <div class="work-main">
         <p class="work-label">project and your account</p>
         <h2 class="work-heading">What people see.</h2>
-        <form class="work-form" method="post" action="/api/profile">
+        <form class="work-form" method="post" action="/api/profile" enctype="multipart/form-data">
           <input type="hidden" name="projectId" value={currentProfile?.id} />
           <label class="work-field">
             <span>your name</span>
@@ -69,6 +70,18 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
             <span>project URL</span>
             <input name="projectUrl" type="url" value={currentProfile.projectUrl ?? ''} placeholder="https://" inputmode="url" />
           </label>
+          <ProjectMark name={currentProfile.projectName} url={currentProfile.projectUrl} logo={currentProfile.logo} />
+          <label class="work-field">
+            <span>project logo</span>
+            <input name="logo" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="logo-help" />
+            <small id="logo-help">We use your website favicon by default. Upload a PNG, JPEG or WebP up to 2 MB to replace it.</small>
+          </label>
+          {currentProfile.logo && (
+            <label class="work-note">
+              <input name="resetLogo" type="checkbox" value="1" />
+              <span>use website favicon instead</span>
+            </label>
+          )}
           <label class="work-field">
             <span>What are you building in a sentence?</span>
             <textarea name="bio" minlength="5" maxlength="280" required>{currentProfile.bio}</textarea>

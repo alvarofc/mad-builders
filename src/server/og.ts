@@ -43,17 +43,23 @@ export const summaryLines = (value: string) => {
   return lines;
 };
 
-async function renderCard(svg: string, projectUrl?: string | null) {
+async function renderCard(svg: string, projectUrl?: string | null, uploadedLogo?: string | null) {
   const card = sharp(Buffer.from(svg));
-  if (projectUrl) {
+  if (uploadedLogo || projectUrl) {
     try {
       // Fetch only from the same favicon service used by ProjectMark, never the project server.
-      const hostname = new URL(projectUrl).hostname;
-      const response = await fetch(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`, {
-        signal: AbortSignal.timeout(2000),
-      });
-      if (!response.ok) throw new Error('Logo unavailable');
-      const logo = await sharp(Buffer.from(await response.arrayBuffer()), { limitInputPixels: 1024 * 1024 })
+      let bytes: Buffer;
+      if (uploadedLogo) {
+        bytes = Buffer.from(uploadedLogo.split(',')[1], 'base64');
+      } else {
+        const hostname = new URL(projectUrl!).hostname;
+        const response = await fetch(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=128`, {
+          signal: AbortSignal.timeout(2000),
+        });
+        if (!response.ok) throw new Error('Logo unavailable');
+        bytes = Buffer.from(await response.arrayBuffer());
+      }
+      const logo = await sharp(bytes, { limitInputPixels: 1024 * 1024 })
         .resize(64, 64, { fit: 'contain', background: token('cream') }).flatten({ background: token('cream') }).png().toBuffer();
       card.composite([{ input: logo, left: 1056, top: 432 }]);
     } catch {
@@ -72,6 +78,7 @@ const projectMark = (name: string) => {
 export async function renderProfileOg(builder: {
   displayName: string;
   projectName: string;
+  logo?: string | null;
   handle: string;
   projectUrl?: string | null;
   bio?: string | null;
@@ -93,7 +100,7 @@ export async function renderProfileOg(builder: {
       ${projectMark(builder.projectName)}
       <text x="72" y="574" fill="${cream}" font-family="Bricolage Grotesque, Archivo, sans-serif" font-size="27" font-weight="500">mad<tspan fill="${dim}" font-weight="400">.builders</tspan></text>
     </svg>`;
-  return renderCard(svg, builder.projectUrl);
+  return renderCard(svg, builder.projectUrl, builder.logo);
 }
 
 export async function renderResultOg(published: {
@@ -103,6 +110,7 @@ export async function renderResultOg(published: {
   summary: string;
   weekStartDate: string;
   projectName: string;
+  logo?: string | null;
   proofStatus: string;
   streak: number;
   rank?: number | null;
@@ -127,5 +135,5 @@ export async function renderResultOg(published: {
       ${projectMark(published.projectName)}
       <text x="72" y="574" fill="${cream}" font-family="Bricolage Grotesque, Archivo, sans-serif" font-size="27" font-weight="500">mad<tspan fill="${dim}" font-weight="400">.builders</tspan></text>
     </svg>`;
-  return renderCard(svg, published.projectUrlAtPublish);
+  return renderCard(svg, published.projectUrlAtPublish, published.logo);
 }

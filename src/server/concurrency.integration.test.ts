@@ -21,7 +21,7 @@ import { account, commitment, comparison, project, projectOwner, projectInvite, 
 import { publishResult } from './results';
 import { getBuildState } from './weeks';
 import { acceptProjectInvite, createProjectInvite, getProjectInvite, revokeProjectInvite, decideProjectAccess, requestProjectAccess, switchProject } from './projects';
-import { getProfileByUserId, getPublicProjectActivity, listPublicProfiles } from './profiles';
+import { createProfile, updateProfile, getPublicProfileByHandle, getProfileByUserId, getPublicProjectActivity, listPublicProfiles } from './profiles';
 import { ensureWeekFinalized, getLatestLeaderboard, getReviewState, submitReview } from './ranking';
 import { allowWrite } from './rate-limit';
 import { POST as withdraw } from '../pages/api/result/visibility';
@@ -131,6 +131,26 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const module = await import('./db') as typeof import('./db') & { testConnection: { end: () => Promise<void> } };
     await module.testConnection.end();
     vi.unstubAllEnvs();
+  });
+
+  it('persists uploaded logos, preserves them on ordinary edits and resets public projections', async () => {
+    await db.insert(user).values({ id: 'logo-owner', name: 'Ana', email: 'logo@example.invalid' });
+    const input = { userId: 'logo-owner', handle: 'logo-project', displayName: 'Ana', location: 'Madrid', bio: 'Tools for builders', projectName: 'Logo project', projectUrl: 'https://example.com', referredByUserId: null };
+    const logo = 'data:image/webp;base64,dGVzdA==';
+    const created = await createProfile({ ...input, logo });
+    await db.update(project).set({ isPublic: true }).where(eq(project.id, created.id));
+    expect((await getProfileByUserId(input.userId))?.logo).toBe(logo);
+    const edit = { ...input, projectId: created.id };
+    await updateProfile({ ...edit, bio: 'Updated description', logo: undefined });
+    expect((await getPublicProfileByHandle(input.handle))?.logo).toBe(logo);
+    expect((await listPublicProfiles())[0].logo).toBe(logo);
+    const replacement = 'data:image/webp;base64,bmV3';
+    await updateProfile({ ...edit, logo: replacement });
+    expect((await getProfileByUserId(input.userId))?.logo).toBe(replacement);
+    await updateProfile({ ...edit, logo: null });
+    expect((await getProfileByUserId(input.userId))?.logo).toBeNull();
+    expect((await getPublicProfileByHandle(input.handle))?.logo).toBeNull();
+    expect((await listPublicProfiles())[0].logo).toBeNull();
   });
 
   it('paginates tied ranks and the public directory without duplicates', async () => {

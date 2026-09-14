@@ -8,6 +8,7 @@ import {
   updateProfile,
   validHandle,
 } from '../../server/profiles';
+import { readLogo } from '../../server/project-logo';
 import { allowWrite } from '../../server/rate-limit';
 
 export const prerender = false;
@@ -23,7 +24,13 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   if (!(await allowWrite(request, locals.user.id, 'profile'))) return fail('Too many attempts. Try again in a minute.', 429);
   const existing = await getProfileByUserId(locals.user.id);
 
-  const data = await request.formData();
+  if (Number(request.headers.get('content-length')) > 3 * 1024 * 1024) return fail('Keep your logo under 2 MB.', 413);
+  let data: FormData;
+  try {
+    data = await request.formData();
+  } catch {
+    return fail('Could not read the form. Try again.');
+  }
   if (existing && data.get('projectId') !== existing.id) return fail('Your active project changed. Reload before saving.', 409);
   const handle = existing?.handle ?? normalizeHandle(field(data, 'handle'));
   const displayName = field(data, 'displayName');
@@ -52,6 +59,13 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
     return fail('Enter a full project URL starting with https://.');
   }
 
+  let logo: string | null | undefined;
+  try {
+    logo = await readLogo(data);
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : 'Could not read your logo.');
+  }
+
   if (existing) {
     const updated = await updateProfile({
       projectId: existing.id,
@@ -60,6 +74,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
       location,
       projectName,
       projectUrl,
+      logo,
       bio,
     });
     if (!updated) return fail('Your active project changed. Reload before saving.', 409);
@@ -77,6 +92,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
       location,
       projectName,
       projectUrl,
+      logo,
       bio,
       referredByUserId,
     });

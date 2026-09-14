@@ -356,7 +356,7 @@
   height: 100%;
   border-radius: inherit;
   background: var(--cream);
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .builder-head > .project-mark {

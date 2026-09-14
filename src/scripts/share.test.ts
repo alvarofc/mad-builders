@@ -82,6 +82,16 @@ it('embeds a project logo in both cards and still renders when the logo service 
       const pixel = await sharp(card).extract({ left: 1088, top: 464, width: 1, height: 1 }).removeAlpha().raw().toBuffer();
       expect([...pixel]).toEqual([255, 0, 0]);
     }
+    fetchLogo.mockClear();
+    const uploadedLogo = `data:image/webp;base64,${(await sharp(logo).webp({ lossless: true }).toBuffer()).toString('base64')}`;
+    for (const card of [
+      await renderProfileOg({ ...project, projectUrl: 'https://example.com', logo: uploadedLogo }),
+      await renderResultOg({ ...project, logo: uploadedLogo, summary: 'Shipped.', status: 'complete', weekStartDate: '2026-09-07', proofStatus: 'proof_linked', streak: 1 }),
+    ]) {
+      const pixel = await sharp(card).extract({ left: 1088, top: 464, width: 1, height: 1 }).removeAlpha().raw().toBuffer();
+      expect([...pixel]).toEqual([255, 0, 0]);
+    }
+    expect(fetchLogo).not.toHaveBeenCalled();
     fetchLogo.mockRejectedValueOnce(new Error('Offline'));
     const fallback = await renderProfileOg({ ...project, projectUrl: 'https://example.com' });
     expect(await sharp(fallback).metadata()).toMatchObject({ width: 1200, height: 630, format: 'png' });

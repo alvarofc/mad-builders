@@ -109,6 +109,7 @@ export const project = appPrivate.table(
     bio: text('bio').default('').notNull(),
     projectName: text('project_name').notNull(),
     projectUrl: text('project_url'),
+    logo: text('logo'),
     projectStage: text('project_stage').default('building').notNull(),
     referredByUserId: text('referred_by_user_id').references(() => user.id, {
       onDelete: 'set null',

@@ -10,7 +10,7 @@ export const demoProjects = [
   { name: 'Brisa', founder: 'Pablo', stage: 'idea', sentence: 'A quieter way for remote teams to plan time together.', goal: 'Interview ten team leads before writing any more code.', summary: 'Spoke with seven team leads. Only two wanted another scheduling tool. Five kept bringing up the cost of finding a venue. We stopped building the calendar and are testing a venue shortlist by email.', feedback: 'Would you pay for the shortlist, or only after booking a space?' },
 ].map((project, index) => ({
   id: index + 1, userId: `demo-${index + 1}`, handle: `demo-${project.name.toLowerCase()}`,
-  projectName: project.name, displayName: project.founder, projectUrl: null,
+  projectName: project.name, displayName: project.founder, projectUrl: null, logo: null,
   projectSentence: project.sentence, projectStage: project.stage,
   promise: project.goal, summary: project.summary, feedbackRequest: project.feedback,
   status: index === 3 || index === 5 ? 'partial' : 'complete',
