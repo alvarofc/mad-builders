@@ -370,6 +370,25 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     });
   });
 
+  it('reads the leaderboard without taking the voting lock or changing pending pairs', async () => {
+    const { targetWeek, candidates } = await votingFixture('voting', 7);
+    await db.transaction(async (tx) => {
+      await tx.select().from(week).where(eq(week.id, targetWeek.id)).for('update');
+      // A leaderboard read must finish while another connection holds the week lock.
+      expect((await getLatestLeaderboard('candidate-0'))?.provisional).toBe(false);
+      expect(await db.select().from(comparison)).toHaveLength(0);
+    });
+    await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: 'candidate-0',
+      candidateLowId: candidates[1].id, candidateHighId: candidates[2].id,
+      presentedFirstId: candidates[1].id, choice: 'low', decidedAt: new Date() });
+    await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: 'candidate-0',
+      candidateLowId: candidates[2].id, candidateHighId: candidates[3].id,
+      presentedFirstId: candidates[2].id });
+    const before = await db.select().from(comparison).orderBy(comparison.id);
+    await getLatestLeaderboard('candidate-0');
+    expect(await db.select().from(comparison).orderBy(comparison.id)).toEqual(before);
+  });
+
   it.each([7, 27])('uses all available pairs and unlocks the leaderboard with %i updates', async (count) => {
     await votingFixture('voting', count);
     const total = Math.floor((count - 1) / 2);

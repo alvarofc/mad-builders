@@ -501,15 +501,20 @@ export async function ensureWeekFinalized(weekId: number) {
 }
 
 async function getProvisionalLeaderboard(userId: string, now: Date, page: number) {
-  const review = await getReviewState(userId);
-  if (review.state === 'unranked') {
-    return { week: { ...review.week, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const, page, hasNext: false };
-  }
-  if (review.state !== 'complete') return null;
-  const votingWeek = review.week;
+  const ownedProject = await getProfileByUserId(userId);
+  if (!ownedProject) return null;
+  const [votingWeek] = await db.select().from(week)
+    .where(and(lte(week.submissionClosesAt, now), gt(week.votingClosesAt, now)))
+    .orderBy(desc(week.startsAt)).limit(1);
+  if (!votingWeek) return null;
+  const [voterResult] = await db.select({ id: result.id }).from(result).where(and(
+    eq(result.weekId, votingWeek.id), eq(result.projectId, ownedProject.id),
+    eq(result.onTime, true), isNull(result.hiddenAt), isNull(result.withdrawnAt),
+  )).limit(1);
+  if (!voterResult) return null;
 
   const candidates = await db
-    .select({ id: result.id, handle: project.handle })
+    .select({ id: result.id, projectId: result.projectId, handle: project.handle })
     .from(result)
     .innerJoin(project, eq(result.projectId, project.id))
     .where(
@@ -527,6 +532,27 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
   if (candidates.length < 6) {
     return { week: { ...votingWeek, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const, page, hasNext: false };
   }
+  const related = await db.execute<{ project_id: string }>(sql`
+    select distinct other.project_id from app_private.project_owner own
+    join app_private.project_owner other on own.user_id = other.user_id
+    where own.project_id = ${ownedProject.id}
+  `);
+  const conflicts = new Set([ownedProject.id, ...related.map((row) => row.project_id)]);
+  const available = new Set(reviewCandidateIds(
+    candidates.map((candidate) => candidate.id),
+    new Set(candidates.filter((candidate) => conflicts.has(candidate.projectId)).map((candidate) => candidate.id)),
+    voterResult.id,
+  ));
+  const assignments = await db.select().from(comparison).where(and(
+    eq(comparison.weekId, votingWeek.id), eq(comparison.voterProjectId, ownedProject.id),
+  ));
+  const assigned = new Set(assignments.flatMap((pair) => [pair.candidateLowId, pair.candidateHighId]));
+  if ([...available].filter((id) => !assigned.has(id)).length >= 2) return null;
+  const seen = new Set(assignments.filter((pair) => pair.choice !== null || pair.invalidatedAt)
+    .flatMap((pair) => [pair.candidateLowId, pair.candidateHighId]));
+  if (assignments.some((pair) => pair.choice === null && !pair.invalidatedAt &&
+      [pair.candidateLowId, pair.candidateHighId].every((id) => available.has(id) && !seen.has(id)))) return null;
+
   const choices = await db
     .select({ candidateLowId: comparison.candidateLowId, candidateHighId: comparison.candidateHighId, choice: comparison.choice })
     .from(comparison)
