@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.5.1.1] - 2026-09-14
+
+### Changed
+
+- Share the update for the week of 7 September until midnight on 14 September, Madrid time. Voting closes Friday, 18 September at 18:00.
+- Keep unfinished updates accessible while an earlier week’s deadline is extended, and count updates submitted within the extension as on time.
+
 ## [0.5.1.0] - 2026-09-09
 
 ### Changed
