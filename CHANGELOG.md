@@ -2,6 +2,13 @@
 
 Changes to mad.builders.
 
+## [0.6.0.0] - 2026-09-14
+
+### Added
+
+- Upload a project logo during setup or in Settings, replace it later, or switch back to the website favicon.
+- Show your chosen logo on project pages, in the directory and leaderboard, and in social previews.
+
 ## [0.5.1.1] - 2026-09-14
 
 ### Changed
