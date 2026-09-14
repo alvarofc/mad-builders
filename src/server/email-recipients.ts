@@ -66,27 +66,37 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
     join app_private."user" u on u.id = owner.user_id
     where ${active} and r.on_time = true and r.hidden_at is null and r.withdrawn_at is null
       and (select count(*) from candidates) >= 6
-      and (select count(*) from app_private.comparison c
-        where c.week_id = w.id and c.voter_project_id = p.id
-          and c.invalidated_at is null and c.choice is not null) < 10
       and exists (
-        select 1 from candidates low join candidates high on low.id < high.id
-        where not exists (
-          select 1 from app_private.project_owner voter_owner
-          join app_private.project_owner candidate_owner on candidate_owner.user_id = voter_owner.user_id
-          where voter_owner.project_id = p.id
-            and candidate_owner.project_id in (low.project_id, high.project_id)
-        )
-          and (
-            not exists (
-              select 1 from app_private.comparison c where c.week_id = w.id
-                and c.voter_project_id = p.id and c.candidate_low_id = low.id and c.candidate_high_id = high.id
-            ) or exists (
-              select 1 from app_private.comparison c where c.week_id = w.id
-                and c.voter_project_id = p.id and c.candidate_low_id = low.id and c.candidate_high_id = high.id
-                and c.choice is null and c.invalidated_at is null
-            )
+        with available as (
+          select candidate.id, count(*) over () as candidate_count,
+            row_number() over (order by (candidate.id > r.id) desc, candidate.id) as bye_order
+          from candidates candidate
+          where candidate.project_id <> p.id and not exists (
+            select 1 from app_private.project_owner voter_owner
+            join app_private.project_owner candidate_owner on candidate_owner.user_id = voter_owner.user_id
+            where voter_owner.project_id = p.id and candidate_owner.project_id = candidate.project_id
           )
+        ), paired as (
+          select id from available where candidate_count % 2 = 0 or bye_order > 1
+        ), history as (
+          select c.* from app_private.comparison c
+          where c.week_id = w.id and c.voter_project_id = p.id
+        )
+        select 1 where (
+          select count(*) from paired candidate where not exists (
+            select 1 from history c where candidate.id in (c.candidate_low_id, c.candidate_high_id)
+          )
+        ) >= 2 or exists (
+          select 1 from history pending
+          join paired low on low.id = pending.candidate_low_id
+          join paired high on high.id = pending.candidate_high_id
+          where pending.choice is null and pending.invalidated_at is null
+            and not exists (
+              select 1 from history seen
+              where (seen.choice is not null or seen.invalidated_at is not null)
+                and (seen.candidate_low_id in (low.id, high.id) or seen.candidate_high_id in (low.id, high.id))
+            )
+        )
       )
     order by w.id, u.id limit 100
   `)];

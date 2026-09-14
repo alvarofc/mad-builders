@@ -277,12 +277,12 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect((await db.select().from(project)).map((entry) => entry.id)).toContain('teammate');
   });
 
-  it('gives co-owners the same ten reviews and one leaderboard entry per startup', async () => {
+  it('gives co-owners the same available reviews and one leaderboard entry per startup', async () => {
     const { candidates } = await votingFixture('voting');
     await db.insert(user).values({ id: 'cofounder', name: 'Cofounder', email: 'cofounder@example.invalid' });
     await requestProjectAccess('cofounder', 'candidate-0');
     expect(await decideProjectAccess('candidate-0', 'candidate-0', 'cofounder', true)).toBe(true);
-    for (let index = 0; index < 10; index++) {
+    for (let index = 0; index < 2; index++) {
       const pair = await getReviewState('candidate-0');
       if (pair.state !== 'pair') throw new Error('Expected pair');
       expect(pair.reviewed).toBe(index);
@@ -290,9 +290,9 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       expect(await getReviewState('cofounder')).toMatchObject({ assignmentId: pair.assignmentId, reviewed: index });
       expect(await submitReview('cofounder', pair.assignmentId, 'first')).toBe(true);
     }
-    expect(await getReviewState('candidate-0')).toMatchObject({ state: 'complete', reviewed: 10 });
-    expect(await getReviewState('cofounder')).toMatchObject({ state: 'complete', reviewed: 10 });
-    expect(await db.select().from(comparison)).toHaveLength(10);
+    expect(await getReviewState('candidate-0')).toMatchObject({ state: 'complete', reviewed: 2, total: 2 });
+    expect(await getReviewState('cofounder')).toMatchObject({ state: 'complete', reviewed: 2, total: 2 });
+    expect(await db.select().from(comparison)).toHaveLength(2);
     const board = await getLatestLeaderboard('cofounder');
     expect(new Set(board?.entries.map((entry) => entry.handle)).size).toBe(board?.entries.length);
   });
@@ -368,6 +368,63 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     await db.transaction(async (tx) => {
       await tx.execute(sql`select id from app_private.week where id = ${targetWeek.id} for update nowait`);
     });
+  });
+
+  it('reads the leaderboard without taking the voting lock or changing pending pairs', async () => {
+    const { targetWeek, candidates } = await votingFixture('voting', 7);
+    await db.transaction(async (tx) => {
+      await tx.select().from(week).where(eq(week.id, targetWeek.id)).for('update');
+      // A leaderboard read must finish while another connection holds the week lock.
+      expect((await getLatestLeaderboard('candidate-0'))?.provisional).toBe(false);
+      expect(await db.select().from(comparison)).toHaveLength(0);
+    });
+    await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: 'candidate-0',
+      candidateLowId: candidates[1].id, candidateHighId: candidates[2].id,
+      presentedFirstId: candidates[1].id, choice: 'low', decidedAt: new Date() });
+    await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: 'candidate-0',
+      candidateLowId: candidates[2].id, candidateHighId: candidates[3].id,
+      presentedFirstId: candidates[2].id });
+    const before = await db.select().from(comparison).orderBy(comparison.id);
+    await getLatestLeaderboard('candidate-0');
+    expect(await db.select().from(comparison).orderBy(comparison.id)).toEqual(before);
+  });
+
+  it.each([7, 27])('uses all available pairs and unlocks the leaderboard with %i updates', async (count) => {
+    await votingFixture('voting', count);
+    const total = Math.floor((count - 1) / 2);
+    const seen = new Set<number>();
+    for (let reviewed = 0; reviewed < total; reviewed++) {
+      const pair = await getReviewState('candidate-0');
+      expect(pair).toMatchObject({ state: 'pair', reviewed, total });
+      if (pair.state !== 'pair') throw new Error('Expected pair');
+      for (const candidate of [pair.first, pair.second]) {
+        expect(seen.has(candidate.id)).toBe(false);
+        seen.add(candidate.id);
+      }
+      expect(await submitReview('candidate-0', pair.assignmentId, 'first')).toBe(true);
+    }
+    expect(await getReviewState('candidate-0')).toMatchObject({ state: 'complete', reviewed: total, total });
+    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ provisional: true });
+  });
+
+  it('replaces a legacy pending pair that repeats a previously reviewed result', async () => {
+    const { targetWeek, candidates } = await votingFixture('voting', 7);
+    await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: 'candidate-0',
+      candidateLowId: candidates[1].id, candidateHighId: candidates[2].id,
+      presentedFirstId: candidates[1].id, choice: 'low', decidedAt: new Date() });
+    const [pending] = await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: 'candidate-0',
+      candidateLowId: candidates[2].id, candidateHighId: candidates[3].id,
+      presentedFirstId: candidates[2].id }).returning();
+    const next = await getReviewState('candidate-0');
+    expect(next).toMatchObject({ state: 'pair', reviewed: 1, total: 2 });
+    if (next.state !== 'pair') throw new Error('Expected replacement pair');
+    expect(next.assignmentId).not.toBe(pending.id);
+    for (const id of [next.first.id, next.second.id]) {
+      expect(candidates.slice(0, 4).map((candidate) => candidate.id)).not.toContain(id);
+    }
+    expect((await db.select().from(comparison).where(eq(comparison.id, pending.id)))[0].invalidatedAt).not.toBeNull();
+    expect(await submitReview('candidate-0', next.assignmentId, 'first')).toBe(true);
+    expect(await getReviewState('candidate-0')).toMatchObject({ state: 'complete', reviewed: 2, total: 2 });
   });
 
   it('resumes one assignment under concurrent requests and saves one immutable vote', async () => {
@@ -509,7 +566,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       await builder(voter);
       await db.insert(comparison).values({ weekId: targetWeek.id, voterProjectId: voter, candidateLowId: candidates[0].id, candidateHighId: candidates[1].id, presentedFirstId: candidates[0].id, choice: 'low', decidedAt: new Date() });
     }
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 2; i++) {
       const pair = await getReviewState('candidate-0');
       if (pair.state !== 'pair') throw new Error('Expected pair');
       expect(await submitReview('candidate-0', pair.assignmentId, 'pass')).toBe(true);
@@ -566,8 +623,10 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       () => moderate(requestContext('candidate-0', { kind: 'voter', handle: 'voter-0', action: 'invalidate', reason: 'Test invalidation' })),
       () => ensureWeekFinalized(targetWeek.id));
     expect((responses[0] as Response).status).toBe(200);
-    expect(responses[1]).toMatchObject({ rankingStatus: 'unranked' });
-    expect(await db.select().from(ranking)).toHaveLength(0);
+    expect(responses[1]).toMatchObject({ rankingStatus: 'final' });
+    const ranks = await db.select().from(ranking);
+    expect(ranks).toHaveLength(2);
+    expect(ranks.every((entry) => entry.decisions === 7 && entry.scoreDenominator === 14)).toBe(true);
     expect((await db.select().from(comparison).where(eq(comparison.voterProjectId, 'voter-0')))[0].invalidatedAt).not.toBeNull();
   });
 

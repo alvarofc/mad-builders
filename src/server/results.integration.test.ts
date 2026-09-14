@@ -45,7 +45,7 @@ it.skipIf(!process.env.DATABASE_TEST_URL)('publishes and edits a first update ag
           const [plan] = await tx.insert(commitment).values({ projectId: voterId, weekId: votingWeek.id, promise: '' }).returning();
           await tx.insert(result).values({ projectId: voterId, weekId: votingWeek.id, commitmentId: plan.id, status: 'submitted', summary: 'Built a demo', onTime: true });
         }
-        for (let index = 0; index < 10; index++) {
+        for (let index = 0; index < 2; index++) {
           const pair = await getReviewState(id);
           expect(pair.state).toBe('pair');
           if (pair.state !== 'pair') throw new Error('Expected a comparison');
@@ -58,15 +58,15 @@ it.skipIf(!process.env.DATABASE_TEST_URL)('publishes and edits a first update ag
           expect(await submitReview(id, pair.assignmentId, 'first')).toBe(true);
         }
         const completed = await getReviewState(id);
-        expect(completed).toMatchObject({ state: 'complete', reviewed: 10 });
+        expect(completed).toMatchObject({ state: 'complete', reviewed: 2, total: 2 });
         // Moderation preserves pair uniqueness even after votes stop counting.
         await tx.update(comparison).set({ invalidatedAt: now })
           .where(and(eq(comparison.weekId, votingWeek.id), eq(comparison.voterProjectId, id)));
-        expect(await getReviewState(id)).toMatchObject({ state: 'exhausted', reviewed: 0 });
-        expect(await getReviewState(id)).toMatchObject({ state: 'exhausted', reviewed: 0 });
+        expect(await getReviewState(id)).toMatchObject({ state: 'complete', reviewed: 0, total: 0 });
+        expect(await getReviewState(id)).toMatchObject({ state: 'complete', reviewed: 0, total: 0 });
         const history = await tx.select().from(comparison)
           .where(and(eq(comparison.weekId, votingWeek.id), eq(comparison.voterProjectId, id)));
-        expect(history).toHaveLength(10);
+        expect(history).toHaveLength(2);
         throw rollback;
       } finally { transactionSpy.mockRestore(); }
     });

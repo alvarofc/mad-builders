@@ -56,7 +56,7 @@ beforeEach(() => { vi.mocked(getReviewState).mockResolvedValue({ state: 'closed'
 describe('Pioneer update fields', () => {
   it('blocks the following week until voting is finished, but allows completion and exceptions', async () => {
     const priorWeek = { ...currentWeek, startsAt: new Date('2026-08-23T22:00:00Z'), votingClosesAt: new Date(now.getTime() + 1000) };
-    for (const state of ['pair', 'complete', 'exhausted', 'unranked', 'ineligible', 'closed'] as const) {
+    for (const state of ['pair', 'complete', 'unranked', 'ineligible', 'closed'] as const) {
       vi.mocked(getReviewState).mockResolvedValue({ state, week: priorWeek, reviewed: 3 } as Awaited<ReturnType<typeof getReviewState>>);
       const writes = mockPublication([[{ commitment: { id: 77, promise: '' }, week: currentWeek }], [], [], []]);
       const publication = publishResult({ ...input, commitmentId: 77 });
