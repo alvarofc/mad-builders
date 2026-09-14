@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, isNull, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNull, lt, lte, or, sql } from 'drizzle-orm';
 import { db, databaseConfigured } from './db';
 import { commitment, result, week } from './schema';
 
@@ -60,10 +60,11 @@ export async function getBuildState(projectId: string, selectedWeekDate?: string
   if (!databaseConfigured) return null;
 
   const now = await getDatabaseNow();
+  const [currentMonday] = madridWeekStartDates(now);
   const unfinishedWeeks = await db.select({ week }).from(commitment)
     .innerJoin(week, eq(commitment.weekId, week.id))
     .leftJoin(result, eq(result.commitmentId, commitment.id))
-    .where(and(eq(commitment.projectId, projectId), lte(week.submissionClosesAt, now), isNull(result.id)))
+    .where(and(eq(commitment.projectId, projectId), or(lte(week.submissionClosesAt, now), lt(week.weekStartDate, currentMonday)), isNull(result.id)))
     .orderBy(desc(week.startsAt));
   const selectedWeek = selectedWeekDate
     ? unfinishedWeeks.find(({ week }) => week.weekStartDate === selectedWeekDate)?.week

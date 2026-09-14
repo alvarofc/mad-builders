@@ -48,6 +48,16 @@ it('opens the owned late commitment after rollover without moving its next goal 
   expect(predicates[2].params).toEqual(['owner', previous.id]);
 });
 
+it('keeps an unfinished previous week accessible during a deadline extension', async () => {
+  const extended = { ...previous, submissionClosesAt: new Date('2026-09-07T22:00:00Z'), votingClosesAt: new Date('2026-09-08T16:00:00Z') };
+  const predicates = reads([[{ week: extended }], [current], [{ id: 44, projectId: 'owner' }], [], []]);
+  expect(await getBuildState('owner', extended.weekStartDate)).toMatchObject({
+    currentWeek: extended, phase: 'active', late: false, canSetNextPromise: false,
+  });
+  expect(predicates[0].sql).toContain('or "app_private"."week"."week_start_date" <');
+  expect(predicates[0].params).toContain('2026-09-07');
+});
+
 it.each(['not-a-date', '2026-02-30', '2026-08-24'])('rejects an unavailable or foreign week %s before loading its commitment', async (date) => {
   reads([[{ week: previous }]]);
   expect(await getBuildState('owner', date)).toBeNull();
