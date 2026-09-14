@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.6.0.1] - 2026-09-14
+
+### Fixed
+
+- See the scheduled voting opening and closing times, including extended voting windows.
+
 ## [0.6.0.0] - 2026-09-14
 
 ### Added
