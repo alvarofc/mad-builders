@@ -78,9 +78,25 @@ it('returns a recoverable error when the model fails', async () => {
 });
 
 it('rejects oversized bodies and out-of-order conversations before rate limiting or model access', async () => {
-  expect((await request({ ...body, padding: 'x'.repeat(50_000) })).status).toBe(400);
+  expect((await request({ ...body, padding: 'x'.repeat(750_000) })).status).toBe(400);
   expect((await request({ ...body, messages: [body.messages[0], body.messages[0]] })).status).toBe(400);
   expect(mocks.allow).not.toHaveBeenCalled();
+  expect(mocks.chat).not.toHaveBeenCalled();
+});
+
+it('accepts the last exchange at maximum message sizes, including JSON escapes', async () => {
+  const messages = Array.from({ length: 39 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: '\u0001'.repeat(3000) }));
+  const draft = { summary: '\u0001'.repeat(1000), nextPromise: '\u0001'.repeat(280), feedbackRequest: '\u0001'.repeat(500) };
+  mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  mocks.chat.mockResolvedValue({ reply: 'What happened?', changes: { summary: null, nextPromise: null, feedbackRequest: null } });
+  expect((await request({ ...body, messages, draft })).status).toBe(200);
+  expect(mocks.chat).toHaveBeenCalledWith(expect.anything(), messages, draft);
+});
+
+it.each([Number.MAX_SAFE_INTEGER + 1, 1e30])('rejects unsafe week ID %s before any database or model call', async weekId => {
+  expect((await request({ ...body, weekId })).status).toBe(400);
+  expect(mocks.allow).not.toHaveBeenCalled();
+  expect(mocks.rows).not.toHaveBeenCalled();
   expect(mocks.chat).not.toHaveBeenCalled();
 });
 

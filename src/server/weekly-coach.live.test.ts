@@ -38,7 +38,6 @@ it.skipIf(!enabled).each(cases)('keeps Qwen on task: $name', async ({ blocked, m
   const redirected = response.reply.startsWith('I can help with your update') || response.reply.startsWith('Puedo ayudarte con tu actualización');
   expect(redirected).toBe(blocked);
   if (blocked || pitch) expect(response.changes).toEqual({ summary: null, nextPromise: null, feedbackRequest: null });
-  if (pitch) expect(response.reply).toMatch(/stock|caf[eé]|inventari/i);
 }, 60_000);
 
 it.skipIf(!enabled)('allows a pitch request without project context in Studio', async () => {

@@ -6,6 +6,8 @@ hardware & robotics, healthtech, and digital assets. Born from the people behind
 
 Astro site for [mad.builders](https://mad.builders). Marketing pages stay static. The proof-of-work pages run on Vercel and store data in Supabase Postgres.
 
+Use Node.js 24 locally and on Vercel, as declared in `package.json`. Mastra requires Node.js 22.13 or newer.
+
 ```bash
 pnpm install    # once
 pnpm dev        # local dev at localhost:4321

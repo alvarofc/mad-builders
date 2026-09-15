@@ -16,7 +16,8 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
   if (request.headers.get('origin') !== url.origin) return reply({ error: 'This request could not be verified.' }, 403);
   if (!import.meta.env.CEREBRAS_API_KEY) return reply({ error: 'Chat is unavailable. You can still edit and publish your draft.' }, 503);
   const text = await request.text();
-  if (text.length > 50_000) return reply({ error: 'This conversation is too long. Start a new conversation with your current draft.' }, 400);
+  // Fits 40 x 3,000 characters plus draft fields, even with six-character JSON escapes.
+  if (text.length > 750_000) return reply({ error: 'This conversation is too long. Start a new conversation with your current draft.' }, 400);
   let body;
   try { body = coachRequestSchema.parse(JSON.parse(text)); }
   catch { return reply({ error: 'Could not read this message. Keep messages under 3,000 characters.' }, 400); }
