@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { PgDialect } from 'drizzle-orm/pg-core';
-const mocks = vi.hoisted(() => ({ rows: vi.fn(), profile: vi.fn(), allow: vi.fn(), chat: vi.fn(), where: vi.fn() }));
-vi.mock('./db', () => ({ db: { select: () => {
+const mocks = vi.hoisted(() => ({ rows: vi.fn(), profile: vi.fn(), allow: vi.fn(), chat: vi.fn(), where: vi.fn(), execute: vi.fn() }));
+vi.mock('./db', () => ({ db: { execute: mocks.execute, select: () => {
   const query = { from: () => query, where: (condition: unknown) => { mocks.where(condition); return query; }, innerJoin: () => query, orderBy: () => query, limit: mocks.rows };
   return query;
 } } }));
@@ -23,6 +23,16 @@ beforeEach(() => {
   mocks.allow.mockResolvedValue(true);
 });
 afterEach(() => vi.unstubAllEnvs());
+it('returns JSON 429 without model access when rate-limit storage fails', async () => {
+  const { allowWrite } = await vi.importActual<typeof import('./rate-limit')>('./rate-limit');
+  mocks.allow.mockImplementationOnce(allowWrite);
+  mocks.execute.mockRejectedValueOnce(new Error('private database details'));
+  const response = await request();
+  expect(response.status).toBe(429);
+  expect(await response.json()).toEqual({ error: 'Give it a moment, then send your message again.' });
+  expect(mocks.profile).not.toHaveBeenCalled();
+  expect(mocks.chat).not.toHaveBeenCalled();
+});
 it('rejects missing sessions, wrong origins, invalid messages and a different active project', async () => {
   expect((await request(body, '')).status).toBe(401);
   expect((await request(body, 'user', 'https://evil.test')).status).toBe(403);

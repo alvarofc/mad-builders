@@ -3,6 +3,14 @@ const execute = vi.hoisted(() => vi.fn());
 vi.mock('./db', () => ({ db: { execute } }));
 import { allowWrite } from './rate-limit';
 beforeEach(() => execute.mockReset());
+it('denies writes when either user or IP counter storage fails', async () => {
+  const request = new Request('https://test.local', { headers: { 'x-real-ip': '192.0.2.1' } });
+  execute.mockRejectedValueOnce(new Error('database unavailable'));
+  expect(await allowWrite(request, 'builder', 'weekly-chat', 10)).toBe(false);
+  expect(execute).toHaveBeenCalledOnce();
+  execute.mockResolvedValueOnce([{ count: 1 }]).mockRejectedValueOnce(new Error('database unavailable'));
+  expect(await allowWrite(request, 'builder', 'publish')).toBe(false);
+});
 it('uses the caller limit without changing the existing default', async () => {
   execute.mockResolvedValue([{ count: 11 }]);
   expect(await allowWrite(new Request('https://test.local'), 'builder', 'weekly-chat', 10)).toBe(false);

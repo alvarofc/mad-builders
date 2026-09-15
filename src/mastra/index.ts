@@ -6,11 +6,12 @@ import { Observability, MastraStorageExporter, SensitiveDataFilter } from '@mast
 import { createWeeklyCoach } from '../server/weekly-coach';
 
 mkdirSync(new URL('../../.context/', import.meta.url), { recursive: true });
+const apiKey = process.env.CEREBRAS_API_KEY?.trim();
 
 export const mastra = new Mastra({
-  agents: {
-    weeklyCoach: createWeeklyCoach(process.env.CEREBRAS_API_KEY!, process.env.CEREBRAS_MODEL || 'qwen-3.8-27b'),
-  },
+  agents: apiKey ? {
+    weeklyCoach: createWeeklyCoach(apiKey, process.env.CEREBRAS_MODEL || 'qwen-3.8-27b'),
+  } : {},
   storage: new LibSQLStore({ id: 'studio-storage', url: new URL('../../.context/mastra-studio.db', import.meta.url).href }),
   editor: new MastraEditor(),
   observability: new Observability({

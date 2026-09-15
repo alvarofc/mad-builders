@@ -18,7 +18,7 @@ async function consume(key: string, max: number) {
         else app_private.rate_limit.last_request
       end
     returning count
-  `);
+  `).catch(() => []);
   return (rows[0]?.count ?? max + 1) <= max;
 }
 
