@@ -118,7 +118,9 @@ Organizer moderation uses `POST /api/moderation` with form fields. Send `kind=pr
 
 ### Weekly check-in chat
 
-Set `CEREBRAS_API_KEY` to enable the conversational weekly check-in. `CEREBRAS_MODEL` defaults to `qwen-3.8-27b`. Without a key, the questionnaire remains available.
+Set `CEREBRAS_API_KEY` in local `.env` to enable the conversational weekly check-in. `CEREBRAS_MODEL` defaults to `qwen-3.8-27b`. In Vercel, add the key and `CEREBRAS_MODEL=qwen-3.8-27b` to Production and Preview before building. The app reads them through `import.meta.env`, so deploy again after changing either value. Without a key, the questionnaire remains available.
+
+The production coach runs inside Astro's `/api/result/chat` route on Vercel and calls Cerebras. Keep the existing `astro build` command. It uses the existing Supabase database for project context and needs no new migration or separate Mastra server. `pnpm mastra:dev` and `.context/mastra-studio.db` are only for local Studio work.
 
 The Mastra coach receives the active project's description and stage, the selected week's goal, up to four earlier updates and their outcomes, the existing next-week goal, the current draft and conversation. It helps reflect on progress and agree a realistic next goal. Context is loaded on the server for the authenticated active project. It has no tools or publishing capability.
 
