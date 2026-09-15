@@ -2,6 +2,20 @@
 
 Changes to mad.builders.
 
+## [0.7.0.0] - 2026-09-15
+
+### Added
+
+- Write weekly updates through a conversation that uses your project details, goals and previous updates.
+- Get help explaining your project, reflecting on blockers and choosing a realistic goal for next week.
+- Review and edit the draft before publishing, with conversation and unsent messages saved in your browser.
+- Test and refine the coach in local Mastra Studio, with prompt versions, evaluations and agent traces.
+
+### Changed
+
+- Keep the coach focused on project check-ins and short pitches, with a redirect for unrelated requests.
+- Continue using the questionnaire when AI is unavailable.
+
 ## [0.6.0.1] - 2026-09-14
 
 ### Fixed
