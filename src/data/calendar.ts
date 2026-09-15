@@ -435,6 +435,28 @@ export const calendarEvents: CalendarEvent[] = [
       "A 48-hour Claude Code hackathon on agent-to-agent infrastructure, run with Nova Talent and Causa Prima. Around 50 participants will build in teams from Friday evening to Sunday, with three short talks during the weekend.",
   },
   {
+    title: 'Madrid Open - Vol.1',
+    date: '2026-10-03',
+    time: '09:00',
+    endTime: '21:00',
+    location: 'Mad Tech Campus, Matadero',
+    url: 'https://luma.com/2js2w670',
+    image: '/events/madrid-open-vol-1.png',
+    description:
+      'A one-day build challenge for 40 people, with real datasets and unsolved problems from Talky, Reversa and Tunen. Teams of three can use any stack or model; briefs and data credits arrive the week before, and registration closes on September 25.',
+  },
+  {
+    title: 'Hacktoberfest Hack Day Madrid 2026',
+    date: '2026-10-10',
+    time: '15:00',
+    endTime: '20:00',
+    location: 'Centro de Negocios Melior, Diego de León 47, Salamanca',
+    url: 'https://hacktoberfest-madrid.vercel.app/',
+    image: '/events/hacktoberfest-madrid-2026.jpg',
+    description:
+      'Hack Day gratuito para construir proyectos open source con modelos y herramientas de IA abiertos. Los equipos se forman allí y la tarde termina con demos; no hace falta llevar una idea cerrada, solo portátil y cargador.',
+  },
+  {
     title: 'DevFest Madrid 2026',
     date: '2026-11-27',
     time: '15:30',
