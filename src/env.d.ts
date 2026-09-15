@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly BETTER_AUTH_SECRET?: string;
   readonly GITHUB_CLIENT_ID?: string;
   readonly GITHUB_CLIENT_SECRET?: string;
+  readonly CEREBRAS_API_KEY?: string;
+  readonly CEREBRAS_MODEL?: string;
   readonly ORGANIZER_GITHUB_IDS?: string;
   readonly ABUSE_REPORT_EMAIL?: string;
   readonly RESEND_API_KEY?: string;

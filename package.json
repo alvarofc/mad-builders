@@ -10,7 +10,8 @@
     "astro": "astro",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "mastra:dev": "mastra dev --env .env"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
@@ -19,6 +20,7 @@
     "@fontsource-variable/bricolage-grotesque": "^5.2.10",
     "@fontsource/archivo": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@mastra/core": "^1.67.0",
     "@shadcn/react": "^0.3.1",
     "@vercel/analytics": "^2.0.1",
     "astro": "^5.13.3",
@@ -27,13 +29,18 @@
     "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "sharp": "^0.34.1"
+    "sharp": "^0.34.1",
+    "zod": "^4.6.4"
   },
   "devDependencies": {
+    "@mastra/editor": "0.15.0",
+    "@mastra/libsql": "1.23.0",
+    "@mastra/observability": "1.17.8",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "drizzle-kit": "^0.31.10",
     "jsdom": "^30.0.1",
+    "mastra": "1.30.0",
     "vitest": "^4.0.17"
   }
 }

@@ -30,3 +30,9 @@ pnpm-debug.log*
 # OG image generation scratch
 .ogtmp/
 .gstack/
+
+# Mastra local output
+.mastra/
+
+# Local workspace data and Studio database
+.context/
