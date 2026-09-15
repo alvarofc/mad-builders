@@ -4,7 +4,7 @@ import { track } from '@vercel/analytics';
 import { submitApiForm } from '../scripts/submit-api-form';
 import '../styles/questionnaire.css';
 
-type Props = {
+export type WeeklyUpdateProps = {
   projectId: string;
   draftKey: string;
   commitmentId?: number;
@@ -15,6 +15,7 @@ type Props = {
   late: boolean;
   stages: readonly { value: string; label: string }[];
   initialValues: Record<string, string>;
+  improveEnabled?: boolean;
 };
 
 type Question = {
@@ -49,7 +50,7 @@ function answerError(question: Question, answer = '') {
   return '';
 }
 
-export default function WeeklyUpdateForm(props: Props) {
+export default function WeeklyUpdateForm(props: WeeklyUpdateProps) {
   const formId = useId();
   const [values, setValues] = useState(props.initialValues);
   const [ready, setReady] = useState(false);
