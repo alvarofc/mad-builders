@@ -18,13 +18,13 @@ async function consume(key: string, max: number) {
         else app_private.rate_limit.last_request
       end
     returning count
-  `);
+  `).catch(() => []);
   return (rows[0]?.count ?? max + 1) <= max;
 }
 
-export async function allowWrite(request: Request, userId: string, action: string) {
+export async function allowWrite(request: Request, userId: string, action: string, max = 30) {
   const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
   const ip = forwarded || request.headers.get('x-real-ip');
-  if (!(await consume(`${action}:user:${userId}`, 30))) return false;
+  if (!(await consume(`${action}:user:${userId}`, max))) return false;
   return ip ? consume(`${action}:ip:${ip}`, 120) : true;
 }

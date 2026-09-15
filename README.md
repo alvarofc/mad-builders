@@ -6,6 +6,8 @@ hardware & robotics, healthtech, and digital assets. Born from the people behind
 
 Astro site for [mad.builders](https://mad.builders). Marketing pages stay static. The proof-of-work pages run on Vercel and store data in Supabase Postgres.
 
+Use Node.js 24 locally and on Vercel, as declared in `package.json`. Mastra requires Node.js 22.13 or newer.
+
 ```bash
 pnpm install    # once
 pnpm dev        # local dev at localhost:4321
@@ -115,6 +117,20 @@ Stop that Astro process when finished, then run `docker stop mad-builders-releas
 Organizer moderation uses `POST /api/moderation` with form fields. Send `kind=profile`, a project `handle`, `action=hide|restore`, and a `reason`; for one result also send `kind=result` and its `week`. To invalidate a project's unfinished-week votes, send `kind=voter&action=invalidate` with its handle and the reason. There is intentionally no moderation dashboard in the pilot.
 
 ## Updating content
+
+### Weekly check-in chat
+
+Set `CEREBRAS_API_KEY` in local `.env` to enable the conversational weekly check-in. `CEREBRAS_MODEL` defaults to `qwen-3.8-27b`. In Vercel, add the key and `CEREBRAS_MODEL=qwen-3.8-27b` to Production and Preview before building. The app reads them through `import.meta.env`, so deploy again after changing either value. Without a key, the questionnaire remains available.
+
+The production coach runs inside Astro's `/api/result/chat` route on Vercel and calls Cerebras. Keep the existing `astro build` command. It uses the existing Supabase database for project context and needs no new migration or separate Mastra server. `pnpm mastra:dev` and `.context/mastra-studio.db` are only for local Studio work.
+
+The Mastra coach receives the active project's description and stage, the selected week's goal, up to four earlier updates and their outcomes, the existing next-week goal, the current draft and conversation. It helps reflect on progress and agree a realistic next goal. Context is loaded on the server for the authenticated active project. It has no tools or publishing capability.
+
+The coach uses Mastra’s built-in `ModerationProcessor` with an `off_topic` category and Qwen. The guardrail runs in both the chat API and Studio. Short project introductions and elevator pitches are allowed alongside updates and goals; pitch suggestions stay in the conversation unless the builder asks to edit the draft. Unrelated requests, attempts to change its role, and requests for code or full marketing campaigns get a fixed redirect with no draft changes. If the check fails, the API returns a recoverable error. `errorStrategy: 'strict'` blocks requests if moderation is unavailable. This adds one model call per message; model-based topic checks reduce misuse but cannot guarantee rejection of every prompt injection. Run the synthetic scope examples with `RUN_COACH_SCOPE_EVAL=1 pnpm exec vitest run src/server/weekly-coach.live.test.ts`.
+
+Chat and draft are saved in this browser. The conversation is sent to Cerebras when the builder sends a message; it is not persisted by Mastra. Each conversation allows 20 exchanges, with a fresh conversation retaining the draft. Requests are limited to ten per user per minute. The review form uses the existing publish endpoint, validation, voting rules and deadlines. Only the builder selects completion status and publishes.
+
+Run `pnpm mastra:dev` and open `http://127.0.0.1:4111` to test the “Weekly check-in coach” in Studio. Studio chats are a prompt playground; the app supplies the project context via `/api/result/chat`. The Editor, Evaluate, Review and Agent traces tabs are enabled. Prompt versions, experiments, reviews and traces from Studio runs persist locally in `.context/mastra-studio.db`. Editor changes apply to Studio runs; the app continues to use the prompt defined in code.
 
 Marketing content lives in `src/data/`; projects, ownership, and weekly updates live in the database:
 

@@ -5,7 +5,7 @@ import { getProjectInvite, listOwnedProjects } from '../server/projects';
 import { authConfigured } from '../server/auth';
 import { getProfileByUserId, normalizeHandle, validHandle } from '../server/profiles';
 import { blocksWeeklyUpdate, getReviewState } from '../server/ranking';
-import WeeklyUpdateForm from '../components/WeeklyUpdateForm';
+import WeeklyUpdateChat from '../components/WeeklyUpdateChat';
 import { projectStages } from '../server/results';
 import { getBuildState, madridDate } from '../server/weeks';
 
@@ -234,8 +234,11 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 {buildState.currentWeek && (
                   <p class="work-note">{buildState.late ? 'The ranking deadline has passed. You can still publish this update, but it will not enter voting or count toward your streak.' : `Ranking deadline: ${madridDate(buildState.currentWeek.submissionClosesAt)}`}</p>
                 )}
-                <WeeklyUpdateForm
+                <WeeklyUpdateChat
                   client:load
+                  userId={currentUser!.id}
+                  projectName={currentProfile.projectName}
+                  improveEnabled={Boolean(import.meta.env.CEREBRAS_API_KEY)}
                   projectId={currentProfile.id}
                   draftKey={`weekly:${currentProfile.id}:${buildState.currentWeek?.id}`}
                   commitmentId={buildState.currentCommitment?.id}
