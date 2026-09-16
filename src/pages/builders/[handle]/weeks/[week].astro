@@ -27,10 +27,10 @@ const proofLabel = published
   : '';
 const title = published
   ? `${published.projectName.slice(0, 26)} this week - mad.builders`
-  : 'Result not found - mad.builders';
+  : 'Update not found - mad.builders';
 const description = published
   ? `${published.projectName}: ${published.summary}`.slice(0, 155)
-  : 'This weekly result does not exist.';
+  : 'This weekly update does not exist.';
 ---
 
 <ProductLayout
@@ -50,12 +50,16 @@ const description = published
             <h1 class="work-title">{published.projectName}</h1>
             <p class="work-copy">{published.projectSentence}</p>
             <p class="work-intro update-copy">{published.summary}</p>
-            <p class="work-copy">Built by <a href={`/builders/${published.handle}`}>{published.displayName}</a>{published.rank ? ` · #${published.rank} this week` : ''}</p>
+            <p class="work-copy">Built by <a href={`/builders/${published.handle}`}>{published.displayName}</a>{published.rank ? <> · <a href="/leaderboard">#{published.rank} this week</a></> : ''}</p>
             {published.nextPromise && <p class="work-copy update-copy">Next week: {published.nextPromise}</p>}
             {published.feedbackRequest && <p class="work-copy update-copy">Feedback wanted: {published.feedbackRequest}</p>}
             <div class="work-actions">
               {published.projectUrlAtPublish && <a class="work-button secondary" href={published.projectUrlAtPublish} target="_blank" rel="noopener noreferrer nofollow">try the project ↗</a>}
-              {currentProfile?.handle !== published.handle && <a class="work-button" href={currentProfile ? '/build#this-week' : `/build?ref=${published.handle}#this-week`}>what are you building?</a>}
+              {currentProfile?.handle !== published.handle
+                ? <a class="work-button" href={currentProfile ? '/build#this-week' : `/build?ref=${published.handle}#this-week`}>what are you building?</a>
+                /* publishing redirects here, so the owner needs a way onward. the
+                   board knows whether voting is open and routes there. */
+                : <a class="work-button" href="/leaderboard">see the board</a>}
               {canEdit && <a class="work-button secondary" href="/build?edit#this-week">edit update</a>}
               <ShareButton path={`/builders/${published.handle}/weeks/${published.weekStartDate}?ref=${published.handle}`} title={[`Weekly update · week of ${published.weekStartDate}\n\n${currentProfile?.handle === published.handle ? "This week I worked on" : `${published.displayName} shared progress on`} ${published.projectName}:\n${published.summary}`, published.feedbackRequest].filter(Boolean).join("\n\n")} eventName="weekly_result_shared" handle={published.handle} />
             </div>
@@ -63,24 +67,16 @@ const description = published
         </header>
         <section class="wrap work-grid">
           <aside class="work-aside">
-            <p class="work-label">builder</p>
-            <p class="work-note"><a href={`/builders/${published.handle}`}>{published.displayName}</a></p>
             <p class="work-label">project stage</p>
             <p class="work-note">{projectStageLabel(published.projectStage)}</p>
             <p class="work-label">proof</p>
             <p class="work-note">{proofLabel}</p>
             {abuseEmail && <p class="work-note"><a href={`mailto:${abuseEmail}?subject=Report%20result%20%40${published.handle}%20${published.weekStartDate}`}>report abuse</a></p>}
-            {published.rank && (
-              <>
-                <p class="work-label">weekly rank</p>
-                <p class="profile-name">#{published.rank}</p>
-              </>
-            )}
           </aside>
           <div class="work-main result-detail">
             {published.promise && (
               <div class="result-block">
-                <p class="work-label">what they planned to do</p>
+                <p class="work-label">the goal for this week</p>
                 <h2 class="work-heading">{published.promise}</h2>
               </div>
             )}
@@ -102,10 +98,10 @@ const description = published
     ) : (
       <section class="work-hero">
         <div class="wrap">
-          <p class="work-kicker">404 / result not found</p>
+          <p class="work-kicker">404 / update not found</p>
           <h1 class="work-title">Nothing here.</h1>
-          <p class="work-intro">The link may be wrong, or the builder has taken this result down.</p>
-          <p><a class="work-button" href="/builders">see all builders</a></p>
+          <p class="work-intro">The link may be wrong, or the builder has taken this update down.</p>
+          <p><a class="work-button" href="/builders">see all projects</a></p>
         </div>
       </section>
     )}

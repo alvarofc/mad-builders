@@ -37,8 +37,8 @@ const proofLabel = (status: string) =>
   <div class="work-page">
     <header class="work-hero">
       <div class="wrap">
-        {demo && <p class="work-note">Local demo. Choices advance the preview only; they do not save votes or change scores. <a href="/leaderboard?demo=1">See sample leaderboard →</a> · <a href="/vote?demo=1">Restart</a> · <a href="/vote?demo=0">Show real data</a></p>}
-        <p class="work-kicker">weekly peer review</p>
+        {demo && <p class="work-note">Local demo. Votes advance the preview only; nothing is saved and no scores change. <a href="/leaderboard?demo=1">See sample leaderboard →</a> · <a href="/vote?demo=1">Restart</a> · <a href="/vote?demo=0">Show real data</a></p>}
+        <p class="work-kicker">weekly peer vote</p>
         <h1 class="work-title">Discover this week's progress.</h1>
         <p class="work-intro">Which project made more meaningful progress? Look at what changed, how ambitious the goal was, and the evidence.</p>
       </div>
@@ -48,28 +48,28 @@ const proofLabel = (status: string) =>
         {review.state === 'signed_out' ? (
           <>
             <p class="work-label">sign in required</p>
-            <h2 class="work-heading">Startups vote.</h2>
-            <p class="work-copy">Sign in with GitHub, create or join a project, and publish on time to review this week's work.</p>
+            <h2 class="work-heading">Projects vote.</h2>
+            <p class="work-copy">Sign in with GitHub, create or join a project, and publish on time to vote on this week's work.</p>
             <a class="work-button" href="/login?next=/vote">continue with GitHub</a>
           </>
         ) : review.state === 'profile_required' ? (
           <>
             <p class="work-label">finish your profile</p>
             <h2 class="work-heading">Create or join a project first.</h2>
-            <p class="work-copy">Voting opens to projects with an eligible result for the week. Co-owners share the same comparisons.</p>
+            <p class="work-copy">Voting opens to projects that published on time. Co-owners share the same votes.</p>
             <a class="work-button" href="/build">make my page</a>
           </>
         ) : review.state === 'pair' ? (
           <>
-            <p class="work-label">{review.reviewed} of {review.total} reviewed / closes {madridDate(review.week.votingClosesAt)}</p>
-            <progress value={review.reviewed} max={review.total} aria-label="Comparisons saved"></progress>
-            <p class="draft-status">Every choice is saved for your startup. Each result appears once. Co-owners share these comparisons.</p>
+            <p class="work-label">{review.reviewed} of {review.total} votes / closes {madridDate(review.week.votingClosesAt)}</p>
+            <progress value={review.reviewed} max={review.total} aria-label="Votes saved"></progress>
+            <p class="draft-status">Every vote is saved. Each update appears once.</p>
             <div class="pair-grid">
               {[review.first, review.second].map((candidate, index) => (
                 <>
                   {index === 1 && <div class="pair-divider" aria-hidden="true"></div>}
                   <article class="pair-card">
-                    <p class="work-label">result {index === 0 ? 'a' : 'b'} / {projectStageLabel(candidate.projectStage)}</p>
+                    <p class="work-label">update {index === 0 ? 'a' : 'b'} / {projectStageLabel(candidate.projectStage)}</p>
                     <h2 class="work-heading">What changed</h2>
                     {candidate.summary.length > 260 ? (
                       <details class="pair-context"><summary class="summary-preview">{candidate.summary.slice(0, 260)}… <span>Read full update</span></summary><p class="work-copy update-copy">{candidate.summary}</p></details>
@@ -108,30 +108,31 @@ const proofLabel = (status: string) =>
           </>
         ) : review.state === 'complete' ? (
           <>
-            <p class="work-label">{review.reviewed} comparisons reviewed</p>
+            <p class="work-label">{review.reviewed} votes cast</p>
             <h2 class="work-heading">Thanks for giving other builders your time.</h2>
-            <p class="work-copy">Your choices are saved. Your early leaderboard is ready; final ranks arrive after voting closes.</p>
+            <p class="work-copy">Your votes are saved. Your early leaderboard is ready; final ranks arrive after voting closes.</p>
             <a class="work-button" href={demo ? '/leaderboard?demo=1' : '/leaderboard?demo=0'}>open leaderboard</a>
           </>
         ) : review.state === 'unranked' ? (
           <>
             <p class="work-label">unranked week</p>
-            <h2 class="work-heading">Not enough results yet.</h2>
-            <p class="work-copy">Six published updates are needed for fair comparisons. Discover the projects taking part while more arrive.</p>
-            <a class="work-button" href="/builders">meet the builders</a>
+            <h2 class="work-heading">Not enough updates yet.</h2>
+            <p class="work-copy">Six published updates unlock voting. Meet the projects taking part while more arrive.</p>
+            <a class="work-button" href="/builders">meet the projects</a>
           </>
         ) : review.state === 'ineligible' ? (
           <>
             <p class="work-label">voting is open</p>
             <h2 class="work-heading">Publish on time to vote.</h2>
-            <p class="work-copy">Late results stay public, but they do not enter this week's review.</p>
+            <p class="work-copy">Late updates stay public, but they do not enter this week's voting.</p>
+            <a class="work-button" href="/leaderboard">see the board</a>
           </>
         ) : (
           <>
             <p class="work-label">voting closed</p>
-            <h2 class="work-heading">No pairs right now.</h2>
+            <h2 class="work-heading">No votes to cast right now.</h2>
             <p class="work-copy">{'opensAt' in review && review.opensAt && review.closesAt ? `Voting opens ${madridDate(review.opensAt)} and closes ${madridDate(review.closesAt)}.` : 'The next voting window will appear here once scheduled.'}</p>
-            <a class="work-button" href="/builders">discover projects</a>
+            <a class="work-button" href="/builders">meet the projects</a>
           </>
         )}
       </div>

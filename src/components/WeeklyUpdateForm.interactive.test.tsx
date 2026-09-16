@@ -50,35 +50,35 @@ it('restores drafts and preserves edited text and radio answers when navigating'
   const input = await type('Updated project');
   await act(async () => { input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); });
   expect(progress()).toBe('1');
-  await click('Next');
+  await click('next');
   await type('First line\nSecond line');
-  await click('Next');
+  await click('next');
   await act(async () => { active().querySelector<HTMLInputElement>('input[value="partial"]')!.click(); await new Promise(resolve => setTimeout(resolve, 5)); });
-  await click('Previous');
+  await click('previous');
   expect(active().querySelector('textarea')!.value).toBe('First line\nSecond line');
-  await click('Previous');
+  await click('previous');
   expect(active().querySelector('textarea')!.value).toBe('Updated project');
-  await click('Next');
-  await click('Next');
+  await click('next');
+  await click('next');
   expect(active().querySelector<HTMLInputElement>('input[value="partial"]')!.checked).toBe(true);
   expect(JSON.parse(localStorage.getItem(draftKey)!)).toMatchObject({ projectSentence: 'Updated project', summary: 'First line\nSecond line', status: 'partial' });
 });
 
 it('blocks missing required answers and malformed URLs before advancing', async () => {
   await mount({ ...initialValues, projectSentence: '' });
-  await click('Next');
+  await click('next');
   expect(progress()).toBe('1');
   expect(active().querySelector('[role="alert"]')).toBeTruthy();
   await type('A useful project');
-  for (let i = 0; i < 4; i++) await click('Next');
-  await click('Skip');
+  for (let i = 0; i < 4; i++) await click('next');
+  await click('skip');
   expect(progress()).toBe('6');
   const url = await type('not-a-url');
   expect(url.validity.typeMismatch).toBe(true);
-  await click('Next');
+  await click('next');
   expect(progress()).toBe('6');
   await type('https://example.com');
-  await click('Next');
+  await click('next');
   expect(progress()).toBe('7');
 });
 
@@ -87,13 +87,13 @@ it('skips optional answers and publishes the original fields, retaining drafts a
   vi.stubGlobal('fetch', fetchMock);
   await mount();
   await type('Updated project');
-  for (let i = 0; i < 4; i++) await click('Next');
+  for (let i = 0; i < 4; i++) await click('next');
   await type('Discard this feedback');
-  await click('Skip');
-  await click('Skip');
-  await click('Next');
+  await click('skip');
+  await click('skip');
+  await click('next');
   expect(progress()).toBe('8');
-  await click('Skip and publish update');
+  await click('publish without a link');
   expect(fetchMock).toHaveBeenCalledTimes(1);
   const body = fetchMock.mock.calls[0][1].body as FormData;
   expect(Object.fromEntries(body)).toEqual({ projectId: 'startup', commitmentId: '2', projectSentence: 'Updated project', summary: 'Shipped a demo', status: 'complete', nextPromise: 'Launch the demo', projectStage: 'idea' });
@@ -108,7 +108,7 @@ it('keeps the initial answers usable when the saved draft is malformed', async (
   expect(container.querySelector('[role="status"]')!.textContent).toBe('Draft saving is unavailable. Keep this tab open.');
   await type('Recovered project');
   expect(JSON.parse(localStorage.getItem(draftKey)!)).toMatchObject({ projectSentence: 'Recovered project' });
-  await click('Next');
+  await click('next');
   expect(progress()).toBe('2');
 });
 
@@ -120,8 +120,8 @@ it('allows editing and navigation when browser storage is unavailable', async ()
     expect(container.querySelector('[role="status"]')!.textContent).toBe('Draft saving is unavailable. Keep this tab open.');
     await type('Unsaved project');
     expect(container.querySelector('[role="status"]')!.textContent).toBe('Draft could not be saved. Keep this tab open.');
-    await click('Next');
-    await click('Previous');
+    await click('next');
+    await click('previous');
     expect(active().querySelector('textarea')!.value).toBe('Unsaved project');
   } finally {
     get.mockRestore();
@@ -131,10 +131,10 @@ it('allows editing and navigation when browser storage is unavailable', async ()
 
 it('shows the invalid answer and blocks Next and keyboard navigation until corrected', async () => {
   await mount();
-  await click('Next');
+  await click('next');
   for (const value of ['   ', ' abcd ', 'x'.repeat(1001)]) {
     const input = await type(value);
-    await click('Next');
+    await click('next');
     expect(progress()).toBe('2');
     expect(active().querySelector('[role="alert"]')!.textContent).toMatch(/answer|characters/);
     expect(input.getAttribute('aria-invalid')).toBe('true');
@@ -144,27 +144,27 @@ it('shows the invalid answer and blocks Next and keyboard navigation until corre
   }
   await type('First line\n' + 'x'.repeat(989));
   expect(active().querySelector('[role="alert"]')).toBeNull();
-  await click('Next');
+  await click('next');
   expect(progress()).toBe('3');
 });
 
 it('blocks invalid restored text and URLs the server would reject', async () => {
   localStorage.setItem(draftKey, JSON.stringify({ ...initialValues, projectSentence: 'x'.repeat(281) }));
   await mount();
-  await click('Next');
+  await click('next');
   expect(progress()).toBe('1');
   expect(active().querySelector('[role="alert"]')!.textContent).toContain('281');
   await type('A useful project');
-  for (let i = 0; i < 4; i++) await click('Next');
-  await click('Skip');
+  for (let i = 0; i < 4; i++) await click('next');
+  await click('skip');
   for (const url of ['not-a-url', 'http://example.com', 'https://user:secret@example.com', 'https://:secret@example.com', 'https://example.com/' + 'x'.repeat(2029)]) {
     await type(url);
-    await click('Next');
+    await click('next');
     expect(progress()).toBe('6');
     expect(active().querySelector('[role="alert"]')!.textContent).toContain('https://');
   }
   await type('https://example.com/' + 'x'.repeat(2028));
-  await click('Next');
+  await click('next');
   expect(progress()).toBe('7');
 });
 
@@ -172,20 +172,20 @@ it('blocks publishing with an invalid proof URL and allows explicitly skipping i
   const fetchMock = vi.fn().mockResolvedValue({ ok: false, text: async () => 'Please retry.' });
   vi.stubGlobal('fetch', fetchMock);
   await mount();
-  for (let i = 0; i < 4; i++) await click('Next');
+  for (let i = 0; i < 4; i++) await click('next');
   await type('x'.repeat(501));
-  await click('Next');
+  await click('next');
   expect(progress()).toBe('5');
   expect(active().querySelector('[role="alert"]')!.textContent).toContain('500');
-  await click('Skip');
-  await click('Skip');
-  await click('Next');
+  await click('skip');
+  await click('skip');
+  await click('next');
   await type('http://example.com');
   await click('publish update');
   expect(progress()).toBe('8');
   expect(active().querySelector('[role="alert"]')!.textContent).toContain('https://');
   expect(fetchMock).not.toHaveBeenCalled();
-  await click('Skip and publish update');
+  await click('publish without a link');
   expect(fetchMock).toHaveBeenCalledOnce();
   expect((fetchMock.mock.calls[0][1].body as FormData).has('proofUrl')).toBe(false);
 });
@@ -196,13 +196,13 @@ it('keeps text controls associated with the form as answers change and are skipp
   const project = await type('A new project');
   expect(project.getAttribute('form')).toBe(form.id);
   expect(project.form).toBe(form);
-  await click('Next');
+  await click('next');
   const summary = await type('Shipped a working demo');
   expect(summary.getAttribute('form')).toBe(form.id);
   expect(summary.form).toBe(form);
-  for (let i = 0; i < 3; i++) await click('Next');
+  for (let i = 0; i < 3; i++) await click('next');
   await type('Discard this feedback');
-  await click('Skip');
+  await click('skip');
   const data = new FormData(form);
   expect(data.get('projectSentence')).toBe('A new project');
   expect(data.get('summary')).toBe('Shipped a working demo');
@@ -216,14 +216,14 @@ it('publishes after skipping malformed URLs without native validation blocking t
   const fetchMock = vi.fn().mockResolvedValue({ ok: false, text: async () => 'Please retry.' });
   vi.stubGlobal('fetch', fetchMock);
   await mount();
-  for (let i = 0; i < 4; i++) await click('Next');
-  await click('Skip');
+  for (let i = 0; i < 4; i++) await click('next');
+  await click('skip');
   const projectUrl = await type('not-a-url');
-  await click('Skip');
+  await click('skip');
   expect(projectUrl.form).toBeNull();
-  await click('Next');
+  await click('next');
   const proofUrl = await type('not-a-url');
-  await click('Skip and publish update');
+  await click('publish without a link');
   expect(proofUrl.form).toBeNull();
   expect(fetchMock).toHaveBeenCalledOnce();
   const data = fetchMock.mock.calls[0][1].body as FormData;

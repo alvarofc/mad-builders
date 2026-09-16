@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   const resultId = Number(data.get('resultId'));
   const action = String(data.get('action') ?? '');
   if (!Number.isSafeInteger(resultId) || resultId < 1) {
-    return new Response('That result does not exist.', { status: 400 });
+    return new Response('That update does not exist.', { status: 400 });
   }
   if (action !== 'withdraw' && action !== 'restore') {
     return new Response('Unknown action.', { status: 400 });

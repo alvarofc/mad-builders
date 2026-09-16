@@ -590,6 +590,47 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
   return { week: votingWeek, now, entries, provisional: true as const, page, hasNext: ranked.length > offset + PAGE_SIZE };
 }
 
+// The board always shows the most recent *closed* week, so the week that is
+// actually running is invisible to it. This read-only companion query supplies
+// that context: without it the leaderboard never tells a builder that voting is
+// open. Deliberately does not reuse getReviewState, which takes a row lock and
+// assigns comparisons as a side effect.
+export async function getLiveWeek(userId?: string) {
+  if (!databaseConfigured) return null;
+  const now = await getDatabaseNow();
+  const [current] = await db
+    .select()
+    .from(week)
+    .where(and(lte(week.startsAt, now), gt(week.votingClosesAt, now)))
+    .orderBy(desc(week.startsAt))
+    .limit(1);
+  const [upcoming] = current
+    ? []
+    : await db.select().from(week).where(gt(week.startsAt, now)).orderBy(asc(week.startsAt)).limit(1);
+  const live = current ?? upcoming;
+  if (!live) return null;
+  const phase = now < live.startsAt
+    ? ('opens soon' as const)
+    : now < live.submissionClosesAt
+      ? ('shipping' as const)
+      : ('voting' as const);
+  const ownedProject = userId ? await getProfileByUserId(userId) : null;
+  const [published] = ownedProject
+    ? await db
+        .select({ id: result.id })
+        .from(result)
+        .where(and(
+          eq(result.weekId, live.id),
+          eq(result.projectId, ownedProject.id),
+          eq(result.onTime, true),
+          isNull(result.hiddenAt),
+          isNull(result.withdrawnAt),
+        ))
+        .limit(1)
+    : [];
+  return { week: live, now, phase, published: Boolean(published) };
+}
+
 export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
   const page = pageNumber(requestedPage);
   if (!databaseConfigured) return null;

@@ -30,12 +30,12 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   const projectSentence = String(data.get('projectSentence') ?? builder.bio).replace(/\r\n?/g, '\n').trim();
   const projectStage = String(data.get('projectStage') ?? '');
 
-  if (!commitmentId && !weekId) return fail('That commitment does not exist.');
+  if (!commitmentId && !weekId) return fail('That goal does not exist.');
   if (status !== 'complete' && status !== 'partial' && status !== 'missed' && status !== 'submitted') {
     return fail('Choose complete, partial, or missed.');
   }
   if (summary.length < 5 || summary.length > 1000) {
-    return fail('Keep the result between 5 and 1,000 characters.');
+    return fail('Keep the update between 5 and 1,000 characters.');
   }
   if (projectSentence.length < 5 || projectSentence.length > 280) {
     return fail('Describe what you are building in one sentence under 280 characters.');
@@ -80,9 +80,9 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
     if (code === 'project_changed') return fail('Your active project changed. Reload before saving.', 409);
     if (code === 'update_locked') return fail('Voting has opened. This update is now locked.', 409);
     if (code === 'status_required') return fail('Choose how much of your plan you completed.');
-    if (code === 'next_commitment_required') return fail('Write next week\'s commitment before publishing.');
+    if (code === 'next_commitment_required') return fail('Write next week\'s goal before publishing.');
     if (code === 'week_not_started') return fail('This week has not started yet.', 409);
-    if (code === 'commitment_not_found') return fail('That commitment does not exist.', 404);
+    if (code === 'commitment_not_found') return fail('That goal does not exist.', 404);
     console.error('Could not publish weekly update');
     return fail('Could not save your update. Your draft is still here; please try again.', 500);
   }

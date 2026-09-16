@@ -27,7 +27,7 @@ Astro.response.headers.set('Cache-Control', 'no-store');
       <div class="wrap">
         <p class="work-kicker">building in public</p>
         <h1 class="work-title">Projects</h1>
-        <p class="work-intro">The work is ranked. The people behind it stay visible.</p>
+        <p class="work-intro">Every project here publishes what it shipped, week after week. <a href="/leaderboard">See this week's ranks</a>.</p>
       </div>
     </header>
 
@@ -47,8 +47,8 @@ Astro.response.headers.set('Cache-Control', 'no-store');
         ) : (
           <div class="empty-ledger">
             <h2 class="work-heading">{page > 1 ? 'No projects on this page.' : 'The first page is still blank.'}</h2>
-            <p class="work-copy">{page > 1 ? 'Use Previous to return to the projects.' : 'Put your project on it.'}</p>
-            {page === 1 && <a class="work-button" href="/build">add your project</a>}
+            <p class="work-copy">{page > 1 ? 'The list ends before this page.' : 'Put your project on it.'}</p>
+            <a class="work-button" href={page > 1 ? '/builders' : '/build'}>{page > 1 ? 'back to the first page' : 'add your project'}</a>
           </div>
         )}
         <Pagination page={page} hasNext={rows.length > PAGE_SIZE} />

@@ -23,7 +23,7 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
 
   if (!Number.isSafeInteger(weekId) || weekId < 1) return fail('That week does not exist.');
   if (promise.length < 5 || promise.length > 280) {
-    return fail('Keep the commitment between 5 and 280 characters.');
+    return fail('Keep the goal between 5 and 280 characters.');
   }
 
   const saved = await db.transaction(async (tx) => {

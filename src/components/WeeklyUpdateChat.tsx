@@ -24,7 +24,7 @@ function Conversation(props: Props) {
   const [saving, setSaving] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [error, setError] = useState('');
-  const [draftStatus, setDraftStatus] = useState('Nothing is published until you review it.');
+  const [draftStatus, setDraftStatus] = useState('');
   const [historyCount, setHistoryCount] = useState<number | null>(null);
   const startedAt = useRef(Date.now());
   const tracked = useRef(false);
@@ -104,7 +104,7 @@ function Conversation(props: Props) {
   }
 
   const welcome = props.promise
-    ? `This week you planned to: ${props.promise}\nWhat happened? Tell me what moved forward, what got stuck, or what surprised you.`
+    ? `Your goal this week: ${props.promise}\nWhat happened? Tell me what moved forward, what got stuck, or what surprised you.`
     : `Let’s look at this week for ${props.projectName}. What moved forward, and what did you learn? Rough notes are fine.`;
 
   function field(name: string, label: string, max: number, required = false) {
@@ -119,7 +119,9 @@ function Conversation(props: Props) {
   return <div className="weekly-chat" data-reviewing={reviewing}>
     <header className="coach-heading">
       <img src="/logo/mad-builders-icon-512.png" alt="" width="36" height="36" />
-      <div><h3>Let’s work through your week.</h3><p>{props.projectName} · AI check-in coach</p></div>
+      {/* the page already carries an h1 "This week" and an h2 asking how the week
+          went; a third heading here only repeated them. */}
+      <p>{props.projectName} · AI check-in coach</p>
     </header>
     <div className="coach-layout">
       <section className="coach-conversation" aria-label="Weekly check-in chat" hidden={reviewing}>
@@ -153,7 +155,7 @@ function Conversation(props: Props) {
         <details className="coach-context"><summary>What the coach knows</summary>
           <p>When you send a message, we share your project description and stage, this week’s goal, up to four previous updates, your draft and this conversation with Cerebras.</p>
           {historyCount !== null && <p>{historyCount ? `Using ${historyCount} previous ${historyCount === 1 ? 'update' : 'updates'} from this project.` : 'No previous updates yet. We’ll build from what you share here.'}</p>}
-          <p>The conversation stays on this browser. Only the reviewed update is published.</p>
+          <p>The conversation stays on this browser.</p>
         </details>
       </section>
       <aside className="coach-draft" aria-label="Your draft">
@@ -197,8 +199,7 @@ function Conversation(props: Props) {
           <h3>This week</h3><p className={`coach-draft-text${values.summary ? '' : ' empty'}`}>{values.summary || 'The useful bits from our conversation will take shape here.'}</p>
           {props.canSetNextPromise && <><h3>Next week</h3><p className={`coach-draft-text${values.nextPromise ? '' : ' empty'}`}>{values.nextPromise || 'One clear priority, with a finish line you agree to.'}</p></>}
           {values.feedbackRequest && <><h3>Ask the community</h3><p className="coach-draft-text">{values.feedbackRequest}</p></>}
-          <button type="button" className="work-button secondary" disabled={!ready || pending} onClick={() => setReviewing(true)}>Review & edit draft →</button>
-          <p className="work-note">You can also write the update yourself.</p>
+          <button type="button" className={`work-button${values.summary ? '' : ' secondary'}`} disabled={!ready || pending} onClick={() => setReviewing(true)}>Review & edit draft →</button>
         </>}
         <p className="coach-save-status" role="status">{draftStatus}</p>
       </aside>

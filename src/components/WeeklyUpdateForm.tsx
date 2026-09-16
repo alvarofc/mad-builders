@@ -77,8 +77,8 @@ export default function WeeklyUpdateForm(props: WeeklyUpdateProps) {
 
   const questions: Question[] = [
     { name: 'projectSentence', title: 'What are you building in a sentence?', required: true, minLength: 5, maxLength: 280 },
-    { name: 'summary', title: 'What did you accomplish this week?', required: true, minLength: 5, maxLength: 1000, placeholder: 'A few concrete lines are enough.', description: props.promise ? `Here's what you planned to do this week: ${props.promise}` : undefined },
-    ...(props.promise ? [{ name: 'status', title: 'Did you do everything you planned?', required: true, choices: [
+    { name: 'summary', title: 'What did you accomplish this week?', required: true, minLength: 5, maxLength: 1000, placeholder: 'A few concrete lines are enough.', description: props.promise ? `Your goal this week: ${props.promise}` : undefined },
+    ...(props.promise ? [{ name: 'status', title: 'Did you hit your goal?', required: true, choices: [
       { value: 'complete', label: 'all of it' }, { value: 'partial', label: 'some of it' }, { value: 'missed', label: 'none of it' },
     ] }] : []),
     ...(props.canSetNextPromise ? [{ name: 'nextPromise', title: 'What do you want to have done by the end of next week?', required: true, minLength: 5, maxLength: 280 }] : []),
@@ -176,11 +176,14 @@ export default function WeeklyUpdateForm(props: WeeklyUpdateProps) {
         );
       })}
       <p className="draft-status">{props.late ? 'Your update is public and locked after publishing.' : 'Your update is public after publishing. You can edit until voting opens.'}</p>
+      {/* back and skip cluster left, the single forward action pushed right.
+          Next and Submit are never visible together: the library hides whichever
+          does not apply, so exactly one primary sits on the right. */}
       <div className="questionnaire-actions">
-        <Questionnaire.Previous className="work-button secondary" disabled={!ready || saving}>Previous</Questionnaire.Previous>
-        <Questionnaire.Skip className="work-button secondary" disabled={!ready || saving}>{activeQuestion === 'proofUrl' ? (props.editing ? 'Skip and save changes' : 'Skip and publish update') : 'Skip'}</Questionnaire.Skip>
-        <Questionnaire.Next className="work-button" disabled={!ready || saving}>Next</Questionnaire.Next>
-        <Questionnaire.Submit className="work-button" disabled={!ready || saving}>{props.editing ? 'save changes' : 'publish update'}</Questionnaire.Submit>
+        <Questionnaire.Previous className="work-button secondary" disabled={!ready || saving}>previous</Questionnaire.Previous>
+        <Questionnaire.Skip className="work-button secondary" disabled={!ready || saving}>{activeQuestion === 'proofUrl' ? (props.editing ? 'save without a link' : 'publish without a link') : 'skip'}</Questionnaire.Skip>
+        <Questionnaire.Next className="work-button questionnaire-forward" disabled={!ready || saving}>next</Questionnaire.Next>
+        <Questionnaire.Submit className="work-button questionnaire-forward" disabled={!ready || saving}>{props.editing ? 'save changes' : 'publish update'}</Questionnaire.Submit>
       </div>
       <p className="work-status" data-form-status aria-live="polite"></p>
     </Questionnaire.Root>

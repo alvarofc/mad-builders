@@ -15,9 +15,9 @@ const href = (target: number) => {
 
 {(page > 1 || hasNext) && (
   <nav class="list-pagination" aria-label="Pagination">
-    {page > 1 && <a class="work-button" href={href(page - 1)} rel="prev">Previous</a>}
-    <span class="work-label">Page {page}</span>
-    {hasNext && <a class="work-button" href={href(page + 1)} rel="next">Next</a>}
+    {page > 1 && <a class="work-button" href={href(page - 1)} rel="prev">previous</a>}
+    <span class="work-label">page {page}</span>
+    {hasNext && <a class="work-button" href={href(page + 1)} rel="next">next</a>}
   </nav>
 )}
 

@@ -7,4 +7,6 @@
 .questionnaire-choice input { accent-color: var(--green); width: 18px; height: 18px; flex-shrink: 0; }
 .questionnaire-choice:focus-within { outline: 2px solid var(--green); outline-offset: 4px; }
 .questionnaire-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+/* separate the one forward action from the back/skip cluster */
+.questionnaire-forward { margin-left: auto; }
 .weekly-questionnaire textarea { min-height: 160px; }

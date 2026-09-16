@@ -27,30 +27,22 @@ if (unavailableWeek) Astro.response.status = 404;
 const ref = normalizeHandle(Astro.url.searchParams.get('ref') ?? '');
 const safeRef = validHandle(ref) ? ref : '';
 const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'active';
+const askedToJoin = Astro.url.searchParams.has('join') || Astro.url.searchParams.has('requested');
 ---
 
 <ProductLayout
   title="Proof of work - mad.builders"
-  description="Make a weekly promise, publish what shipped, and build a public record of your work."
+  description="Set a weekly goal, publish what shipped, and build a public record of your work."
   active="build"
   noindex={Boolean(inviteToken)}
   profileHandle={currentProfile?.handle}
   signedIn={Boolean(currentUser)}
 >
   <div class="work-page">
-    <div class="wrap app-shell">
-      <div class="app-context mono">
-        <span>mad builders / weekly proof of work</span>
-        <div class="app-context-actions">
-          {currentProfile && <a href={`/builders/${currentProfile.handle}`}>{currentProfile.projectName} →</a>}
-          <a href="/leaderboard">leaderboard →</a>
-        </div>
-      </div>
-    </div>
-
+    {/* the product nav one row up already links the project and the board, and
+        names the place. this strip and its kicker only repeated it. */}
     <section class="week-section" id="this-week">
       <div class="wrap section-heading">
-        <p class="work-label">accountability loop</p>
         <h1 class="app-section-title">{buildState?.selectedLateWeek ? 'Catch up' : 'This week'}</h1>
       </div>
       <div class="wrap update-shell">
@@ -69,14 +61,16 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
             </> : <p class="work-copy">This invite has expired, been revoked, or already been used. Ask the owner for a new link.</p>}
           </div>
         )}
-        {currentUser && (
-          <details class="result-block" id="join-project" open={Astro.url.searchParams.has('join') || Astro.url.searchParams.has('requested')}>
-            <summary>Join an existing startup</summary>
+        {/* only for builders who are not in a project yet. members reach it via
+            /build?join= or an invite link, so it stays out of the update flow. */}
+        {currentUser && (!ownedProjects.length || askedToJoin) && (
+          <details class="result-block" id="join-project" open={askedToJoin}>
+            <summary>Join an existing project</summary>
             <p class="work-note">Request co-ownership using its project handle. An existing owner approves requests in settings. Once approved, reload this page and choose the shared project.</p>
             {Astro.url.searchParams.has('requested') && <p class="work-copy" role="status">Request sent. Ask your teammate to approve it in settings.</p>}
             <form class="work-form" method="post" action="/api/project">
               <input type="hidden" name="action" value="request" />
-              <label class="work-field"><span>project handle</span><input name="handle" minlength="3" maxlength="30" placeholder="your-startup" required /></label>
+              <label class="work-field"><span>project handle</span><input name="handle" minlength="3" maxlength="30" placeholder="your-project" required /></label>
               <button class="work-button secondary" type="submit">request co-ownership</button>
             </form>
           </details>
@@ -92,7 +86,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
         )}
         {!authConfigured ? (
           <>
-            <h2 class="work-heading">The build log is offline.</h2>
+            <h2 class="work-heading">Publishing is offline.</h2>
             <p class="work-copy">The database and GitHub sign-in still need their deployment credentials.</p>
           </>
         ) : !currentUser ? (
@@ -134,7 +128,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 <span>project handle</span>
                 <input
                   name="handle"
-                  placeholder="your-startup"
+                  placeholder="your-project"
                   minlength="3"
                   maxlength="30"
                   pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]"
@@ -188,16 +182,16 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                 <h2 class="work-heading">Your week is published.</h2>
                 <p class="work-copy update-copy">{buildState.currentResult.summary}</p>
                 {buildState.nextCommitment && <p class="work-copy">Next week: {buildState.nextCommitment.promise}</p>}
-                <p class="work-note">{buildState.phase === 'active' ? `You can edit until voting opens ${madridDate(buildState.currentWeek!.submissionClosesAt)}.` : 'Voting is open. Your update is locked for fair comparisons.'}</p>
+                <p class="work-note">{buildState.phase === 'active' ? `You can edit until voting opens ${madridDate(buildState.currentWeek!.submissionClosesAt)}.` : 'Voting is open. Your update is locked for fair votes.'}</p>
                 <div class="work-actions">
-                  <ShareButton path={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}?ref=${currentProfile.handle}`} title={[`Weekly update · week of ${buildState.currentWeek?.weekStartDate}\n\nThis week I worked on ${currentProfile.projectName}:\n${buildState.currentResult.summary}`, buildState.currentResult.feedbackRequest].filter(Boolean).join("\n\n")} expanded eventName="weekly_result_shared" handle={currentProfile.handle} />
+                  <ShareButton path={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}?ref=${currentProfile.handle}`} title={[`Weekly update · week of ${buildState.currentWeek?.weekStartDate}\n\nThis week I worked on ${currentProfile.projectName}:\n${buildState.currentResult.summary}`, buildState.currentResult.feedbackRequest].filter(Boolean).join("\n\n")} expanded={buildState.phase !== 'voting'} eventName="weekly_result_shared" handle={currentProfile.handle} />
                   {buildState.phase === 'active' && <a class="work-button secondary" href="/build?edit#this-week">edit update</a>}
-                  {buildState.phase === 'voting' && <a class="work-button" href="/vote">review weekly updates</a>}
+                  {buildState.phase === 'voting' && <a class="work-button" href="/vote">vote on this week</a>}
                   <a
-                    class={`work-button ${buildState.phase === 'voting' ? 'secondary' : ''}`}
+                    class="work-button secondary"
                     href={`/builders/${currentProfile.handle}/weeks/${buildState.currentWeek?.weekStartDate}`}
                   >
-                    open the result
+                    open the update
                   </a>
                 </div>
                 {buildState.canSetNextPromise && buildState.nextWeek && (
@@ -212,7 +206,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                         <textarea name="promise" minlength="5" maxlength="280" required>{buildState.nextCommitment?.promise}</textarea>
                       </label>
                       <div>
-                        <button class="work-button" type="submit">save project commitment</button>
+                        <button class="work-button" type="submit">save next week's goal</button>
                         <p class="work-status" data-form-status aria-live="polite"></p>
                       </div>
                     </form>
@@ -221,9 +215,9 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
               </>
             ) : votingRequired && review?.state === 'pair' ? (
               <>
-                <p class="work-label">{review.reviewed} of {review.total} reviewed</p>
+                <p class="work-label">{review.reviewed} of {review.total} votes</p>
                 <h2 class="work-heading">Finish last week's voting first.</h2>
-                <p class="work-copy">Review the remaining pairs before publishing this week's update. Your saved draft will be here when you return.</p>
+                <p class="work-copy">Cast your remaining votes before publishing this week's update. Your saved draft will be here when you return.</p>
                 <a class="work-button" href="/vote?demo=0">continue voting</a>
                 <p class="work-note">Voting closes {madridDate(review.week.votingClosesAt)}.</p>
               </>
@@ -279,7 +273,7 @@ const editing = Astro.url.searchParams.has('edit') && buildState?.phase === 'act
                     >{buildState.nextCommitment?.promise}</textarea>
                   </label>
                   <div>
-                    <button class="work-button" type="submit">save project commitment</button>
+                    <button class="work-button" type="submit">save next week's goal</button>
                     <p class="work-status" data-form-status aria-live="polite"></p>
                   </div>
                 </form>

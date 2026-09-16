@@ -1,8 +1,7 @@
 .update-shell:has(.weekly-chat) { max-width: 1080px; }
 .weekly-chat { margin-top: 28px; }
 .coach-heading { display: flex; align-items: center; gap: 12px; padding-bottom: 24px; }
-.coach-heading h3 { margin: 0; font-size: 1.15rem; font-weight: 500; letter-spacing: -0.02em; }
-.coach-heading p { margin: 4px 0 0; color: var(--green-dim); font-size: 13px; }
+.coach-heading p { margin: 0; color: var(--green-dim); font-size: 13px; }
 .coach-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(250px, 1fr); border-top: 1px solid var(--green-line); }
 .coach-conversation { min-width: 0; padding: 24px 28px 0 0; }
 .coach-conversation[hidden] { display: none; }
@@ -35,6 +34,8 @@
 .coach-draft-text { margin: 0 0 28px; font-size: 16px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .coach-draft-text.empty { color: var(--green-dim); }
 .coach-save-status { margin: 24px 0 0; font-size: 12px; line-height: 1.5; color: var(--green-dim); }
+/* live region must stay in the DOM to be announced, but must not reserve space */
+.coach-save-status:empty { margin: 0; }
 .weekly-chat[data-reviewing="true"] .coach-layout { grid-template-columns: 1fr; }
 .weekly-chat[data-reviewing="true"] .coach-draft { border-left: 0; padding-left: 0; }
 .coach-review { margin-top: 24px; max-width: none; }
