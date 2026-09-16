@@ -2,6 +2,21 @@
 
 Changes to mad.builders.
 
+## [0.8.0.0] - 2026-09-16
+
+### Changed
+
+- Keep the leaderboard focused on the current weekly loop, with clearer scores, project updates, mobile rows, empty states, and a marker for your own project.
+- Use vote, goal, update, and project consistently across the weekly build flow, pages, emails, and publishing errors.
+- Keep the next action visible after publishing, including voting from the weekly result page and recovery links from empty states.
+- Hide project-joining prompts from builders who already belong to a project unless they explicitly open the join flow.
+- Make weekly update chat and questionnaire actions easier to scan, with the primary next step separated from back and skip actions.
+
+### Added
+
+- Show the running week's publish or voting task on the leaderboard when the signed-in builder can act.
+- Keep weekly update summaries available on mobile and add keyboard skip navigation and accessible leaderboard labels.
+
 ## [0.7.0.0] - 2026-09-15
 
 ### Added
