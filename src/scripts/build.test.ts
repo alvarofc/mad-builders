@@ -106,3 +106,17 @@ it.each(['http', 'network'])('preserves the draft and allows retry after a %s pu
   expect(removeItem).not.toHaveBeenCalled();
   expect(assign).not.toHaveBeenCalled();
 });
+
+it('stops asking builders to join a startup once they are in one', () => {
+  expect(page).toContain('currentUser && (!ownedProjects.length || askedToJoin) && (');
+  expect(page).toContain("const askedToJoin = Astro.url.searchParams.has('join')");
+});
+
+it('offers the owner a way onward from the page publishing redirects to', () => {
+  // api/result/publish.ts redirects here, and the visitor CTA is suppressed for
+  // the owner, so without this the loop dead-ends at the moment of shipping.
+  const result = readFileSync(new URL('../pages/builders/[handle]/weeks/[week].astro', import.meta.url), 'utf8');
+  const actions = result.split('<div class="work-actions">')[1].split('</div>')[0];
+  expect(actions).toContain('currentProfile?.handle !== published.handle');
+  expect(actions).toContain('href="/leaderboard"');
+});

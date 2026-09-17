@@ -25,7 +25,52 @@ it('keeps the rank explainer but moves it below the board', () => {
   expect(panel).toContain('Eight votes unlock a rank.');
 });
 
-it.each(['leaderboard-join', 'leaderboard-about', 'login-shell', 'login-steps', 'login-step-list'])(
-  'styles .%s so the new markup does not ship unstyled',
-  (name) => expect(css).toContain(`.${name} {`),
-);
+it.each([
+  'leaderboard-join',
+  'leaderboard-about',
+  'leaderboard-live',
+  'leaderboard-jump',
+  'leaderboard-you',
+  'login-shell',
+  'login-steps',
+  'login-step-list',
+])('styles .%s so the new markup does not ship unstyled', (name) => expect(css).toContain(`.${name} {`));
+
+it('surfaces the running week, which the board itself never shows', () => {
+  // getLatestLeaderboard always prefers the latest *closed* week, so without this
+  // a builder mid-voting-window only ever sees last week marked final.
+  expect(page).toContain('getLiveWeek');
+  expect(page).toContain('live={live}');
+  const todo = panel.split('const todo =')[1].split('---')[0];
+  expect(todo).toContain("href: '/vote'");
+  expect(todo).toContain("href: '/build#this-week'");
+  // only a builder who published can review, so signed-in alone must not offer it
+  expect(todo).toContain('live.published');
+  expect(todo).not.toContain('signedIn');
+});
+
+it('keeps the board itself near the top', () => {
+  // the running-week prompt only renders when this viewer can act on it, so it
+  // never stacks with the join banner, and no explainer sits above the ranks.
+  const head = panel.split('<header class="leaderboard-head">')[1].split('leaderboard-columns')[0];
+  expect(head).not.toContain('weekly peer rank');
+  expect(head).not.toContain('leaderboard-key');
+  expect(panel).toContain('{todo && (');
+  // the score is defined in the column header rather than in a line of its own
+  expect(panel).toContain('<span>peer win rate</span>');
+  expect(panel).not.toContain('class="leaderboard-columns mono" aria-hidden');
+});
+
+it('keeps the mobile board showing what shipped rather than hiding it', () => {
+  const mobile = css.split('@media (max-width: 720px)')[1];
+  expect(mobile).not.toMatch(/\.leaderboard-update\s*\{[^}]*display:\s*none/);
+  expect(mobile).toContain('.leaderboard-update {');
+});
+
+it('gives every empty board a way out', () => {
+  // these fire when a builder has already done the work, so none may be a dead end
+  const blocks = panel.split('class="leaderboard-empty').length - 1;
+  expect(blocks).toBeGreaterThan(0);
+  expect(panel.split('leaderboard-empty-action').length - 1).toBe(blocks);
+  expect(panel).not.toContain('Use Previous to return');
+});

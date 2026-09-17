@@ -49,6 +49,7 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
     <SEO title={title} description={description} image={image} noindex={noindex} structuredData={structuredData} />
   </head>
   <body>
+    <a class="skip-link" href="#main">skip to content</a>
     {!product && <header class="nav">
       <div class="wrap nav-inner">
         <a href="/" class="wordmark" data-brand-menu-trigger aria-haspopup="menu">mad<span>.builders</span></a>
@@ -65,7 +66,9 @@ const iconFor = (icon: string) => socialIcons[`../assets/logos/socials/${icon}.s
       </div>
     </header>}
 
-    <main class="site-main">
+    <slot name="nav" />
+
+    <main class="site-main" id="main" tabindex="-1">
       <slot />
     </main>
 

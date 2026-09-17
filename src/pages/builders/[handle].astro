@@ -77,30 +77,29 @@ const proofLabel = (status: string) =>
 
         <section class="wrap work-grid">
           <aside class="work-aside">
-            <p class="work-label">owners</p>
-            <p class="profile-name">{builder.displayName}</p>
-            <p class="builder-handle mono">@{builder.handle}</p>
             <p class="work-label">shipping streak</p>
             <p class="profile-name">{activity?.streak ?? 0} {(activity?.streak ?? 0) === 1 ? 'week' : 'weeks'}</p>
-            <p class="work-label">public record</p>
-            <p class="work-note">Complete or partial results published on time keep the streak alive.</p>
+            <p class="work-note">Complete or partial updates published on time keep the streak alive.</p>
             {abuseEmail && <p class="work-note"><a href={`mailto:${abuseEmail}?subject=Report%20builder%20%40${builder.handle}`}>report abuse</a></p>}
           </aside>
           <div class="work-main">
-            <p class="work-label">weekly ledger</p>
-            <h2 class="work-heading">{results.length ? `${results.length} public ${results.length === 1 ? 'result' : 'results'}.` : 'No results yet.'}</h2>
-            <p class="work-copy">Each result stays attached to the promise that came before it.</p>
+            <p class="work-label">weekly updates</p>
+            <h2 class="work-heading">{results.length ? `${results.length} public ${results.length === 1 ? 'update' : 'updates'}.` : 'No updates yet.'}</h2>
+            {results.length > 0 && <p class="work-copy">Each update is tied to the goal set before it.</p>}
             {activity?.commitment?.promise && (
               <div class="result-block">
                 <p class="work-label">
-                  {activity.commitment.startsAt > activity.now ? 'next commitment' : 'current commitment'} / week of {activity.commitment.weekStartDate}
+                  {activity.commitment.startsAt > activity.now ? 'next goal' : 'this week\u2019s goal'} / week of {activity.commitment.weekStartDate}
                 </p>
                 <p class="builder-bio">{activity.commitment.promise}</p>
               </div>
             )}
             <div class="work-actions">
               {currentProfile?.handle === builder.handle ? (
-                <a class="work-button secondary" href="/settings">edit project</a>
+                <>
+                  <a class="work-button" href="/build#this-week">write your update</a>
+                  <a class="work-button secondary" href="/settings">edit project</a>
+                </>
               ) : (
                 <a class="work-button" href={currentProfile ? '/build#this-week' : `/build?ref=${builder.handle}#this-week`}>{currentProfile ? 'write your update' : 'what are you building?'}</a>
               )}

@@ -19,7 +19,7 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
 
 <ProductLayout
   title="Settings - mad.builders"
-  description="Manage your public mad.builders project and weekly results."
+  description="Manage your public mad.builders project and weekly updates."
   profileHandle={currentProfile.handle}
   signedIn
   noindex
@@ -29,7 +29,7 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
       <div class="wrap">
         <p class="work-kicker">@{currentProfile.handle}</p>
         <h1 class="work-title">Settings</h1>
-        <p class="work-intro">You control whether your project and weekly results stay public.</p>
+        <p class="work-intro">You control whether your project and weekly updates stay public.</p>
       </div>
     </header>
     <section class="wrap work-grid">
@@ -132,9 +132,9 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
             <button class="work-button secondary" type="submit">switch project</button>
           </form>
         )}
-        <p class="work-note">To join another startup, <a href="/build?join=1#join-project">request access</a>. Its owner must approve you.</p>
+        <p class="work-note">To join another project, <a href="/build?join=1#join-project">request access</a>. Its owner must approve you.</p>
         <hr class="work-rule" />
-        <p class="work-label">weekly results</p>
+        <p class="work-label">weekly updates</p>
         <h2 class="work-heading">Choose what stays public.</h2>
         {results.length ? (
           <div class="result-list">

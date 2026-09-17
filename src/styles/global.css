@@ -8,8 +8,11 @@
   --logo-dim-on-green: #a2aca5;
   --logo-dim-on-cream: #7d8b84;
   --line: rgba(246, 245, 240, 0.14);
-  --green-dim: rgba(26, 52, 43, 0.7);
-  --green-faint: var(--green-dim);
+  /* two real steps of ink on cream. --green-faint was an alias of --green-dim,
+     so labels and body copy carried identical weight and nothing could recede.
+     Both clear WCAG AA on --cream. */
+  --green-dim: rgba(26, 52, 43, 0.82); /* 7.1:1 on --cream */
+  --green-faint: rgba(26, 52, 43, 0.7); /* 5.0:1 on --cream, for 10-11px labels */
   --green-line: rgba(26, 52, 43, 0.16);
   /* /madrid map category colours (legend swatch + marker border). Tunable —
      the brand is green/cream, so these are three earthy accents picked to read
@@ -79,6 +82,37 @@ a {
 :focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 4px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: calc(var(--z-nav) + 1);
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--cream);
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
 }
 
 img {

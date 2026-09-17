@@ -16,7 +16,7 @@ it('preserves the weekly questions, constraints, and conditional commitment fiel
         'What would you like feedback on from the community?', 'Project website',
         'Which of these best describes the stage of your project?', 'Proof URL',
       ]) expect(html).toContain(question);
-      expect(html.includes('Did you do everything you planned?')).toBe(hasPromise);
+      expect(html.includes('Did you hit your goal?')).toBe(hasPromise);
       expect(html.includes('What do you want to have done by the end of next week?')).toBe(canSetNextPromise);
       expect(html).toContain('action="/api/result/publish"');
       expect(html).toContain('name="projectId" value="startup"');

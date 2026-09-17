@@ -1,5 +1,5 @@
 ---
-import type { getLatestLeaderboard } from '../server/ranking';
+import type { getLatestLeaderboard, getLiveWeek } from '../server/ranking';
 import { madridDate } from '../server/weeks';
 import Pagination from './Pagination.astro';
 import ProjectMark from './ProjectMark.astro';
@@ -7,40 +7,79 @@ import { listRecentUpdates } from '../server/profiles';
 
 interface Props {
   board: Awaited<ReturnType<typeof getLatestLeaderboard>>;
+  live?: Awaited<ReturnType<typeof getLiveWeek>>;
   signedIn?: boolean;
   hasProject?: boolean;
+  viewerHandle?: string;
   demo?: boolean;
 }
 
-const { board, signedIn = false, hasProject = false, demo = false } = Astro.props;
+const { board, live = null, signedIn = false, hasProject = false, viewerHandle, demo = false } = Astro.props;
 const ranked = board?.week && (board.week.rankingStatus === 'final' || board.provisional);
 const recent = (!ranked || !board?.entries.length) && (!board || board.page === 1) ? await listRecentUpdates() : [];
+// An unranked week that was never finalized is still running: voting has not
+// closed, so this is not yet a verdict.
+const liveUnranked = Boolean(board && !board.provisional && board.week?.rankingStatus === 'unranked' && !board.week.finalizedAt);
 const status = !board
   ? 'not scheduled'
   : board.provisional
     ? 'provisional'
-    : board.week.rankingStatus === 'final'
-      ? 'final'
-      : board.week.rankingStatus === 'unranked'
-        ? 'unranked'
-        : board.now < board.week.startsAt
-          ? 'opens soon'
-          : board.now < board.week.submissionClosesAt
-            ? 'shipping'
-            : 'voting';
+    : liveUnranked
+      ? 'voting'
+      : board.week.rankingStatus === 'final'
+        ? 'final'
+        : board.week.rankingStatus === 'unranked'
+          ? 'unranked'
+          : board.now < board.week.startsAt
+            ? 'opens soon'
+            : board.now < board.week.submissionClosesAt
+              ? 'shipping'
+              : 'voting';
+const viewerRank = viewerHandle && ranked
+  ? board?.entries.find((entry) => entry.handle === viewerHandle)?.rank
+  : undefined;
+// the one thing this viewer owes the running week, or nothing at all
+const todo = live?.phase === 'shipping' && hasProject && !live.published
+  ? {
+      title: 'Your turn: publish what you shipped.',
+      deadline: ` Closes ${madridDate(live.week.submissionClosesAt)}.`,
+      action: 'publish this week',
+      href: '/build#this-week',
+    }
+  : live?.phase === 'voting' && live.published && !board?.provisional
+    ? {
+        title: "Your turn: vote on this week's work.",
+        deadline: ` Closes ${madridDate(live.week.votingClosesAt)}.`,
+        action: 'vote',
+        href: '/vote',
+      }
+    : null;
 ---
 
 <section class="leaderboard-panel" aria-labelledby="leaderboard-title">
   <header class="leaderboard-head">
     <div>
-      <p class="work-label">weekly peer rank</p>
       <h1 class="app-title" id="leaderboard-title">Leaderboard</h1>
+      <p class="leaderboard-caveat">One useful weekly signal, not a universal founder score.</p>
     </div>
     <div class="leaderboard-status mono">
       {board?.week && <span>week of {board.week.weekStartDate}</span>}
       <strong>{status}</strong>
+      {viewerRank && <a class="leaderboard-jump" href="#my-project">jump to my project</a>}
     </div>
   </header>
+
+  {/* only when this viewer can actually act. framed as their turn rather than as
+      a second status, so it never reads as contradicting the chip above. */}
+  {todo && (
+    <div class="leaderboard-live">
+      <p>
+        <strong>{todo.title}</strong>
+        {todo.deadline}
+      </p>
+      <a class="work-button" href={todo.href}>{todo.action}</a>
+    </div>
+  )}
 
   {!hasProject && (
     <aside class="leaderboard-join">
@@ -50,31 +89,47 @@ const status = !board
   )}
 
   {!board ? (
-    <div class="leaderboard-empty">
-      <p class="app-empty-title">The first week has not been scheduled.</p>
-      <p>Projects will appear here once the first results are published and reviewed.</p>
+    <div class="leaderboard-empty leaderboard-empty-action">
+      <div>
+        <p class="app-empty-title">The first week has not been scheduled.</p>
+        <p>Projects will appear here once the first updates are published and voted on.</p>
+      </div>
+      <a class="work-button" href="/builders">meet the projects</a>
     </div>
   ) : ranked ? (
     board.entries.length ? (
       <>
-        <div class="leaderboard-columns mono" aria-hidden="true">
-          <span>rank</span><span>project</span><span>shipped</span><span>score</span>
+        {/* decorative: every cell below carries its own label for assistive tech */}
+        <div class="leaderboard-columns mono">
+          <span>rank</span><span>project</span><span>what changed</span><span>peer win rate</span>
         </div>
-        <ol class="leaderboard-list">
+        <ol class="leaderboard-list" role="list">
           {board.entries.map((entry) => (
-            <li class="leaderboard-row">
+            <li
+              class:list={['leaderboard-row', { 'is-viewer': entry.handle === viewerHandle }]}
+              id={entry.handle === viewerHandle ? 'my-project' : undefined}
+              aria-current={entry.handle === viewerHandle ? 'true' : undefined}
+            >
               <span class="leaderboard-rank">#{entry.rank}</span>
               <a class="leaderboard-project" href={demo ? `/leaderboard?demo=1#${entry.handle}` : `/builders/${entry.handle}`}>
                 <ProjectMark name={entry.projectName} url={entry.projectUrl} logo={entry.logo} />
                 <span class="leaderboard-project-copy">
                   <strong>{entry.projectName}</strong>
-                  <span>by {entry.displayName} · @{entry.handle}</span>
+                  <span>
+                    by {entry.displayName} · @{entry.handle}
+                    {entry.handle === viewerHandle && <span class="leaderboard-you">you</span>}
+                  </span>
                 </span>
               </a>
-              <a class="leaderboard-update" href={demo ? `/leaderboard?demo=1#${entry.handle}` : `/builders/${entry.handle}/weeks/${entry.weekStartDate}`}>
-                {entry.summary}
+              <a
+                class="leaderboard-update"
+                href={demo ? `/leaderboard?demo=1#${entry.handle}` : `/builders/${entry.handle}/weeks/${entry.weekStartDate}`}
+                aria-label={`What ${entry.projectName} shipped in the week of ${entry.weekStartDate}`}
+              >
+                <span>{entry.summary}</span>
               </a>
               <span class="leaderboard-score">
+                <span class="visually-hidden">peer win rate</span>
                 {Math.round((entry.scoreNumerator / entry.scoreDenominator) * 100)}%<br />
                 {entry.decisions} votes
               </span>
@@ -83,15 +138,31 @@ const status = !board
         </ol>
       </>
     ) : (
-      <div class="leaderboard-empty">
-        <p class="app-empty-title">{board.page > 1 ? 'No projects on this page.' : 'No project has enough decisions yet.'}</p>
-        <p>{board.page > 1 ? 'Use Previous to return to the rankings.' : 'Ranks appear after each result has eight peer decisions.'}</p>
+      <div class="leaderboard-empty leaderboard-empty-action">
+        <div>
+          <p class="app-empty-title">{board.page > 1 ? 'No projects on this page.' : 'No project has enough votes yet.'}</p>
+          <p>{board.page > 1 ? 'The board ends before this page.' : 'Ranks appear after each update has eight peer votes.'}</p>
+        </div>
+        {board.page > 1
+          ? <a class="work-button" href="/leaderboard">back to the first page</a>
+          : <a class="work-button" href={signedIn ? '/vote' : '/login?next=/vote'}>help unlock the ranks</a>}
       </div>
     )
+  ) : liveUnranked ? (
+    <div class="leaderboard-empty leaderboard-empty-action">
+      <div>
+        <p class="app-empty-title">Not enough projects yet this week.</p>
+        <p>Six published updates unlock a rank.</p>
+      </div>
+      <a class="work-button" href="/builders">meet the projects</a>
+    </div>
   ) : board.week.rankingStatus === 'unranked' ? (
-    <div class="leaderboard-empty">
-      <p class="app-empty-title">No rank this week.</p>
-      <p>There were fewer than six eligible results or too few peer decisions.</p>
+    <div class="leaderboard-empty leaderboard-empty-action">
+      <div>
+        <p class="app-empty-title">No rank this week.</p>
+        <p>Fewer than six projects published, so there was nothing to vote on.</p>
+      </div>
+      <a class="work-button" href="/builders">meet the projects</a>
     </div>
   ) : (
     <div class="leaderboard-empty leaderboard-empty-action">
@@ -105,19 +176,21 @@ const status = !board
         </p>
         <p>
           {board.now < board.week.startsAt
-            ? `Commitments lock at ${madridDate(board.week.startsAt)}.`
-            : `Final ranks appear after ${madridDate(board.week.votingClosesAt)}.`}
+            ? `Goals lock ${madridDate(board.week.startsAt)}.`
+            : board.now < board.week.submissionClosesAt
+              ? `Publish what you shipped by ${madridDate(board.week.submissionClosesAt)}.`
+              : `Final ranks appear after ${madridDate(board.week.votingClosesAt)}.`}
         </p>
       </div>
-      {board.now >= board.week.submissionClosesAt && board.now < board.week.votingClosesAt && signedIn && (
-        <a class="work-button" href="/vote">review pairs</a>
+      {board.now >= board.week.submissionClosesAt && board.now < board.week.votingClosesAt && hasProject && (
+        <a class="work-button" href="/vote">vote</a>
       )}
     </div>
   )}
   {ranked && board && <Pagination page={board.page} hasNext={board.hasNext} path="/leaderboard" />}
   {recent.length > 0 && (
     <div class="recent-updates">
-      <p class="work-label">Recently published</p>
+      <h2 class="work-label">Recently published</h2>
       {recent.map((entry) => (
         <a class="recent-update" href={`/builders/${entry.handle}/weeks/${entry.weekStartDate}`}>
           <ProjectMark name={entry.projectName} url={entry.projectUrl} logo={entry.logo} />
@@ -129,16 +202,15 @@ const status = !board
   )}
 
   <div class="leaderboard-about">
-    <p class="work-label">how the rank works</p>
+    <h2 class="work-label">how the rank works</h2>
     <p class="work-copy">
-      You push harder when other builders are watching. Each week, they review your
-      progress and you see how you stack up. A little competition gives you a reason
-      to go further next week.
-    </p>
-    <p class="work-copy">
-      Publish on time to enter. Builders compare results head to head: your score is
+      Publish on time to enter. Builders vote on two updates at a time: your score is
       your win percentage, with ties worth half a win. Eight votes unlock a rank.
       Ranks become final when voting closes.
+    </p>
+    <p class="work-copy">
+      You push harder when other builders are watching. Each week, they vote on your
+      progress and you see how you stack up.
     </p>
   </div>
 </section>
