@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.8.0.2] - 2026-09-18
+
+### Fixed
+
+- See update and sharing controls only on your own project page.
+
 ## [0.8.0.1] - 2026-09-18
 
 ### Fixed
