@@ -61,7 +61,16 @@ it('keeps the board itself near the top', () => {
   expect(panel).not.toContain('class="leaderboard-columns mono" aria-hidden');
 });
 
-it('keeps the mobile board showing what shipped rather than hiding it', () => {
+it('shows the project description and links it to the project profile', () => {
+  const description = panel.split('class="leaderboard-update"')[1].split('</a>')[0];
+  expect(panel).toContain('<span>description</span>');
+  expect(description).toContain('<span>{entry.projectSentence}</span>');
+  expect(description).toContain('`/builders/${entry.handle}`');
+  expect(description).not.toContain('entry.summary');
+  expect(description).not.toContain('/weeks/');
+});
+
+it('keeps the project description visible on the mobile board', () => {
   const mobile = css.split('@media (max-width: 720px)')[1];
   expect(mobile).not.toMatch(/\.leaderboard-update\s*\{[^}]*display:\s*none/);
   expect(mobile).toContain('.leaderboard-update {');

@@ -101,7 +101,7 @@ const todo = live?.phase === 'shipping' && hasProject && !live.published
       <>
         {/* decorative: every cell below carries its own label for assistive tech */}
         <div class="leaderboard-columns mono">
-          <span>rank</span><span>project</span><span>what changed</span><span>peer win rate</span>
+          <span>rank</span><span>project</span><span>description</span><span>peer win rate</span>
         </div>
         <ol class="leaderboard-list" role="list">
           {board.entries.map((entry) => (
@@ -123,10 +123,10 @@ const todo = live?.phase === 'shipping' && hasProject && !live.published
               </a>
               <a
                 class="leaderboard-update"
-                href={demo ? `/leaderboard?demo=1#${entry.handle}` : `/builders/${entry.handle}/weeks/${entry.weekStartDate}`}
-                aria-label={`What ${entry.projectName} shipped in the week of ${entry.weekStartDate}`}
+                href={demo ? `/leaderboard?demo=1#${entry.handle}` : `/builders/${entry.handle}`}
+                aria-label={`About ${entry.projectName}`}
               >
-                <span>{entry.summary}</span>
+                <span>{entry.projectSentence}</span>
               </a>
               <span class="leaderboard-score">
                 <span class="visually-hidden">peer win rate</span>
