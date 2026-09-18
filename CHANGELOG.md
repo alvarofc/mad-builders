@@ -2,6 +2,17 @@
 
 Changes to mad.builders.
 
+## [0.8.0.1] - 2026-09-18
+
+### Fixed
+
+- See the actual Madrid deadline in weekly update and voting reminders, including extended deadlines.
+
+### Changed
+
+- Understand why weekly votes matter for ranking and how teammates share them.
+- Get check-in email subjects that match the update or goal you still need to post.
+
 ## [0.8.0.0] - 2026-09-16
 
 ### Changed
