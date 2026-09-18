@@ -23,6 +23,7 @@ it('renders the approved messages with working destinations and an unsubscribe f
 
 it('asks only for missing check-in actions', () => {
   const both = renderEmail('checkin', { unsubscribeUrl, needsResult: true, needsPromise: true });
+  expect(both.subject).toBe('Share your progress and set next week’s goal');
   expect(both.text).toContain('Post what you got done and set next week’s goals.');
   const result = renderEmail('checkin', { unsubscribeUrl, needsResult: true, needsPromise: false });
   expect(result.text).toContain('Post what you got done.');
@@ -45,6 +46,19 @@ it('escapes unsubscribe URLs in HTML while preserving the plain-text URL', () =>
 
 it('keeps voting copy independent of the number of available votes', () => {
   const email = renderEmail('voting', { unsubscribeUrl });
-  expect(email.subject).toBe('Vote on this week’s updates');
+  expect(email.subject).toBe('Your vote helps decide this week’s ranking');
   expect(email.text).not.toMatch(/\b(ten|10)\b/i);
+});
+
+it('uses stored deadlines in Madrid time, including extensions and winter time', () => {
+  for (const [deadline, expected] of [
+    ['2026-09-18T16:00:00Z', /Friday.*18 September.*18:00 Madrid time/],
+    ['2026-12-07T17:00:00Z', /Monday.*7 December.*18:00 Madrid time/],
+  ] as const) {
+    for (const kind of ['voting', 'checkin'] as const) {
+      const email = renderEmail(kind, { unsubscribeUrl, deadline });
+      expect(email.text).toMatch(expected);
+      expect(email.html).toMatch(expected);
+    }
+  }
 });
