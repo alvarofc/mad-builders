@@ -13,9 +13,14 @@ export function renderEmail(kind: EmailKind, {
   unsubscribeUrl,
   needsResult = true,
   needsPromise = true,
-}: { unsubscribeUrl: string; needsResult?: boolean; needsPromise?: boolean }) {
+  deadline,
+}: { unsubscribeUrl: string; needsResult?: boolean; needsPromise?: boolean; deadline?: string }) {
   if (new URL(unsubscribeUrl).protocol !== 'https:') throw new Error('Unsubscribe URL must use HTTPS');
   if (kind === 'checkin' && !needsResult && !needsPromise) throw new Error('No check-in action needed');
+  const closesAt = deadline ? new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Madrid', weekday: 'long', day: 'numeric', month: 'long',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).format(new Date(deadline)) + ' Madrid time' : null;
   const messages = {
     welcome: {
       subject: 'Start with one thing', label: 'Welcome to mad.builders',
@@ -23,16 +28,16 @@ export function renderEmail(kind: EmailKind, {
       cta: 'Post your first update', path: '/build', note: 'One week at a time.',
     },
     checkin: {
-      subject: 'This week, in your words', label: 'Your weekly check-in',
+      subject: needsResult && needsPromise ? 'Share your progress and set next week’s goal' : needsResult ? 'Share your progress' : 'Set next week’s goal', label: 'Your weekly check-in',
       paragraphs: [needsResult && needsPromise ? 'Post what you got done and set next week’s goals.' : needsResult ? 'Post what you got done.' : 'Set next week’s goals.',
         needsResult ? 'Partial counts. Nothing counts too, if you say what happened.' : 'Keep it small. Pick something you can get done in a week.'],
       cta: needsResult ? 'Post your update' : 'Set next week’s goals', path: '/build',
-      note: needsResult ? 'Post by Sunday, 18:00 Madrid for this week’s ranking.' : 'One week at a time.',
+      note: needsResult ? (closesAt ? `Post by ${closesAt} for this week’s ranking.` : 'See your submission deadline on your project page.') : 'One week at a time.',
     },
     voting: {
-      subject: 'Vote on this week’s updates', label: 'Your weekly vote',
-      paragraphs: ['Other builders posted their work. Read two updates at a time and pick who got further.', 'Finish your votes and the early leaderboard opens up.'],
-      cta: 'Start voting', path: '/vote', note: 'Voting closes Monday, 18:00 Madrid.',
+      subject: 'Your vote helps decide this week’s ranking', label: 'Your weekly vote',
+      paragraphs: ['Your project still has votes to finish. Compare other builders’ updates, looking at what changed, how ambitious the goal was, and the evidence.', 'Each update needs enough reviews to qualify for a rank. Your choices help more projects get there. Finish your votes to unlock the early leaderboard.', 'Votes are shared by your project, so one teammate can complete them for the team.'],
+      cta: 'Continue voting', path: '/vote', note: closesAt ? `Voting closes ${closesAt}.` : 'See the voting deadline on the voting page.',
     },
   };
   const { subject, label, paragraphs, cta, path, note } = messages[kind];

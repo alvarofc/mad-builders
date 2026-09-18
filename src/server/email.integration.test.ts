@@ -27,7 +27,7 @@ it.skipIf(!process.env.DATABASE_TEST_URL)('deduplicates delivery, preserves retr
       try {
         const id = crypto.randomUUID();
         const [user] = await tx.execute<{token:string}>(sql`insert into app_private."user" (id, name, email) values (${id}, 'Email test', ${`${id}@example.invalid`}) returning email_unsubscribe_token as token`);
-        const recipient = { userId: id, weekId: 999, needsResult: true, needsPromise: true };
+        const recipient = { userId: id, weekId: 999, deadline: '2026-09-18T16:00:00Z', needsResult: true, needsPromise: true };
         vi.mocked(getReminderRecipients).mockResolvedValue([recipient]);
         const results = await Promise.all([sendEmailOnce('welcome', { userId: id }), sendEmailOnce('welcome', { userId: id })]);
         expect(results.sort()).toEqual([false, true]);
