@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.8.0.3] - 2026-09-18
+
+### Fixed
+
+- See project descriptions on the leaderboard, with links to each project profile.
+
 ## [0.8.0.2] - 2026-09-18
 
 ### Fixed
