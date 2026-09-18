@@ -17,6 +17,8 @@ it.skipIf(!process.env.DATABASE_EMAIL_TEST_URL)('selects only actionable reminde
   try {
     await drizzle(connection).transaction(async (db) => {
       proxy.execute = (query) => db.execute(query);
+      await db.execute(sql`set local datestyle = 'SQL, DMY'`);
+      await db.execute(sql`set local time zone 'Europe/Madrid'`);
       const prefix = crypto.randomUUID();
       const owner = `${prefix}-0`;
       const [w] = await db.execute<{ id: number }>(sql`
@@ -39,14 +41,14 @@ it.skipIf(!process.env.DATABASE_EMAIL_TEST_URL)('selects only actionable reminde
         if (index === 0) {
           expect(await getReminderRecipients('checkin', new Date(sunday.getTime() - 1))).toEqual([]);
           expect(await getReminderRecipients('checkin', sunday)).toEqual([
-            { userId: owner, email: `${owner}@example.invalid`, weekId: Number(w.id), deadline: expect.any(String), needsResult: true, needsPromise: true },
+            { userId: owner, email: `${owner}@example.invalid`, weekId: Number(w.id), deadline: '1902-01-12T17:00:00.000Z', needsResult: true, needsPromise: true },
           ]);
         }
         const [r] = await db.execute<{ id: number }>(sql`insert into app_private.result (commitment_id, project_id, week_id, status, summary, on_time)
           values (${c.id}, ${id}, ${w.id}, 'submitted', 'Shipped', true) returning id`);
         ids.push(Number(r.id));
       }
-      expect(new Date((await getReminderRecipients('voting', monday, owner))[0].deadline).toISOString()).toBe('1902-01-13T17:00:00.000Z');
+      expect((await getReminderRecipients('voting', monday, owner))[0].deadline).toBe('1902-01-13T17:00:00.000Z');
       const recipients = (kind: 'checkin' | 'voting') => getReminderRecipients(kind, kind === 'checkin' ? sunday : monday);
       expect((await recipients('checkin'))[0]).toMatchObject({ needsResult: false, needsPromise: true });
       await db.execute(sql`update app_private.result set hidden_at = now() where project_id = ${owner}`);

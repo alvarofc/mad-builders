@@ -28,7 +28,7 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
 
   if (kind === 'checkin') {
     return [...await db.execute<ReminderRecipient>(sql`
-      select u.id as "userId", u.email, w.id::integer as "weekId", ${deadline}::text as deadline,
+      select u.id as "userId", u.email, w.id::integer as "weekId", to_char(${deadline} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as deadline,
         r.id is null as "needsResult", nc.id is null as "needsPromise"
       from app_private.week w
       cross join app_private."user" u
@@ -58,7 +58,7 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
         and r.hidden_at is null and r.withdrawn_at is null
         and p.is_public = true and p.hidden_at is null and p.withdrawn_at is null
     )
-    select u.id as "userId", u.email, w.id::integer as "weekId", ${deadline}::text as deadline,
+    select u.id as "userId", u.email, w.id::integer as "weekId", to_char(${deadline} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as deadline,
       false as "needsResult", false as "needsPromise"
     from voting_week w
     join app_private.result r on r.week_id = w.id
