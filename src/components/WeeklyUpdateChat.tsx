@@ -60,7 +60,7 @@ function Conversation(props: Props) {
     } catch { setDraftStatus('Could not save on this browser. Keep this tab open.'); }
   }, [ready, values, messages, input]);
 
-  useEffect(() => { if (reviewing) reviewRef.current?.focus(); }, [reviewing]);
+  useEffect(() => { if (reviewing) reviewRef.current?.focus(); else if (ready) inputRef.current?.focus(); }, [reviewing]);
 
   function markStarted() {
     if (!tracked.current) { track('weekly_update_started'); tracked.current = true; }
@@ -117,50 +117,47 @@ function Conversation(props: Props) {
   }
 
   return <div className="weekly-chat" data-reviewing={reviewing}>
-    <header className="coach-heading">
-      <img src="/logo/mad-builders-icon-512.png" alt="" width="36" height="36" />
-      {/* the page already carries an h1 "This week" and an h2 asking how the week
-          went; a third heading here only repeated them. */}
-      <p>{props.projectName} · AI check-in coach</p>
-    </header>
     <div className="coach-layout">
       <section className="coach-conversation" aria-label="Weekly check-in chat" hidden={reviewing}>
-        <MessageScroller.Provider defaultScrollPosition="end">
+        {ready ? <MessageScroller.Provider defaultScrollPosition="last-anchor">
           <MessageScroller.Root className="coach-scroller">
             <MessageScroller.Viewport className="coach-viewport" aria-label="Conversation">
               <MessageScroller.Content className="coach-messages">
                 <MessageScroller.Item messageId="welcome" className="coach-message" data-role="assistant">
-                  <span className="coach-speaker">mad.builders</span><p>{welcome}</p>
+                  <span className="coach-speaker">mad.builders · AI coach</span><p>{welcome}</p>
                 </MessageScroller.Item>
-                {messages.map((message, index) => <MessageScroller.Item key={index} messageId={String(index)} className="coach-message" data-role={message.role}>
+                {messages.map((message, index) => <MessageScroller.Item key={index} messageId={String(index)} scrollAnchor={message.role === 'user'} className="coach-message" data-role={message.role}>
                   <span className="coach-speaker">{message.role === 'user' ? 'You' : 'mad.builders'}</span><p>{message.content}</p>
                 </MessageScroller.Item>)}
-                {pending && <MessageScroller.Item messageId="pending" className="coach-message" data-role="user"><span className="coach-speaker">You</span><p>{input.trim()}</p></MessageScroller.Item>}
+                {pending && <MessageScroller.Item messageId={String(messages.length)} scrollAnchor className="coach-message" data-role="user"><span className="coach-speaker">You</span><p>{input.trim()}</p></MessageScroller.Item>}
               </MessageScroller.Content>
             </MessageScroller.Viewport>
             <MessageScroller.Button className="coach-scroll-button" direction="end">Latest message ↓</MessageScroller.Button>
           </MessageScroller.Root>
-        </MessageScroller.Provider>
+        </MessageScroller.Provider> : <div className="coach-scroller" role="status">Loading your conversation…</div>}
         <p className="coach-activity" role="status">{pending ? 'Thinking about your update…' : ''}</p>
         <form className="coach-composer" onSubmit={event => { event.preventDefault(); void send(); }}>
-          <label htmlFor={`${id}-message`} className="work-label">Your message</label>
+          <label htmlFor={`${id}-message`} className="visually-hidden">Your message</label>
           <textarea ref={inputRef} id={`${id}-message`} value={input} onChange={event => setInput(event.target.value)}
-            placeholder="What did you try, ship, or learn?" maxLength={3000} rows={3} disabled={!ready || pending || saving}
+            placeholder="What did you try, ship, or learn?" maxLength={3000} rows={2} disabled={!ready || pending || saving}
             onKeyDown={event => { if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }} />
-          <div className="coach-composer-actions"><small>Rough notes are enough.</small><button className="work-button" type="submit" disabled={!ready || pending || saving || !input.trim() || messages.length >= 40}>Send ↑</button></div>
+          <div className="coach-composer-actions"><small>Chat first. Review before publishing.</small><button className="work-button" type="submit" disabled={!ready || pending || saving || !input.trim() || messages.length >= 40}>Send ↑</button></div>
         </form>
         {error && <p role="alert" className="work-status">{error}</p>}
         {messages.length >= 40 && <p className="work-note">Review your draft, or start a new conversation to keep refining it.</p>}
-        {messages.length > 0 && <button type="button" className="coach-reset" disabled={pending || saving} onClick={() => { setMessages([]); setError(''); }}>New conversation, keep draft</button>}
-        <details className="coach-context"><summary>What the coach knows</summary>
+        <div className="coach-next">
+          <button type="button" className="work-button secondary" disabled={!ready || pending} onClick={() => setReviewing(true)}>Review & edit draft →</button>
+        </div>
+        <details className="coach-context"><summary>About this chat</summary>
+          {messages.length > 0 && <button type="button" className="coach-reset" disabled={pending || saving} onClick={() => { setMessages([]); setError(''); }}>New conversation, keep draft</button>}
           <p>When you send a message, we share your project description and stage, this week’s goal, up to four previous updates, your draft and this conversation with Cerebras.</p>
           {historyCount !== null && <p>{historyCount ? `Using ${historyCount} previous ${historyCount === 1 ? 'update' : 'updates'} from this project.` : 'No previous updates yet. We’ll build from what you share here.'}</p>}
           <p>The conversation stays on this browser.</p>
         </details>
       </section>
-      <aside className="coach-draft" aria-label="Your draft">
-        <div className="coach-draft-heading"><p className="work-label">{reviewing ? 'Final review' : 'Your draft'}</p><span className="coach-private">Not published</span></div>
-        {reviewing ? <>
+      <aside className="coach-draft" aria-label="Your draft" hidden={!reviewing}>
+        <div className="coach-draft-heading"><p className="work-label">Final review</p><span className="coach-private">Not published</span></div>
+        {reviewing && <>
           <h3 ref={reviewRef} tabIndex={-1}>Make it yours.</h3>
           <p className="work-note">Check the facts and next week’s goal. You can edit every field before publishing.</p>
           <form className="work-form coach-review" action="/api/result/publish" method="post" onSubmit={async event => {
@@ -195,14 +192,9 @@ function Conversation(props: Props) {
             </div>
             <p className="work-status" data-form-status aria-live="polite" />
           </form>
-        </> : <>
-          <h3>This week</h3><p className={`coach-draft-text${values.summary ? '' : ' empty'}`}>{values.summary || 'The useful bits from our conversation will take shape here.'}</p>
-          {props.canSetNextPromise && <><h3>Next week</h3><p className={`coach-draft-text${values.nextPromise ? '' : ' empty'}`}>{values.nextPromise || 'One clear priority, with a finish line you agree to.'}</p></>}
-          {values.feedbackRequest && <><h3>Ask the community</h3><p className="coach-draft-text">{values.feedbackRequest}</p></>}
-          <button type="button" className={`work-button${values.summary ? '' : ' secondary'}`} disabled={!ready || pending} onClick={() => setReviewing(true)}>Review & edit draft →</button>
         </>}
-        <p className="coach-save-status" role="status">{draftStatus}</p>
       </aside>
+      <p className={`coach-save-status${draftStatus === 'Draft and conversation saved on this browser.' ? ' visually-hidden' : ''}`} role="status">{draftStatus}</p>
     </div>
   </div>;
 }
