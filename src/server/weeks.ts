@@ -59,12 +59,16 @@ async function refreshWeeklySchedule() {
 export async function getBuildState(projectId: string, selectedWeekDate?: string | null) {
   if (!databaseConfigured) return null;
 
+  if (selectedWeekDate && (!/^\d{4}-\d{2}-\d{2}$/.test(selectedWeekDate) ||
+    !Number.isFinite(Date.parse(selectedWeekDate)) || new Date(selectedWeekDate).toISOString().slice(0, 10) !== selectedWeekDate)) return null;
   const now = await getDatabaseNow();
   const [currentMonday] = madridWeekStartDates(now);
   const unfinishedWeeks = await db.select({ week }).from(week)
     .leftJoin(result, and(eq(result.weekId, week.id), eq(result.projectId, projectId)))
-    .where(and(lte(week.startsAt, now), or(lte(week.submissionClosesAt, now), lt(week.weekStartDate, currentMonday)), isNull(result.id)))
-    .orderBy(desc(week.startsAt));
+    .where(and(lte(week.startsAt, now), or(lte(week.submissionClosesAt, now), lt(week.weekStartDate, currentMonday)), isNull(result.id),
+      selectedWeekDate ? eq(week.weekStartDate, selectedWeekDate) : undefined))
+    .orderBy(desc(week.startsAt))
+    .limit(selectedWeekDate ? 1 : 12);
   const selectedWeek = selectedWeekDate
     ? unfinishedWeeks.find(({ week }) => week.weekStartDate === selectedWeekDate)?.week
     : null;

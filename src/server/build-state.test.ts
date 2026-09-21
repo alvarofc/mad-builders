@@ -12,6 +12,7 @@ const next = { ...current, id: 3, startsAt: new Date('2026-09-13T22:00:00Z') };
 
 function reads(rows: unknown[][]) {
   const predicates: Array<{ sql: string; params: unknown[] }> = [];
+  const limits: number[] = [];
   const joins: Array<{ sql: string; params: unknown[] }> = [];
   select.mockImplementation(() => {
     const value = rows.shift() ?? [];
@@ -22,12 +23,12 @@ function reads(rows: unknown[][]) {
       where: (predicate: Parameters<PgDialect['sqlToQuery']>[0]) => {
         predicates.push(new PgDialect().sqlToQuery(predicate)); return query;
       },
-      orderBy: () => query, limit: async () => value,
+      orderBy: () => query, limit: async (count: number) => { limits.push(count); return value; },
       then: (resolve: (value: unknown[]) => unknown) => Promise.resolve(value).then(resolve),
     };
     return query;
   });
-  return Object.assign(predicates, { joins });
+  return Object.assign(predicates, { joins, limits });
 }
 beforeEach(() => {
   vi.resetAllMocks();
@@ -62,9 +63,9 @@ it('keeps an unfinished previous week accessible during a deadline extension', a
 });
 
 it.each(['not-a-date', '2026-02-30', '2026-08-24'])('rejects an unavailable or foreign week %s before loading its commitment', async (date) => {
-  reads([[{ week: previous }]]);
+  reads([[]]);
   expect(await getBuildState('owner', date)).toBeNull();
-  expect(select).toHaveBeenCalledOnce();
+  expect(select).toHaveBeenCalledTimes(date === '2026-08-24' ? 1 : 0);
 });
 
 it('rejects a week that another tab published after the unfinished list was loaded', async () => {
@@ -86,4 +87,15 @@ it('opens an unfinished previous week without a saved goal', async () => {
     currentWeek: previous, currentCommitment: null, currentResult: null,
     selectedLateWeek: true, late: true, canSetNextPromise: false,
   });
+});
+
+it('bounds the catch-up list while looking up an older link directly', async () => {
+  const list = reads([[], [current], [next], [], []]);
+  await getBuildState('owner');
+  expect(list.limits[0]).toBe(12);
+  const old = { ...previous, weekStartDate: '2025-01-06' };
+  const direct = reads([[{ week: old }], [current], [], []]);
+  expect(await getBuildState('owner', old.weekStartDate)).toMatchObject({ currentWeek: old });
+  expect(direct[0].params).toContain(old.weekStartDate);
+  expect(direct.limits[0]).toBe(1);
 });
