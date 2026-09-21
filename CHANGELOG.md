@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.8.2.1] - 2026-09-21
+
+### Fixed
+
+- Open this week’s update while signed in without a server error.
+
 ## [0.8.2.0] - 2026-09-21
 
 ### Changed
