@@ -3,14 +3,17 @@ import postgres from 'postgres';
 import { expect, it } from 'vitest';
 
 // Only temporary tables are touched; the real migration runs with a fixed clock.
-it.skipIf(!process.env.DATABASE_MIGRATION_TEST_URL).each(['open', 'finalized', 'expired'])(
-  'extends deadlines and corrects eligible results only when %s', async (scenario) => {
+it.skipIf(!process.env.DATABASE_MIGRATION_TEST_URL).each(
+  ['0008_extend_september_update', '0010_monday_update_deadline'].flatMap(migration =>
+    ['open', 'finalized', 'expired'].map(scenario => ({ migration, scenario }))),
+)(
+  '$migration extends deadlines and corrects eligible results only when $scenario', async ({ migration: migrationName, scenario }) => {
     const url = new URL(process.env.DATABASE_MIGRATION_TEST_URL!);
     if (!['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || url.pathname !== '/mad_builders_test') {
       throw new Error('Deadline migration tests require a disposable local mad_builders_test database');
     }
     const sql = postgres(process.env.DATABASE_MIGRATION_TEST_URL!, { max: 1 });
-    const migration = readFileSync(new URL('../../drizzle/0008_extend_september_update.sql', import.meta.url), 'utf8')
+    const migration = readFileSync(new URL(`../../drizzle/${migrationName}.sql`, import.meta.url), 'utf8')
       .replaceAll('app_private.', 'pg_temp.')
       .replaceAll('now()', `TIMESTAMPTZ '${scenario === 'expired' ? '2026-09-14 22:00:00+00' : '2026-09-14 12:00:00+00'}'`);
     try {
@@ -30,7 +33,7 @@ it.skipIf(!process.env.DATABASE_MIGRATION_TEST_URL).each(['open', 'finalized', '
       const saved = await snapshot();
       const extended = scenario === 'open';
       expect(saved.weeks[0].submission_closes_at.toISOString()).toBe(extended ? '2026-09-14T22:00:00.000Z' : '2026-09-13T16:00:00.000Z');
-      expect(saved.weeks[0].voting_closes_at.toISOString()).toBe(extended ? '2026-09-18T16:00:00.000Z' : '2026-09-14T16:00:00.000Z');
+      expect(saved.weeks[0].voting_closes_at.toISOString()).toBe(extended ? (migrationName === '0010_monday_update_deadline' ? '2026-09-15T22:00:00.000Z' : '2026-09-18T16:00:00.000Z') : '2026-09-14T16:00:00.000Z');
       expect(saved.weeks[1].submission_closes_at.toISOString()).toBe('2026-09-06T16:00:00.000Z');
       expect(saved.results.map((row) => row.on_time)).toEqual([extended, extended, false, false]);
       expect(saved.projects.map((row) => row.first_on_time_result_at?.toISOString() ?? null)).toEqual([extended ? '2026-09-14T10:00:00.000Z' : null, null, null, null]);
