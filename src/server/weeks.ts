@@ -77,7 +77,7 @@ export async function getBuildState(projectId: string, selectedWeekDate?: string
     .select()
     .from(week)
     .where(and(lte(week.startsAt, now), gt(week.votingClosesAt, now)))
-    .orderBy(desc(sql`${week.submissionClosesAt} > ${now}`), asc(week.submissionClosesAt))
+    .orderBy(desc(gt(week.submissionClosesAt, now)), asc(week.submissionClosesAt))
     .limit(1);
   const [nextWeek] = await db
     .select()

@@ -14,6 +14,7 @@ function reads(rows: unknown[][]) {
   const predicates: Array<{ sql: string; params: unknown[] }> = [];
   const limits: number[] = [];
   const joins: Array<{ sql: string; params: unknown[] }> = [];
+  const ordering: Array<{ sql: string; params: unknown[] }> = [];
   select.mockImplementation(() => {
     const value = rows.shift() ?? [];
     const query = {
@@ -23,12 +24,15 @@ function reads(rows: unknown[][]) {
       where: (predicate: Parameters<PgDialect['sqlToQuery']>[0]) => {
         predicates.push(new PgDialect().sqlToQuery(predicate)); return query;
       },
-      orderBy: () => query, limit: async (count: number) => { limits.push(count); return value; },
+      orderBy: (...expressions: Parameters<PgDialect['sqlToQuery']>[0][]) => {
+        ordering.push(...expressions.map(expression => new PgDialect().sqlToQuery(expression))); return query;
+      },
+      limit: async (count: number) => { limits.push(count); return value; },
       then: (resolve: (value: unknown[]) => unknown) => Promise.resolve(value).then(resolve),
     };
     return query;
   });
-  return Object.assign(predicates, { joins, limits });
+  return Object.assign(predicates, { joins, limits, ordering });
 }
 beforeEach(() => {
   vi.resetAllMocks();
@@ -39,6 +43,13 @@ it('keeps Monday on the current week while offering the unfinished previous week
   reads([[{ week: previous }], [current], [next], [], []]);
   const state = await getBuildState('owner');
   expect(state).toMatchObject({ currentWeek: current, nextWeek: next, selectedLateWeek: false, late: false, canSetNextPromise: true, unfinishedWeeks: [previous] });
+});
+
+it('serializes the current-week ordering timestamp for the database driver', async () => {
+  const queries = reads([[], [current], [next], [], []]);
+  await getBuildState('owner');
+  const deadlineOrder = queries.ordering.find(query => query.sql.includes('submission_closes_at') && query.sql.includes('>'));
+  expect(deadlineOrder?.params).toEqual([now.toISOString()]);
 });
 
 it('opens the owned late commitment after rollover without moving its next goal to a later week', async () => {
