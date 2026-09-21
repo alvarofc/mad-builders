@@ -221,7 +221,7 @@ const askedToJoin = Astro.url.searchParams.has('join') || Astro.url.searchParams
                 <a class="work-button" href="/vote?demo=0">continue voting</a>
                 <p class="work-note">Voting closes {madridDate(review.week.votingClosesAt)}.</p>
               </>
-            ) : buildState?.currentCommitment || (buildState?.currentWeek && buildState.phase === 'active') ? (
+            ) : buildState?.currentWeek ? (
               <>
                 <p class="work-label">weekly update / week of {buildState.currentWeek?.weekStartDate}</p>
                 <h2 class="work-heading">{editing ? 'Edit your weekly update.' : buildState.currentCommitment?.promise ? 'Tell us how the week went.' : 'Your first weekly update.'}</h2>

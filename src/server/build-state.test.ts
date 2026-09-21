@@ -12,10 +12,13 @@ const next = { ...current, id: 3, startsAt: new Date('2026-09-13T22:00:00Z') };
 
 function reads(rows: unknown[][]) {
   const predicates: Array<{ sql: string; params: unknown[] }> = [];
+  const joins: Array<{ sql: string; params: unknown[] }> = [];
   select.mockImplementation(() => {
     const value = rows.shift() ?? [];
     const query = {
-      from: () => query, innerJoin: () => query, leftJoin: () => query,
+      from: () => query, innerJoin: () => query, leftJoin: (_table: unknown, predicate: Parameters<PgDialect['sqlToQuery']>[0]) => {
+        joins.push(new PgDialect().sqlToQuery(predicate)); return query;
+      },
       where: (predicate: Parameters<PgDialect['sqlToQuery']>[0]) => {
         predicates.push(new PgDialect().sqlToQuery(predicate)); return query;
       },
@@ -24,7 +27,7 @@ function reads(rows: unknown[][]) {
     };
     return query;
   });
-  return predicates;
+  return Object.assign(predicates, { joins });
 }
 beforeEach(() => {
   vi.resetAllMocks();
@@ -41,9 +44,9 @@ it('opens the owned late commitment after rollover without moving its next goal 
   const predicates = reads([[{ week: previous }], [current], [{ id: 44, projectId: 'owner', promise: 'Ship the prototype' }], [], [{ id: 55, promise: 'This week is already locked' }]]);
   const state = await getBuildState('owner', previous.weekStartDate);
   expect(state).toMatchObject({ currentWeek: previous, currentCommitment: { id: 44 }, currentResult: null, nextWeek: current, selectedLateWeek: true, late: true, canSetNextPromise: false });
-  expect(predicates[0].sql).toContain('"commitment"."project_id" =');
+  expect(predicates.joins[0].sql).toContain('"result"."project_id" =');
   expect(predicates[0].sql).toContain('"result"."id" is null');
-  expect(predicates[0].params).toContain('owner');
+  expect(predicates.joins[0].params).toContain('owner');
   expect(predicates[1].params).toEqual([previous.startsAt.toISOString()]);
   expect(predicates[2].params).toEqual(['owner', previous.id]);
 });
@@ -74,5 +77,13 @@ it.each([-1, 0, 1])('allows next-goal edits only before its start (%i ms from Mo
   reads([[], [previous], [current], [{ id: 44 }], [{ id: 66 }], [{ id: 55, promise: 'Next goal' }]]);
   expect(await getBuildState('owner')).toMatchObject({
     phase: 'voting', currentResult: { id: 66 }, canSetNextPromise: offset < 0,
+  });
+});
+
+it('opens an unfinished previous week without a saved goal', async () => {
+  reads([[{ week: previous }], [current], [], []]);
+  expect(await getBuildState('owner', previous.weekStartDate)).toMatchObject({
+    currentWeek: previous, currentCommitment: null, currentResult: null,
+    selectedLateWeek: true, late: true, canSetNextPromise: false,
   });
 });

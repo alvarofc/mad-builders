@@ -47,8 +47,8 @@ async function refreshWeeklySchedule() {
     select
       scheduled_date,
       scheduled_date::timestamp at time zone 'Europe/Madrid',
-      (scheduled_date::timestamp + interval '6 days 18 hours') at time zone 'Europe/Madrid',
-      (scheduled_date::timestamp + interval '7 days 18 hours') at time zone 'Europe/Madrid'
+      (scheduled_date::timestamp + interval '8 days') at time zone 'Europe/Madrid',
+      (scheduled_date::timestamp + interval '9 days') at time zone 'Europe/Madrid'
     from (values (${currentMonday}::date), (${nextMonday}::date)) as schedule(scheduled_date)
     on conflict (week_start_date) do nothing
   `);
@@ -61,10 +61,9 @@ export async function getBuildState(projectId: string, selectedWeekDate?: string
 
   const now = await getDatabaseNow();
   const [currentMonday] = madridWeekStartDates(now);
-  const unfinishedWeeks = await db.select({ week }).from(commitment)
-    .innerJoin(week, eq(commitment.weekId, week.id))
-    .leftJoin(result, eq(result.commitmentId, commitment.id))
-    .where(and(eq(commitment.projectId, projectId), or(lte(week.submissionClosesAt, now), lt(week.weekStartDate, currentMonday)), isNull(result.id)))
+  const unfinishedWeeks = await db.select({ week }).from(week)
+    .leftJoin(result, and(eq(result.weekId, week.id), eq(result.projectId, projectId)))
+    .where(and(lte(week.startsAt, now), or(lte(week.submissionClosesAt, now), lt(week.weekStartDate, currentMonday)), isNull(result.id)))
     .orderBy(desc(week.startsAt));
   const selectedWeek = selectedWeekDate
     ? unfinishedWeeks.find(({ week }) => week.weekStartDate === selectedWeekDate)?.week
@@ -74,7 +73,7 @@ export async function getBuildState(projectId: string, selectedWeekDate?: string
     .select()
     .from(week)
     .where(and(lte(week.startsAt, now), gt(week.votingClosesAt, now)))
-    .orderBy(desc(week.startsAt))
+    .orderBy(desc(sql`${week.submissionClosesAt} > ${now}`), asc(week.submissionClosesAt))
     .limit(1);
   const [nextWeek] = await db
     .select()
@@ -98,7 +97,7 @@ export async function getBuildState(projectId: string, selectedWeekDate?: string
         .limit(1)
     : [];
   // A publication in another tab can close this catch-up form between reads.
-  if (selectedWeekDate && (!currentCommitment || currentResult)) return null;
+  if (selectedWeekDate && currentResult) return null;
   const [nextCommitment] = nextWeek
     ? await db
         .select()
