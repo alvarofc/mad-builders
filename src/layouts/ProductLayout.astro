@@ -23,6 +23,15 @@ const {
   signedIn = false,
   structuredData,
 } = Astro.props;
+
+const links = [
+  { href: '/leaderboard', label: 'leaderboard', current: active === 'leaderboard' },
+  { href: '/build#this-week', label: 'this week', current: active === 'build' },
+  { href: '/vote', label: 'vote', current: active === 'vote' },
+  { href: '/builders', label: 'projects', current: active === 'builders' },
+  ...(profileHandle ? [{ href: `/builders/${profileHandle}`, label: 'my project', current: active === 'profile' }] : []),
+  { href: signedIn ? '/settings' : '/login', label: signedIn ? 'settings' : 'log in', current: false },
+];
 ---
 
 <Layout
@@ -37,34 +46,43 @@ const {
   <nav class="product-nav mono" slot="nav" aria-label="product">
     <div class="wrap product-nav-inner">
       <a href="/" class="wordmark">mad.builders</a>
-      <a href="/leaderboard" aria-current={active === 'leaderboard' ? 'page' : undefined}>leaderboard</a>
-      <a href="/build#this-week" aria-current={active === 'build' ? 'page' : undefined}>this week</a>
-      <a href="/vote" aria-current={active === 'vote' ? 'page' : undefined}>vote</a>
-      <a href="/builders" aria-current={active === 'builders' ? 'page' : undefined}>projects</a>
-      {profileHandle && (
-        <a
-          href={`/builders/${profileHandle}`}
-          aria-current={active === 'profile' ? 'page' : undefined}
-        >
-          my project
-        </a>
-      )}
-      {signedIn && <a href="/settings">settings</a>}
-      {signedIn && <button type="button" data-sign-out>sign out</button>}
-      {!signedIn && <a href="/login">log in</a>}
+      <div class="product-nav-links">
+        {links.map(link => <a href={link.href} aria-current={link.current ? 'page' : undefined}>{link.label}</a>)}
+        {signedIn && <button type="button" data-sign-out>sign out</button>}
+      </div>
+      <details class="product-nav-menu">
+        <summary aria-label="Navigation menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path class="menu-bars" d="M4 6h16M4 12h16M4 18h16" />
+            <path class="menu-close" d="m6 6 12 12M6 18 18 6" />
+          </svg>
+        </summary>
+        <div class="product-nav-dropdown">
+          {links.map(link => <a href={link.href} aria-current={link.current ? 'page' : undefined}>{link.label}</a>)}
+          {signedIn && <button type="button" data-sign-out>sign out</button>}
+        </div>
+      </details>
     </div>
   </nav>
   <slot />
 </Layout>
+
+<script>
+  document.querySelectorAll<HTMLDetailsElement>('.product-nav-menu').forEach(menu => {
+    menu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+      menu.open = false;
+    }));
+  });
+</script>
 
 {signedIn && (
   <script>
     import { createAuthClient } from 'better-auth/client';
 
     const authClient = createAuthClient();
-    document.querySelector('[data-sign-out]')?.addEventListener('click', async () => {
+    document.querySelectorAll('[data-sign-out]').forEach(button => button.addEventListener('click', async () => {
       await authClient.signOut();
       window.location.assign('/build');
-    });
+    }));
   </script>
 )}

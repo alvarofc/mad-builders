@@ -38,6 +38,8 @@ it('keeps a failed message, retries once, updates the draft and requires a separ
   await click('Send ↑');
   expect(JSON.parse(fetch.mock.calls[1][1].body).messages).toHaveLength(1);
   expect(container.textContent).toContain('What surprised you?');
+  expect(container.querySelector('[data-message-id="0"]')!.getAttribute('data-scroll-anchor')).toBe('true');
+  expect(container.querySelector('[data-message-id="1"]')!.getAttribute('data-scroll-anchor')).toBe('false');
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I spoke to three café owners.', nextPromise: '' });
   expect(submit).not.toHaveBeenCalled();
   await click('Review & edit draft →');
@@ -60,7 +62,7 @@ it('restores drafts and unsent messages and sends manual draft edits on the next
   const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reply: 'Thanks for clarifying.', changes: { summary: null, nextPromise: null, feedbackRequest: null }, historyCount: 0 }) });
   vi.stubGlobal('fetch', fetch);
   await mount();
-  expect(container.textContent).toContain('Saved progress');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'Saved progress' });
   expect(container.querySelector<HTMLTextAreaElement>('.coach-composer textarea')!.value).toBe('Unsent note');
   await click('Review & edit draft →');
   await type('textarea[name="summary"]', 'Manually corrected facts');
@@ -68,7 +70,7 @@ it('restores drafts and unsent messages and sends manual draft edits on the next
   await click('Send ↑');
   expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({ draft: { summary: 'Manually corrected facts' } });
   expect(JSON.parse(fetch.mock.calls[0][1].body).messages).toHaveLength(3);
-  expect(container.textContent).toContain('Manually corrected facts');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'Manually corrected facts' });
   expect(submit).not.toHaveBeenCalled();
 });
 
@@ -101,7 +103,7 @@ it('preserves catch-up goals and can reset the conversation without discarding t
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I tested the counter.', nextPromise: 'Previously saved goal' });
   await click('New conversation, keep draft');
   expect(container.textContent).not.toContain('Here is your update.');
-  expect(container.textContent).toContain('I tested the counter.');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I tested the counter.' });
   expect(JSON.parse(localStorage.getItem(`${props.draftKey}:chat:u1`)!).messages).toEqual([]);
   await click('Review & edit draft →');
   expect(container.querySelector('[name="nextPromise"]')).toBeNull();
@@ -171,4 +173,18 @@ it('submits an unplanned week with the week id and submitted outcome', async () 
   expect(data.get('status')).toBe('submitted');
   expect(data.has('commitmentId')).toBe(false);
   expect(data.has('nextPromise')).toBe(false);
+});
+
+it('focuses the screen on chat and opens the draft only for review', async () => {
+  await mount();
+  expect(container.querySelector<HTMLElement>('.coach-draft')!.hidden).toBe(true);
+  expect(container.querySelector('.coach-review')).toBeNull();
+  expect(container.querySelector<HTMLDetailsElement>('.coach-context')!.open).toBe(false);
+  await click('Review & edit draft →');
+  expect(container.querySelector<HTMLElement>('.coach-conversation')!.hidden).toBe(true);
+  expect(container.querySelector<HTMLElement>('.coach-draft')!.hidden).toBe(false);
+  expect(document.activeElement).toBe(container.querySelector('.coach-draft h3'));
+  await click('Back to chat');
+  expect(container.querySelector<HTMLElement>('.coach-draft')!.hidden).toBe(true);
+  expect(document.activeElement).toBe(container.querySelector('.coach-composer textarea'));
 });

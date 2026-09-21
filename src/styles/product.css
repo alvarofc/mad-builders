@@ -15,6 +15,24 @@
   overflow-x: auto;
 }
 
+.product-nav-links { display: flex; flex: 1; align-items: center; gap: 24px; }
+.product-nav-menu { display: none; }
+.product-nav-menu summary { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer; list-style: none; color: var(--cream); }
+.product-nav-menu summary::-webkit-details-marker { display: none; }
+.product-nav-menu .menu-close,
+.product-nav-menu[open] .menu-bars { display: none; }
+.product-nav-menu[open] .menu-close { display: block; }
+.product-nav-dropdown { position: absolute; inset: 100% 0 auto; display: flex; flex-direction: column; padding: 8px 16px 16px; background: var(--green); border-bottom: 1px solid var(--line); max-height: calc(100dvh - 46px); overflow-y: auto; }
+.product-nav-dropdown a,
+.product-nav-dropdown button { width: 100%; }
+
+@media (max-width: 720px) {
+  .product-nav .product-nav-inner { overflow: visible; padding-inline: 16px; }
+  .product-nav-links { display: none; }
+  .product-nav-menu { display: block; margin-left: auto; }
+  .product-nav-dropdown { font-size: 13px; }
+}
+
 .product-nav a,
 .product-nav button {
   display: inline-flex;
@@ -906,6 +924,20 @@
 }
 
 @media (max-width: 720px) {
+  #this-week > .wrap { padding-inline: 16px; }
+  #this-week > .section-heading { padding-top: 24px; }
+  #this-week .update-shell { padding-top: 16px; padding-bottom: 32px; overflow-wrap: anywhere; }
+  .update-shell .work-heading { font-size: 1.5rem; line-height: 1.2; }
+  .update-shell .work-note { max-width: none; margin-bottom: 20px; }
+  .update-shell .work-form { gap: 20px; }
+  .update-shell .work-field,
+  .update-shell .work-field input,
+  .update-shell .work-field textarea,
+  .update-shell .work-field select { min-width: 0; }
+  .update-shell .work-field input,
+  .update-shell .work-field textarea,
+  .update-shell .work-field select { font-size: 1rem; }
+  .update-shell .work-actions > .work-button { flex: 1 1 auto; }
   .product-nav-inner { gap: 12px; font-size: 0.6875rem; }
   .product-nav-inner > .wordmark { font-size: 0.875rem; }
   .work-title,
