@@ -199,3 +199,12 @@ describe('Pioneer update fields', () => {
     }
   });
 });
+
+it('publishes a previous week without a saved goal after voting closes', async () => {
+  const writes = mockTransaction([[currentWeek], [], [nextWeek], []], new Date('2026-09-08T12:00:00Z'));
+  await expect(publishResult({ ...input, nextPromise: '' })).resolves.toHaveProperty('result');
+  expect(writes.find(write => write.table === result)?.values).toMatchObject({
+    weekId: currentWeek.id, commitmentId: 77, status: 'submitted', onTime: false,
+  });
+  expect(writes.filter(write => write.table === commitment).map(write => write.values.promise)).toEqual(['']);
+});

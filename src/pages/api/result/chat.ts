@@ -32,7 +32,7 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
       .where(and(eq(commitment.projectId, project.id), eq(commitment.weekId, selectedWeek.id))).limit(1);
     const [published] = await db.select({ id: result.id }).from(result)
       .where(and(eq(result.projectId, project.id), eq(result.weekId, selectedWeek.id))).limit(1);
-    if (now >= selectedWeek.submissionClosesAt && (published || !pledge)) return reply({ error: 'This update is no longer editable.' }, 409);
+    if (now >= selectedWeek.submissionClosesAt && published) return reply({ error: 'This update is no longer editable.' }, 409);
     const [nextWeek] = await db.select().from(week).where(gt(week.startsAt, selectedWeek.startsAt)).orderBy(asc(week.startsAt)).limit(1);
     const canSetNextGoal = Boolean(nextWeek && now < nextWeek.startsAt);
     const [nextGoal] = nextWeek ? await db.select({ promise: commitment.promise }).from(commitment)

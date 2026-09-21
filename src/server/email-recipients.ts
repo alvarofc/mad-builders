@@ -29,7 +29,7 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
   if (kind === 'checkin') {
     return [...await db.execute<ReminderRecipient>(sql`
       select u.id as "userId", u.email, w.id::integer as "weekId", to_char(${deadline} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as deadline,
-        r.id is null as "needsResult", nc.id is null as "needsPromise"
+        r.id is null as "needsResult", coalesce(nc.id is null and nw.starts_at > ${clock}::timestamptz, false) as "needsPromise"
       from app_private.week w
       cross join app_private."user" u
       join app_private.project_owner owner on owner.user_id = u.id and owner.active = true
@@ -40,7 +40,7 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
       left join app_private.commitment nc on nc.project_id = p.id and nc.week_id = nw.id
       where ${window} and ${active}
         and (c.id is not null or r.id is not null)
-        and (r.id is null or nc.id is null)
+        and (r.id is null or (nc.id is null and nw.starts_at > ${clock}::timestamptz))
       order by w.id, u.id limit 100
     `)];
   }

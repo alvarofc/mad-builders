@@ -176,7 +176,6 @@ export async function publishResult(input: {
     if (clock.now < record.week.startsAt) throw new Error('week_not_started');
     if (blocksWeeklyUpdate(review, record.week.startsAt, clock.now)) throw new Error('voting_required');
     if (existing && clock.now >= record.week.submissionClosesAt) throw new Error('update_locked');
-    if (!input.commitmentId && clock.now >= record.week.submissionClosesAt) throw new Error('commitment_not_found');
     if (
       nextWeek &&
       clock.now < nextWeek.startsAt &&

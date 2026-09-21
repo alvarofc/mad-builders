@@ -221,7 +221,7 @@ const askedToJoin = Astro.url.searchParams.has('join') || Astro.url.searchParams
                 <a class="work-button" href="/vote?demo=0">continue voting</a>
                 <p class="work-note">Voting closes {madridDate(review.week.votingClosesAt)}.</p>
               </>
-            ) : buildState?.currentCommitment || (buildState?.currentWeek && buildState.phase === 'active') ? (
+            ) : buildState?.currentWeek ? (
               <>
                 {import.meta.env.CEREBRAS_API_KEY ? (
                   <details class="update-details" open={buildState.late}>
