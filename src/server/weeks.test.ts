@@ -12,11 +12,11 @@ describe('automatic weekly schedule', () => {
   });
 });
 
-it('schedules updates through Monday and voting through Tuesday in Madrid time', async () => {
+it('schedules updates through Monday and voting through Sunday in Madrid time', async () => {
   execute.mockResolvedValueOnce([{ now: '2026-09-21T12:00:00Z' }]).mockResolvedValueOnce([]);
   await ensureWeeklySchedule();
   const schedule = new PgDialect().sqlToQuery(execute.mock.calls[1][0]);
   expect(schedule.sql).toContain("interval '8 days') at time zone 'Europe/Madrid'");
-  expect(schedule.sql).toContain("interval '9 days') at time zone 'Europe/Madrid'");
+  expect(schedule.sql).toContain("interval '14 days') at time zone 'Europe/Madrid'");
   expect(schedule.params).toEqual(['2026-09-21', '2026-09-28']);
 });

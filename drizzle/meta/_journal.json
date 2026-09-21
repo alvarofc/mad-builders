@@ -78,6 +78,13 @@
       "when": 1790010000000,
       "tag": "0010_monday_update_deadline",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790010000001,
+      "tag": "0011_sunday_voting_deadline",
+      "breakpoints": true
     }
   ]
 }

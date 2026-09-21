@@ -48,7 +48,7 @@ async function refreshWeeklySchedule() {
       scheduled_date,
       scheduled_date::timestamp at time zone 'Europe/Madrid',
       (scheduled_date::timestamp + interval '8 days') at time zone 'Europe/Madrid',
-      (scheduled_date::timestamp + interval '9 days') at time zone 'Europe/Madrid'
+      (scheduled_date::timestamp + interval '14 days') at time zone 'Europe/Madrid'
     from (values (${currentMonday}::date), (${nextMonday}::date)) as schedule(scheduled_date)
     on conflict (week_start_date) do nothing
   `);

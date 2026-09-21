@@ -44,3 +44,32 @@ it.skipIf(!process.env.DATABASE_MIGRATION_TEST_URL).each(
     }
   },
 );
+
+it.skipIf(!process.env.DATABASE_MIGRATION_TEST_URL)('extends pending voting through Sunday without changing submissions or finalized weeks', async () => {
+  const url = new URL(process.env.DATABASE_MIGRATION_TEST_URL!);
+  if (!['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || url.pathname !== '/mad_builders_test') {
+    throw new Error('Deadline migration tests require a disposable local mad_builders_test database');
+  }
+  const sql = postgres(url.toString(), { max: 1 });
+  const migration = readFileSync(new URL('../../drizzle/0011_sunday_voting_deadline.sql', import.meta.url), 'utf8')
+    .replaceAll('app_private.', 'pg_temp.')
+    .replaceAll('now()', "TIMESTAMPTZ '2026-09-21 12:00Z'");
+  try {
+    await sql`create temporary table week (week_start_date date, submission_closes_at timestamptz, voting_closes_at timestamptz, finalized_at timestamptz, ranking_status text)`;
+    await sql`insert into week values
+      ('2026-09-14', '2026-09-21 22:00Z', '2026-09-22 22:00Z', null, 'pending'),
+      ('2026-09-07', '2026-09-14 22:00Z', '2026-09-15 22:00Z', null, 'pending'),
+      ('2026-09-14', '2026-09-21 22:00Z', '2026-09-22 22:00Z', '2026-09-21 10:00Z', 'final'),
+      ('2026-10-19', '2026-10-26 23:00Z', '2026-10-27 23:00Z', null, 'pending')`;
+    const before = await sql`select * from week order by week_start_date, ranking_status`;
+    await sql.unsafe(migration);
+    const after = await sql`select * from week order by week_start_date, ranking_status`;
+    expect(after.map(row => row.submission_closes_at)).toEqual(before.map(row => row.submission_closes_at));
+    expect(after.map(row => row.voting_closes_at.toISOString())).toEqual([
+      '2026-09-15T22:00:00.000Z', '2026-09-22T22:00:00.000Z',
+      '2026-09-27T22:00:00.000Z', '2026-11-01T23:00:00.000Z',
+    ]);
+    await sql.unsafe(migration);
+    expect(await sql`select * from week order by week_start_date, ranking_status`).toEqual(after);
+  } finally { await sql.end(); }
+});
