@@ -2,6 +2,14 @@
 
 Changes to mad.builders.
 
+## [0.8.1.0] - 2026-09-21
+
+### Fixed
+
+- Publish updates for previous weeks even without a saved goal. Late updates stay out of voting and streaks.
+- Finish weekly updates through Monday night, Madrid time, with voting through Sunday night.
+- Open the week being finished by default on Monday, and stop reminders from asking for goals that have already locked.
+
 ## [0.8.0.3] - 2026-09-18
 
 ### Fixed

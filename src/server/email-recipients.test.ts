@@ -140,6 +140,15 @@ it.skipIf(!process.env.DATABASE_EMAIL_TEST_URL)('selects only actionable reminde
           values (${w.id}, ${owner}, ${ids[low]}, ${ids[low + 1]}, ${ids[low]}, 'pass')`);
       }
       expect(await getReminderRecipients('voting', monday, owner)).toEqual([]);
+      // Monday reminders must not ask for goals that locked at the start of the day.
+      await db.execute(sql`update app_private.week set submission_closes_at = '1902-01-13T17:00Z', voting_closes_at = '1902-01-14T17:00Z' where id = ${w.id}`);
+      expect(await getReminderRecipients('checkin', monday, `${prefix}-1`)).toEqual([]);
+      await db.execute(sql`delete from app_private.comparison where week_id = ${w.id}`);
+      await db.execute(sql`delete from app_private.result where id = ${ids[1]}`);
+      expect(await getReminderRecipients('checkin', monday, `${prefix}-1`)).toEqual([
+        { userId: `${prefix}-1`, email: `${prefix}-1@example.invalid`, weekId: Number(w.id),
+          deadline: '1902-01-13T17:00:00.000Z', needsResult: true, needsPromise: false },
+      ]);
       throw rollback;
     });
   } catch (error) {

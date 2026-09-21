@@ -12,19 +12,23 @@ const next = { ...current, id: 3, startsAt: new Date('2026-09-13T22:00:00Z') };
 
 function reads(rows: unknown[][]) {
   const predicates: Array<{ sql: string; params: unknown[] }> = [];
+  const limits: number[] = [];
+  const joins: Array<{ sql: string; params: unknown[] }> = [];
   select.mockImplementation(() => {
     const value = rows.shift() ?? [];
     const query = {
-      from: () => query, innerJoin: () => query, leftJoin: () => query,
+      from: () => query, innerJoin: () => query, leftJoin: (_table: unknown, predicate: Parameters<PgDialect['sqlToQuery']>[0]) => {
+        joins.push(new PgDialect().sqlToQuery(predicate)); return query;
+      },
       where: (predicate: Parameters<PgDialect['sqlToQuery']>[0]) => {
         predicates.push(new PgDialect().sqlToQuery(predicate)); return query;
       },
-      orderBy: () => query, limit: async () => value,
+      orderBy: () => query, limit: async (count: number) => { limits.push(count); return value; },
       then: (resolve: (value: unknown[]) => unknown) => Promise.resolve(value).then(resolve),
     };
     return query;
   });
-  return predicates;
+  return Object.assign(predicates, { joins, limits });
 }
 beforeEach(() => {
   vi.resetAllMocks();
@@ -41,9 +45,9 @@ it('opens the owned late commitment after rollover without moving its next goal 
   const predicates = reads([[{ week: previous }], [current], [{ id: 44, projectId: 'owner', promise: 'Ship the prototype' }], [], [{ id: 55, promise: 'This week is already locked' }]]);
   const state = await getBuildState('owner', previous.weekStartDate);
   expect(state).toMatchObject({ currentWeek: previous, currentCommitment: { id: 44 }, currentResult: null, nextWeek: current, selectedLateWeek: true, late: true, canSetNextPromise: false });
-  expect(predicates[0].sql).toContain('"commitment"."project_id" =');
+  expect(predicates.joins[0].sql).toContain('"result"."project_id" =');
   expect(predicates[0].sql).toContain('"result"."id" is null');
-  expect(predicates[0].params).toContain('owner');
+  expect(predicates.joins[0].params).toContain('owner');
   expect(predicates[1].params).toEqual([previous.startsAt.toISOString()]);
   expect(predicates[2].params).toEqual(['owner', previous.id]);
 });
@@ -59,9 +63,9 @@ it('keeps an unfinished previous week accessible during a deadline extension', a
 });
 
 it.each(['not-a-date', '2026-02-30', '2026-08-24'])('rejects an unavailable or foreign week %s before loading its commitment', async (date) => {
-  reads([[{ week: previous }]]);
+  reads([[]]);
   expect(await getBuildState('owner', date)).toBeNull();
-  expect(select).toHaveBeenCalledOnce();
+  expect(select).toHaveBeenCalledTimes(date === '2026-08-24' ? 1 : 0);
 });
 
 it('rejects a week that another tab published after the unfinished list was loaded', async () => {
@@ -75,4 +79,23 @@ it.each([-1, 0, 1])('allows next-goal edits only before its start (%i ms from Mo
   expect(await getBuildState('owner')).toMatchObject({
     phase: 'voting', currentResult: { id: 66 }, canSetNextPromise: offset < 0,
   });
+});
+
+it('opens an unfinished previous week without a saved goal', async () => {
+  reads([[{ week: previous }], [current], [], []]);
+  expect(await getBuildState('owner', previous.weekStartDate)).toMatchObject({
+    currentWeek: previous, currentCommitment: null, currentResult: null,
+    selectedLateWeek: true, late: true, canSetNextPromise: false,
+  });
+});
+
+it('bounds the catch-up list while looking up an older link directly', async () => {
+  const list = reads([[], [current], [next], [], []]);
+  await getBuildState('owner');
+  expect(list.limits[0]).toBe(12);
+  const old = { ...previous, weekStartDate: '2025-01-06' };
+  const direct = reads([[{ week: old }], [current], [], []]);
+  expect(await getBuildState('owner', old.weekStartDate)).toMatchObject({ currentWeek: old });
+  expect(direct[0].params).toContain(old.weekStartDate);
+  expect(direct.limits[0]).toBe(1);
 });

@@ -100,12 +100,9 @@ it.each([Number.MAX_SAFE_INTEGER + 1, 1e30])('rejects unsafe week ID %s before a
   expect(mocks.chat).not.toHaveBeenCalled();
 });
 
-it('allows an unpublished catch-up only with a commitment and disables goals after the next week starts', async () => {
+it.each([{ pledges: [] }, { pledges: [{ promise: 'Test the counter' }] }])('allows catch-up with or without a goal ($pledges)', async ({ pledges }) => {
   const closedWeek = { ...selectedWeek, submissionClosesAt: new Date('2026-09-14') };
-  mocks.rows.mockResolvedValueOnce([closedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
-  expect((await request()).status).toBe(409);
-  expect(mocks.chat).not.toHaveBeenCalled();
-  mocks.rows.mockResolvedValueOnce([closedWeek]).mockResolvedValueOnce([{ promise: 'Test the counter' }]).mockResolvedValueOnce([])
+  mocks.rows.mockResolvedValueOnce([closedWeek]).mockResolvedValueOnce(pledges).mockResolvedValueOnce([])
     .mockResolvedValueOnce([{ id: 4, weekStartDate: '2026-09-15', startsAt: new Date('2026-09-15T00:00Z') }]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
   mocks.chat.mockResolvedValue({ reply: 'What happened?', changes: { summary: null, nextPromise: null, feedbackRequest: null } });
   expect((await request()).status).toBe(200);
