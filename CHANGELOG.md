@@ -2,6 +2,15 @@
 
 Changes to mad.builders.
 
+## [0.8.2.0] - 2026-09-21
+
+### Changed
+
+- Write weekly updates in a focused chat, then review and edit the draft before publishing.
+- Keep the message box visible while longer conversations scroll on mobile and desktop.
+- Open product and account links from a hamburger menu on mobile.
+- Use clearer button layouts, larger tap targets, and better text wrapping on small screens.
+
 ## [0.8.0.3] - 2026-09-18
 
 ### Fixed
