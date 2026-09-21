@@ -119,7 +119,7 @@ function Conversation(props: Props) {
   return <div className="weekly-chat" data-reviewing={reviewing}>
     <div className="coach-layout">
       <section className="coach-conversation" aria-label="Weekly check-in chat" hidden={reviewing}>
-        <MessageScroller.Provider defaultScrollPosition="last-anchor">
+        {ready ? <MessageScroller.Provider defaultScrollPosition="last-anchor">
           <MessageScroller.Root className="coach-scroller">
             <MessageScroller.Viewport className="coach-viewport" aria-label="Conversation">
               <MessageScroller.Content className="coach-messages">
@@ -134,7 +134,7 @@ function Conversation(props: Props) {
             </MessageScroller.Viewport>
             <MessageScroller.Button className="coach-scroll-button" direction="end">Latest message ↓</MessageScroller.Button>
           </MessageScroller.Root>
-        </MessageScroller.Provider>
+        </MessageScroller.Provider> : <div className="coach-scroller" role="status">Loading your conversation…</div>}
         <p className="coach-activity" role="status">{pending ? 'Thinking about your update…' : ''}</p>
         <form className="coach-composer" onSubmit={event => { event.preventDefault(); void send(); }}>
           <label htmlFor={`${id}-message`} className="visually-hidden">Your message</label>

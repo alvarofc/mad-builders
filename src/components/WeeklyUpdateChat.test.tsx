@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import WeeklyUpdateChat from './WeeklyUpdateChat';
 vi.mock('@vercel/analytics', () => ({ track: vi.fn() }));
@@ -187,4 +188,18 @@ it('focuses the screen on chat and opens the draft only for review', async () =>
   await click('Back to chat');
   expect(container.querySelector<HTMLElement>('.coach-draft')!.hidden).toBe(true);
   expect(document.activeElement).toBe(container.querySelector('.coach-composer textarea'));
+});
+
+it('waits for saved history before opening the message scroller and does not autofocus on load', async () => {
+  localStorage.setItem(`${props.draftKey}:chat:u1`, JSON.stringify({ messages: [
+    { role: 'user', content: 'First turn' }, { role: 'assistant', content: 'First reply' },
+    { role: 'user', content: 'Last turn' }, { role: 'assistant', content: 'Last reply' },
+  ] }));
+  const initial = renderToString(<WeeklyUpdateChat {...props} />);
+  expect(initial).toContain('Loading your conversation');
+  expect(initial).not.toContain('data-message-id');
+  await mount();
+  expect(container.querySelectorAll('[data-scroll-anchor="true"]')).toHaveLength(2);
+  expect(container.querySelector('[data-message-id="2"]')!.textContent).toContain('Last turn');
+  expect(document.activeElement).not.toBe(container.querySelector('.coach-composer textarea'));
 });

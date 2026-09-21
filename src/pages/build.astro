@@ -224,8 +224,8 @@ const askedToJoin = Astro.url.searchParams.has('join') || Astro.url.searchParams
             ) : buildState?.currentCommitment || (buildState?.currentWeek && buildState.phase === 'active') ? (
               <>
                 {import.meta.env.CEREBRAS_API_KEY ? (
-                  <details class="update-details">
-                    <summary>Week of {buildState.currentWeek?.weekStartDate}</summary>
+                  <details class="update-details" open={buildState.late}>
+                    <summary>{editing ? 'Edit weekly update' : 'Weekly update'} · week of {buildState.currentWeek?.weekStartDate}</summary>
                     <p class="work-note">{buildState.late ? 'The ranking deadline has passed. You can still publish this update, but it will not enter voting or count toward your streak.' : `Ranking deadline: ${madridDate(buildState.currentWeek!.submissionClosesAt)}`}</p>
                   </details>
                 ) : <>

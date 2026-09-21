@@ -69,9 +69,20 @@ const links = [
 
 <script>
   document.querySelectorAll<HTMLDetailsElement>('.product-nav-menu').forEach(menu => {
-    menu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+    const close = () => {
+      if (menu.contains(document.activeElement)) menu.querySelector('summary')?.focus();
       menu.open = false;
-    }));
+    };
+    menu.querySelectorAll('a').forEach(link => link.addEventListener('click', close));
+    document.addEventListener('keydown', event => {
+      if (menu.open && event.key === 'Escape') {
+        event.preventDefault();
+        close();
+      }
+    });
+    document.addEventListener('click', event => {
+      if (menu.open && !menu.contains(event.target as Node)) close();
+    });
   });
 </script>
 
