@@ -528,7 +528,7 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
       ),
     );
   if (candidates.length < 6) {
-    return { week: { ...votingWeek, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const, page, hasNext: false };
+    return { week: { ...votingWeek, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const, page, hasNext: false, hasRanks: false };
   }
   const related = await db.execute<{ project_id: string }>(sql`
     select distinct other.project_id from app_private.project_owner own
@@ -586,7 +586,7 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
     const detail = byId.get(score.resultId);
     return detail ? [{ ...detail, ...score }] : [];
   });
-  return { week: votingWeek, now, entries, provisional: true as const, page, hasNext: ranked.length > offset + PAGE_SIZE };
+  return { week: votingWeek, now, entries, provisional: true as const, page, hasNext: ranked.length > offset + PAGE_SIZE, hasRanks: ranked.length > 0 };
 }
 
 // The board always shows the most recent *closed* week, so the week that is
@@ -633,10 +633,9 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
   const page = pageNumber(requestedPage);
   if (!databaseConfigured) return null;
   const now = await getDatabaseNow();
-  if (userId) {
-    const provisional = await getProvisionalLeaderboard(userId, now, page);
-    if (provisional) return provisional;
-  }
+  const provisional = userId ? await getProvisionalLeaderboard(userId, now, page) : null;
+  // Check the whole board, not this page: an out-of-range page must not switch weeks.
+  if (provisional?.hasRanks) return { ...provisional, votingComplete: true };
   const [latestClosedWeek] = await db
     .select()
     .from(week)
@@ -656,9 +655,16 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
     : await db.select().from(week).orderBy(asc(week.startsAt)).limit(1);
   const latestWeek = latestClosedWeek ?? latestStartedWeek ?? nextWeek;
   if (!latestWeek) return null;
-  const finalWeek = latestClosedWeek && !latestClosedWeek.finalizedAt
+  let finalWeek = latestClosedWeek && !latestClosedWeek.finalizedAt
     ? await ensureWeekFinalized(latestWeek.id)
     : latestWeek;
+  if (finalWeek?.rankingStatus !== 'final') {
+    const [latestRankedWeek] = await db.select().from(week)
+      .where(and(lte(week.votingClosesAt, now), eq(week.rankingStatus, 'final')))
+      .orderBy(desc(week.startsAt)).limit(1);
+    finalWeek = latestRankedWeek ?? finalWeek;
+    if (!latestRankedWeek && provisional) return { ...provisional, votingComplete: provisional.provisional };
+  }
   const entries = finalWeek?.rankingStatus === 'final'
     ? await db
         .select({
@@ -685,7 +691,7 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
         .innerJoin(week, eq(ranking.weekId, week.id))
         .where(
           and(
-            eq(ranking.weekId, latestWeek.id),
+            eq(ranking.weekId, finalWeek.id),
             eq(project.isPublic, true),
             isNull(project.hiddenAt),
             isNull(project.withdrawnAt),
@@ -697,7 +703,7 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
         .limit(PAGE_SIZE + 1).offset((page - 1) * PAGE_SIZE)
     : [];
 
-  return { week: finalWeek, now, entries: entries.slice(0, PAGE_SIZE), provisional: false as const, page, hasNext: entries.length > PAGE_SIZE };
+  return { week: finalWeek, now, entries: entries.slice(0, PAGE_SIZE), provisional: false as const, votingComplete: provisional?.provisional ?? false, page, hasNext: entries.length > PAGE_SIZE };
 }
 
 export async function finalizeLatestClosedWeek() {
