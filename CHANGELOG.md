@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.8.4.0] - 2026-09-22
+
+### Fixed
+
+- Keep the last ranked leaderboard visible until the next week has qualifying ranks, without asking builders who finished voting to vote again.
+
 ## [0.8.3.0] - 2026-09-22
 
 ### Fixed

@@ -603,6 +603,73 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect((await db.select().from(comparison).where(eq(comparison.id, pair.assignmentId)))[0].invalidatedAt).not.toBeNull();
   });
 
+  it.each([3, 6])('keeps the previous ranked week when %s current updates have no ranks', async (count) => {
+    const { targetWeek } = await votingFixture('closed');
+    await ensureWeekFinalized(targetWeek.id);
+    const previous = await getLatestLeaderboard();
+    expect(previous?.entries).toHaveLength(2);
+    const [current] = await db.insert(week).values({
+      weekStartDate: '2000-01-10',
+      startsAt: sql`now() - interval '10 minutes'`,
+      submissionClosesAt: sql`now() - interval '5 minutes'`,
+      votingClosesAt: sql`now() + interval '1 hour'`,
+    }).returning();
+    for (let i = 0; i < count; i++) {
+      const projectId = `candidate-${i}`;
+      const [plan] = await db.insert(commitment).values({ projectId, weekId: current.id, promise: 'Ship again' }).returning();
+      await db.insert(result).values({ commitmentId: plan.id, projectId, weekId: current.id, status: 'complete', summary: 'Shipped again', onTime: true });
+    }
+    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ votingAvailable: count === 6, votingComplete: false });
+    if (count === 6) {
+      for (let i = 0; i < 2; i++) {
+        const pair = await getReviewState('candidate-0');
+        if (pair.state !== 'pair') throw new Error('Expected pair');
+        expect(await submitReview('candidate-0', pair.assignmentId, 'pass')).toBe(true);
+      }
+    }
+    for (const userId of [undefined, 'candidate-0']) {
+      expect(await getLatestLeaderboard(userId)).toMatchObject({
+        week: { id: targetWeek.id }, entries: previous!.entries, provisional: false,
+        votingComplete: Boolean(userId) && count === 6,
+      });
+    }
+    expect(await getLatestLeaderboard('candidate-0', 2)).toMatchObject({
+      week: { id: targetWeek.id }, entries: [], page: 2, provisional: false,
+    });
+    if (count === 6) {
+      const currentResults = await db.select().from(result).where(eq(result.weekId, current.id));
+      const [low, high] = currentResults.sort((a, b) => a.id - b.id);
+      for (let i = 0; i < 4; i++) {
+        await db.insert(comparison).values({ weekId: current.id, voterProjectId: `voter-${i}`, candidateLowId: low.id, candidateHighId: high.id, presentedFirstId: low.id, choice: 'low', decidedAt: new Date() });
+      }
+      expect(await getLatestLeaderboard('candidate-0')).toMatchObject({
+        week: { id: current.id }, provisional: true, votingComplete: true,
+      });
+      expect((await getLatestLeaderboard('candidate-0'))?.entries).toHaveLength(2);
+      expect(await getLatestLeaderboard('candidate-0', 2)).toMatchObject({
+        week: { id: current.id }, provisional: true, entries: [], page: 2,
+      });
+      const removed = currentResults.find((entry) => entry.projectId === 'candidate-5')!;
+      for (const field of ['hiddenAt', 'withdrawnAt'] as const) {
+        await db.update(result).set({ [field]: new Date() }).where(eq(result.id, removed.id));
+        expect(await getLatestLeaderboard('candidate-0')).toMatchObject({
+          week: { id: targetWeek.id }, votingAvailable: false, entries: previous!.entries,
+        });
+        expect(await getReviewState('candidate-0')).toMatchObject({ state: 'unranked' });
+        await db.update(result).set({ [field]: null }).where(eq(result.id, removed.id));
+        expect(await getLatestLeaderboard('candidate-0')).toMatchObject({
+          week: { id: current.id }, votingAvailable: true, votingComplete: true,
+        });
+      }
+      await db.update(comparison).set({ invalidatedAt: new Date() }).where(eq(comparison.weekId, current.id));
+    }
+    await db.update(week).set({ votingClosesAt: sql`now() - interval '1 minute'` }).where(eq(week.id, current.id));
+    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({
+      week: { id: targetWeek.id }, entries: previous!.entries, provisional: false,
+    });
+    expect((await db.select().from(week).where(eq(week.id, current.id)))[0].rankingStatus).toBe('unranked');
+  });
+
   it.each(['profile', 'result'] as const)('removes provisional ranks below six candidates after hiding a %s, and restores them', async (kind) => {
     const { targetWeek, candidates } = await votingFixture('voting');
     for (let i = 0; i < 8; i++) {
@@ -619,7 +686,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const table = kind === 'profile' ? project : result;
     const identity = kind === 'profile' ? project.id : result.projectId;
     await db.update(table).set({ hiddenAt: new Date() }).where(eq(identity, 'candidate-5'));
-    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ week: { rankingStatus: 'unranked' }, provisional: false, entries: [] });
+    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ week: { rankingStatus: 'unranked' }, provisional: false, votingAvailable: false, entries: [] });
     expect((await db.select().from(week))[0].finalizedAt).toBeNull();
     await db.update(table).set({ hiddenAt: null }).where(eq(identity, 'candidate-5'));
     expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ provisional: true });

@@ -46,7 +46,7 @@ const todo = live?.phase === 'shipping' && hasProject && !live.published
       action: 'publish this week',
       href: '/build#this-week',
     }
-  : live?.phase === 'voting' && live.published && !board?.provisional
+  : live?.phase === 'voting' && live.published && board?.votingAvailable && !board.votingComplete
     ? {
         title: "Your turn: vote on this week's work.",
         deadline: ` Closes ${madridDate(live.week.votingClosesAt)}.`,

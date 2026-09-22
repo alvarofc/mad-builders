@@ -46,6 +46,7 @@ it('surfaces the running week, which the board itself never shows', () => {
   expect(todo).toContain("href: '/build#this-week'");
   // only a builder who published can review, so signed-in alone must not offer it
   expect(todo).toContain('live.published');
+  expect(todo).toContain('board?.votingAvailable && !board.votingComplete');
   expect(todo).not.toContain('signedIn');
 });
 
