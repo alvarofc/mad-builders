@@ -6,12 +6,14 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgSchema,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import type { SocialLinks, SocialSnapshot } from '../lib/socials';
 
 export const appPrivate = pgSchema('app_private');
 
@@ -23,6 +25,7 @@ export const user = appPrivate.table('user', {
   emailUnsubscribedAt: timestamp('email_unsubscribed_at', { withTimezone: true }),
   emailUnsubscribeToken: uuid('email_unsubscribe_token').defaultRandom().notNull().unique(),
   image: text('image'),
+  socialLinks: jsonb('social_links').$type<SocialLinks>().default({}).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -109,6 +112,7 @@ export const project = appPrivate.table(
     bio: text('bio').default('').notNull(),
     projectName: text('project_name').notNull(),
     projectUrl: text('project_url'),
+    socialLinks: jsonb('social_links').$type<SocialLinks>().default({}).notNull(),
     logo: text('logo'),
     projectStage: text('project_stage').default('building').notNull(),
     referredByUserId: text('referred_by_user_id').references(() => user.id, {
@@ -157,6 +161,15 @@ export const projectInvite = appPrivate.table('project_invite', {
   projectId: text('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
 });
+
+export const socialSnapshot = appPrivate.table('social_snapshot', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  projectId: text('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
+  account: text('account').notNull(),
+  observedOn: date('observed_on', { mode: 'string' }).notNull(),
+  payload: jsonb('payload').$type<SocialSnapshot>().notNull(),
+}, table => [uniqueIndex('social_snapshot_account_day_uidx').on(table.userId, table.projectId, table.account, table.observedOn)]).enableRLS();
 
 export const week = appPrivate.table(
   'week',
@@ -325,3 +338,11 @@ export const ranking = appPrivate.table(
     check('ranking_rank_check', sql`${table.rank} > 0`),
   ],
 );
+
+// Durable claims prevent duplicate paid requests across server instances.
+export const socialCache = appPrivate.table('social_cache', {
+  key: text('key').primaryKey(),
+  day: date('day', { mode: 'string' }).notNull(),
+  status: text('status').notNull(),
+  payload: jsonb('payload').$type<unknown>(),
+}).enableRLS();
