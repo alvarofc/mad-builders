@@ -72,6 +72,16 @@ it('reuses a successful daily snapshot, isolates account history, and collects o
   expect(new PgDialect().sqlToQuery(mocks.where.mock.calls[0][0]).params).toEqual(['alice', 'stock-project', 'https://x.com/stock', '2026-09-16', '2026-08-30', '2026-09-21']);
 });
 
+it.each([false, true])('reads saved evidence without provider calls or writes when cached-only (has history: %s)', async hasHistory => {
+  const yesterday = snapshot('2026-09-15T12:00:00Z', 1100, [post(1)]);
+  mocks.history.mockResolvedValue(hasHistory ? [{ payload: yesterday }] : []);
+  const evidence = await gatherSocialContext('alice', 'stock-project', {}, { x: 'https://x.com/stock' }, start, now, undefined, false, true);
+  expect(evidence.posts).toHaveLength(hasHistory ? 1 : 0);
+  expect(evidence.accountCount).toBe(1);
+  expect(mocks.fetch).not.toHaveBeenCalled();
+  expect(mocks.write).not.toHaveBeenCalled();
+});
+
 it('persists new observations and keeps old evidence if a provider is unavailable', async () => {
   const before = snapshot('2026-09-14T12:00:00Z', 1000, [post(1)]);
   mocks.history.mockResolvedValue([{ payload: before }]);

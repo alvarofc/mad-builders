@@ -2,6 +2,20 @@
 
 Changes to mad.builders.
 
+## [0.9.1.0] - 2026-09-22
+
+### Changed
+
+- Review and accept each suggested chat edit before it changes your draft. Social additions also wait for your approval, even when the draft is empty.
+- Ask the project coach for candid opinions, technical help, business advice or a small next step. Coaching uses known context and fits both business and hobby projects.
+- Start a check-in with a short welcome based on your draft, previous updates or relevant social activity, while keeping your notes intact.
+- See whether your last social check succeeded, was incomplete or has not run yet, with a status dot and label.
+
+### Fixed
+
+- Let ordinary chat replies use saved social context without fetching accounts again.
+- Retry rate-limited TwitterAPI.io reads and coordinate personal and company account reads within each server worker.
+
 ## [0.9.0.0] - 2026-09-22
 
 ### Added

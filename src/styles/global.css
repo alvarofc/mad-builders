@@ -14,6 +14,7 @@
   --green-dim: rgba(26, 52, 43, 0.82); /* 7.1:1 on --cream */
   --green-faint: rgba(26, 52, 43, 0.7); /* 5.0:1 on --cream, for 10-11px labels */
   --green-line: rgba(26, 52, 43, 0.16);
+  --status-error: #993c1d;
   /* /madrid map category colours (legend swatch + marker border). Tunable —
      the brand is green/cream, so these are three earthy accents picked to read
      both on the dark-green legend and on the light map. */

@@ -1,12 +1,68 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { normalizeSocialUrl } from '../lib/socials';
 import { fetchSocialAccount, inSocialWeek, socialAccounts } from './social-posts';
+vi.mock('node:timers/promises', () => ({ setTimeout: vi.fn().mockResolvedValue(undefined) }));
+import { setTimeout as delay } from 'node:timers/promises';
 
-afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks(); vi.mocked(delay).mockResolvedValue(undefined); });
 const now = new Date('2026-09-16T12:00:00Z');
 const source = { platform: 'x' as const, scope: 'personal' as const, account: 'https://x.com/builder' };
 const tweet = (id: string, extra = {}) => ({ id, text: 'Shipped the beta.', createdAt: '2026-09-15T12:00:00Z', author: { userName: 'builder' },
   likeCount: 80, replyCount: 12, retweetCount: 4, quoteCount: 2, viewCount: 900, ...extra });
+
+it('keeps personal and company X reads from colliding during rate-limit retries', async () => {
+  vi.stubEnv('TWITTERAPI_IO_KEY', 'test-key');
+  let elapsed = 0;
+  let lastRead = -5000;
+  vi.mocked(delay).mockImplementation(async milliseconds => { elapsed += Number(milliseconds); });
+  vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: URL) => {
+    if (elapsed - lastRead < 5000) return { ok: false, status: 429, headers: new Headers() };
+    lastRead = elapsed;
+    const handle = url.searchParams.get('userName');
+    return { ok: true, json: async () => url.pathname.endsWith('/info')
+      ? { data: { id: handle, userName: handle, followers: 100 } }
+      : { tweets: [tweet('1', { author: { userName: handle } })] } };
+  }));
+  const results = await Promise.all([fetchSocialAccount(source, now),
+    fetchSocialAccount({ ...source, scope: 'company', account: 'https://x.com/stock' }, now)]);
+  for (const result of results) {
+    expect(result.posts).toHaveLength(1);
+    expect(result.followers).toBe(100);
+    expect(result.warnings).toEqual([]);
+  }
+  expect(delay).toHaveBeenCalledTimes(3);
+});
+
+it('does not wait beyond the retry budget or retry a cancelled read', async () => {
+  vi.stubEnv('TWITTERAPI_IO_KEY', 'test-key');
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 429, headers: new Headers({ 'retry-after': '11' }) }));
+  await expect(fetchSocialAccount(source, now)).rejects.toThrow('provider_unavailable');
+  expect(delay).not.toHaveBeenCalled();
+  expect(fetch).toHaveBeenCalledTimes(2);
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 429, headers: new Headers() }));
+  vi.mocked(delay).mockRejectedValue(new DOMException('Aborted', 'AbortError'));
+  await expect(fetchSocialAccount(source, now)).rejects.toThrow('provider_unavailable');
+  expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+it.each([false, true])('retries a rate-limited Twitter read once, preserving the successful profile (still limited: %s)', async stillLimited => {
+  vi.stubEnv('TWITTERAPI_IO_KEY', 'test-key');
+  let postCalls = 0;
+  const fetch = vi.fn().mockImplementation(async (url: URL) => {
+    if (url.pathname.endsWith('/info')) return { ok: true, json: async () => ({ data: { id: '123', userName: 'builder', followers: 1100 } }) };
+    if (++postCalls === 1 || stillLimited) return { ok: false, status: 429, headers: new Headers() };
+    return { ok: true, json: async () => ({ data: { tweets: [tweet('1')] } }) };
+  });
+  vi.stubGlobal('fetch', fetch);
+  const result = await fetchSocialAccount(source, now);
+  expect(delay).toHaveBeenCalledWith(5100, undefined, { signal: expect.any(AbortSignal) });
+  expect(postCalls).toBe(2);
+  expect(fetch.mock.calls.filter(([url]) => url.pathname.endsWith('/info'))).toHaveLength(1);
+  expect(result.followers).toBe(1100);
+  expect(result.posts).toHaveLength(stillLimited ? 0 : 1);
+  if (stillLimited) expect(result.warnings[0]).toContain('rate limit');
+  else expect(result.warnings).toEqual([]);
+});
 
 it('normalizes links and rejects unsafe or non-profile URLs', () => {
   expect(normalizeSocialUrl(' https://twitter.com/Builder/?s=20 ', 'x')).toBe('https://x.com/builder');
@@ -78,4 +134,24 @@ it('reads personal LinkedIn posts and follower counts from HarvestAPI responses'
   expect(result.posts).toHaveLength(1);
   expect(fetch.mock.calls[0][0].searchParams.get('profile')).toBe('https://linkedin.com/in/alice');
   expect(fetch.mock.calls[1][0].searchParams.get('main')).toBe('true');
+});
+
+it('starts each X read timeout only when the queue admits it', async () => {
+  vi.stubEnv('TWITTERAPI_IO_KEY', 'test-key');
+  const timeout = vi.spyOn(AbortSignal, 'timeout');
+  let release!: () => void;
+  const waiting = new Promise<void>(resolve => { release = resolve; });
+  vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: URL) => {
+    await waiting;
+    return { ok: true, json: async () => url.pathname.endsWith('/info')
+      ? { data: { id: '123', userName: 'builder', followers: 100 } } : { tweets: [tweet('1')] } };
+  }));
+  try {
+    const result = fetchSocialAccount(source, now);
+    await Promise.resolve();
+    expect(timeout).toHaveBeenCalledTimes(1);
+    release();
+    await result;
+    expect(timeout).toHaveBeenCalledTimes(2);
+  } finally { release(); timeout.mockRestore(); }
 });

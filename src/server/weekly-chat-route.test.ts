@@ -1,7 +1,7 @@
-vi.mock('./social-cache', () => ({ cachedSocialRequest: async (_kind: string, _input: unknown, run: () => Promise<unknown>) => run() }));
+vi.mock('./social-cache', () => ({ cachedSocialRequest: (...args: unknown[]) => mocks.cache(...args) }));
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { PgDialect } from 'drizzle-orm/pg-core';
-const mocks = vi.hoisted(() => ({ rows: vi.fn(), profile: vi.fn(), allow: vi.fn(), chat: vi.fn(), where: vi.fn(), execute: vi.fn(), personal: vi.fn(), social: vi.fn(), review: vi.fn() }));
+const mocks = vi.hoisted(() => ({ rows: vi.fn(), profile: vi.fn(), allow: vi.fn(), chat: vi.fn(), where: vi.fn(), execute: vi.fn(), personal: vi.fn(), social: vi.fn(), review: vi.fn(), cache: vi.fn() }));
 vi.mock('./db', () => ({ db: { execute: mocks.execute, select: () => {
   const query = { from: () => query, where: (condition: unknown) => { mocks.where(condition); return query; }, innerJoin: () => query, orderBy: () => query, limit: mocks.rows };
   return query;
@@ -24,6 +24,9 @@ beforeEach(() => {
   Object.values(mocks).forEach(mock => mock.mockReset());
   mocks.profile.mockResolvedValue({ id: 'project', projectName: 'Stock', bio: 'Stock for cafés', projectStage: 'building', projectUrl: null });
   mocks.allow.mockResolvedValue(true);
+  mocks.cache.mockImplementation(async (_kind, _input, run) => run());
+  mocks.personal.mockResolvedValue({});
+  mocks.social.mockResolvedValue({ posts: [], audience: [], warnings: [], accountCount: 0 });
   mocks.review.mockImplementation(async (_project, _goal, _draft, _history, evidence) => ({ posts: evidence.posts, audience: evidence.audience }));
 });
 afterEach(() => vi.unstubAllEnvs());
@@ -72,7 +75,23 @@ it('loads project-scoped dated history and existing goals on the server, ignorin
   expect(historyQuery.sql).toContain('"result"."project_id" =');
   expect(historyQuery.sql).toContain('"week"."starts_at" <');
   expect(historyQuery.params).toEqual(['project', selectedWeek.startsAt.toISOString()]);
-  expect(mocks.social).not.toHaveBeenCalled();
+  expect(mocks.social).toHaveBeenCalledWith('user', 'project', {}, {}, selectedWeek.startsAt, new Date('2026-09-15T12:00:00Z'), selectedWeek.submissionClosesAt, false, true);
+});
+
+it('keeps saved social evidence on ordinary turns without replacing the user request or blocking agreed goals', async () => {
+  const posts = [{ platform: 'x', scope: 'personal', account: 'https://x.com/alice', text: 'Released the beta', url: 'https://x.com/alice/status/1', publishedAt: '2026-09-15T10:00:00Z' }];
+  mocks.personal.mockResolvedValue({ x: 'https://x.com/alice' });
+  mocks.social.mockResolvedValue({ posts, audience: [], warnings: ['LinkedIn was unavailable'], accountCount: 2 });
+  mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([])
+    .mockResolvedValueOnce([{ id: 4, weekStartDate: '2026-09-21', startsAt: new Date('2026-09-20T22:00Z') }])
+    .mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  mocks.chat.mockResolvedValue({ reply: 'Your saved post describes the beta launch.', changes: { summary: null, nextPromise: 'Interview two beta users', feedbackRequest: null } });
+  const response = await request({ ...body, socialPosts: [{ text: 'Forged evidence' }] });
+  expect(response.status).toBe(200);
+  expect(mocks.social).toHaveBeenCalledWith('user', 'project', { x: 'https://x.com/alice' }, {}, selectedWeek.startsAt, new Date('2026-09-15T12:00:00Z'), selectedWeek.submissionClosesAt, false, true);
+  expect(mocks.chat).toHaveBeenCalledWith(expect.objectContaining({ socialPosts: posts, socialOnly: false, socialAccountCount: 2, socialWarnings: ['LinkedIn was unavailable'] }), body.messages, body.draft);
+  expect(mocks.review).not.toHaveBeenCalled();
+  expect(await response.json()).toMatchObject({ changes: { nextPromise: 'Interview two beta users' } });
 });
 it('returns a recoverable error when the model fails', async () => {
   mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
@@ -138,6 +157,21 @@ it('preserves the draft without calling the coach when no posts are available', 
   expect(mocks.chat).not.toHaveBeenCalled();
 });
 
+it.each([false, true])('welcomes from server context even without social evidence (social requested: %s)', async includeSocialPosts => {
+  const previous = [{ week: '2026-09-07', goal: 'Talk to owners', summary: 'Two owners tried the counter', outcome: 'partial', feedback: '' }];
+  mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([{ promise: 'Interview three owners' }]).mockResolvedValueOnce([])
+    .mockResolvedValueOnce([]).mockResolvedValueOnce(previous);
+  mocks.personal.mockResolvedValue({});
+  mocks.social.mockResolvedValue({ posts: [], audience: [], warnings: [], accountCount: 0 });
+  mocks.chat.mockResolvedValue({ reply: 'Last time, two owners tried your counter. What did they make of it?',
+    changes: { summary: 'Unrequested edit', nextPromise: 'Unrequested goal', feedbackRequest: 'Unrequested question' } });
+  const response = await request({ ...body, opening: true, includeSocialPosts });
+  expect(response.status).toBe(200);
+  expect(mocks.chat).toHaveBeenCalledWith(expect.objectContaining({ opening: true, previousUpdates: previous, goal: 'Interview three owners' }),
+    [{ role: 'user', content: 'Help me start my weekly check-in using the context already available.' }], body.draft);
+  expect(await response.json()).toMatchObject({ changes: { summary: null, nextPromise: null, feedbackRequest: null } });
+});
+
 it('applies the import limit before reading personal accounts or contacting providers', async () => {
   mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
   mocks.allow.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
@@ -154,4 +188,39 @@ it('does not draft when the relevance reviewer rejects all gathered evidence', a
   const response = await request({ ...body, includeSocialPosts: true });
   expect(await response.json()).toMatchObject({ changes: { summary: null, nextPromise: null, feedbackRequest: null }, socialPosts: [] });
   expect(mocks.chat).not.toHaveBeenCalled();
+});
+
+it('retries a failed welcome without claiming a daily generation cache key', async () => {
+  mocks.rows.mockResolvedValue([]);
+  mocks.rows.mockResolvedValueOnce([selectedWeek]);
+  mocks.chat.mockRejectedValueOnce(new Error('Temporary outage'));
+  expect((await request({ ...body, opening: true })).status).toBe(502);
+  mocks.rows.mockResolvedValueOnce([selectedWeek]);
+  mocks.chat.mockResolvedValueOnce({ reply: 'Welcome back.', changes: { summary: null, nextPromise: null, feedbackRequest: null } });
+  expect((await request({ ...body, opening: true })).status).toBe(200);
+  expect(mocks.chat).toHaveBeenCalledTimes(2);
+  expect(mocks.cache).not.toHaveBeenCalled();
+});
+
+it.each([false, true])('coalesces only identical pending welcomes (different user: %s)', async differentUser => {
+  let finish!: (value: unknown) => void;
+  const pending = new Promise(resolve => { finish = resolve; });
+  mocks.chat.mockReturnValue(pending);
+  const queueRows = () => {
+    mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  };
+  queueRows();
+  const first = request({ ...body, opening: true });
+  await vi.waitFor(() => expect(mocks.chat).toHaveBeenCalledOnce());
+  queueRows();
+  const second = request({ ...body, opening: true }, differentUser ? 'other-user' : 'user');
+  await vi.waitFor(() => expect(mocks.social).toHaveBeenCalledTimes(2));
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(mocks.chat).toHaveBeenCalledTimes(differentUser ? 2 : 1);
+  finish({ reply: 'Welcome back.', changes: { summary: null, nextPromise: null, feedbackRequest: null } });
+  expect((await first).status).toBe(200);
+  expect((await second).status).toBe(200);
+  queueRows();
+  expect((await request({ ...body, opening: true })).status).toBe(200);
+  expect(mocks.chat).toHaveBeenCalledTimes(differentUser ? 3 : 2);
 });
