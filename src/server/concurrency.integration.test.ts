@@ -22,7 +22,7 @@ import { publishResult } from './results';
 import { getBuildState } from './weeks';
 import { acceptProjectInvite, createProjectInvite, getProjectInvite, revokeProjectInvite, decideProjectAccess, requestProjectAccess, switchProject } from './projects';
 import { createProfile, updateProfile, getPublicProfileByHandle, getProfileByUserId, getPublicProjectActivity, listPublicProfiles } from './profiles';
-import { ensureWeekFinalized, getLatestLeaderboard, getReviewState, submitReview } from './ranking';
+import { ensureWeekFinalized, getLatestLeaderboard, getLiveWeek, getReviewState, submitReview } from './ranking';
 import { allowWrite } from './rate-limit';
 import { POST as withdraw } from '../pages/api/result/visibility';
 import { POST as moderate } from '../pages/api/moderation';
@@ -131,6 +131,27 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const module = await import('./db') as typeof import('./db') & { testConnection: { end: () => Promise<void> } };
     await module.testConnection.end();
     vi.unstubAllEnvs();
+  });
+
+  it('lets late publishers vote and unlock the early leaderboard', async () => {
+    const { targetWeek } = await votingFixture('voting');
+    await builder('late-voter');
+    expect(await getReviewState('late-voter')).toMatchObject({ state: 'ineligible' });
+    const [plan] = await db.insert(commitment).values({ projectId: 'late-voter', weekId: targetWeek.id, promise: '' }).returning();
+    await db.insert(result).values({ projectId: 'late-voter', weekId: targetWeek.id, commitmentId: plan.id, status: 'submitted', summary: 'Published late', onTime: false });
+    expect(await getLiveWeek('late-voter')).toMatchObject({ phase: 'voting', published: true });
+    for (let index = 0; index < 3; index++) {
+      const pair = await getReviewState('late-voter');
+      expect(pair.state).toBe('pair');
+      if (pair.state !== 'pair') throw new Error('Expected a comparison');
+      expect(pair.first.projectId).not.toBe('late-voter');
+      expect(pair.second.projectId).not.toBe('late-voter');
+      expect(await submitReview('late-voter', pair.assignmentId, 'first')).toBe(true);
+    }
+    expect(await getReviewState('late-voter')).toMatchObject({ state: 'complete', reviewed: 3 });
+    expect(await getLatestLeaderboard('late-voter')).toMatchObject({ provisional: true });
+    await db.update(result).set({ hiddenAt: new Date() }).where(eq(result.projectId, 'late-voter'));
+    expect(await getReviewState('late-voter')).toMatchObject({ state: 'ineligible' });
   });
 
   it('persists uploaded logos, preserves them on ordinary edits and resets public projections', async () => {

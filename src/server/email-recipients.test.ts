@@ -133,6 +133,8 @@ it.skipIf(!process.env.DATABASE_EMAIL_TEST_URL)('selects only actionable reminde
           values (${c.id}, ${id}, ${w.id}, 'submitted', 'Shipped', true) returning id`);
         ids.push(Number(r.id));
       }
+      await db.execute(sql`update app_private.result set on_time = false where project_id = ${owner}`);
+      expect(await getReminderRecipients('voting', monday, owner)).toHaveLength(1);
       for (let low = 1; low < 27; low += 2) {
         if (low === 21) expect(await getReminderRecipients('voting', monday, owner)).toHaveLength(1);
         await db.execute(sql`insert into app_private.comparison

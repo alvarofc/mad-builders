@@ -65,7 +65,7 @@ export async function getReminderRecipients(kind: 'checkin' | 'voting', now: Dat
     join app_private.project p on p.id = r.project_id
     join app_private.project_owner owner on owner.project_id = p.id and owner.active = true
     join app_private."user" u on u.id = owner.user_id
-    where ${active} and r.on_time = true and r.hidden_at is null and r.withdrawn_at is null
+    where ${active} and r.hidden_at is null and r.withdrawn_at is null
       and (select count(*) from candidates) >= 6
       and exists (
         with available as (

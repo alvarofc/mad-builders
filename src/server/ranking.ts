@@ -212,7 +212,6 @@ export async function getReviewState(
         and(
           eq(result.weekId, votingWeek.id),
           eq(result.projectId, projectId),
-          eq(result.onTime, true),
           isNull(result.hiddenAt),
           isNull(result.withdrawnAt),
         ),
@@ -388,7 +387,6 @@ export async function submitReview(userId: string, assignmentId: number, selecte
     const [voterResult] = await tx.select({ id: result.id }).from(result).where(and(
       eq(result.weekId, assignment.week.id),
       eq(result.projectId, projectId),
-      eq(result.onTime, true),
       isNull(result.hiddenAt),
       isNull(result.withdrawnAt),
     )).limit(1);
@@ -509,7 +507,7 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
   if (!votingWeek) return null;
   const [voterResult] = await db.select({ id: result.id }).from(result).where(and(
     eq(result.weekId, votingWeek.id), eq(result.projectId, ownedProject.id),
-    eq(result.onTime, true), isNull(result.hiddenAt), isNull(result.withdrawnAt),
+    isNull(result.hiddenAt), isNull(result.withdrawnAt),
   )).limit(1);
   if (!voterResult) return null;
 
@@ -623,7 +621,6 @@ export async function getLiveWeek(userId?: string) {
         .where(and(
           eq(result.weekId, live.id),
           eq(result.projectId, ownedProject.id),
-          eq(result.onTime, true),
           isNull(result.hiddenAt),
           isNull(result.withdrawnAt),
         ))
