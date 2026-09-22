@@ -22,7 +22,7 @@ import { publishResult } from './results';
 import { getBuildState } from './weeks';
 import { acceptProjectInvite, createProjectInvite, getProjectInvite, revokeProjectInvite, decideProjectAccess, requestProjectAccess, switchProject } from './projects';
 import { createProfile, updateProfile, getPublicProfileByHandle, getProfileByUserId, getPublicProjectActivity, listPublicProfiles } from './profiles';
-import { ensureWeekFinalized, getLatestLeaderboard, getReviewState, submitReview } from './ranking';
+import { ensureWeekFinalized, getLatestLeaderboard, getLiveWeek, getReviewState, submitReview } from './ranking';
 import { allowWrite } from './rate-limit';
 import { POST as withdraw } from '../pages/api/result/visibility';
 import { POST as moderate } from '../pages/api/moderation';
@@ -131,6 +131,27 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const module = await import('./db') as typeof import('./db') & { testConnection: { end: () => Promise<void> } };
     await module.testConnection.end();
     vi.unstubAllEnvs();
+  });
+
+  it('lets late publishers vote and unlock the early leaderboard', async () => {
+    const { targetWeek } = await votingFixture('voting');
+    await builder('late-voter');
+    expect(await getReviewState('late-voter')).toMatchObject({ state: 'ineligible' });
+    const [plan] = await db.insert(commitment).values({ projectId: 'late-voter', weekId: targetWeek.id, promise: '' }).returning();
+    await db.insert(result).values({ projectId: 'late-voter', weekId: targetWeek.id, commitmentId: plan.id, status: 'submitted', summary: 'Published late', onTime: false });
+    expect(await getLiveWeek('late-voter')).toMatchObject({ phase: 'voting', published: true });
+    for (let index = 0; index < 3; index++) {
+      const pair = await getReviewState('late-voter');
+      expect(pair.state).toBe('pair');
+      if (pair.state !== 'pair') throw new Error('Expected a comparison');
+      expect(pair.first.projectId).not.toBe('late-voter');
+      expect(pair.second.projectId).not.toBe('late-voter');
+      expect(await submitReview('late-voter', pair.assignmentId, 'first')).toBe(true);
+    }
+    expect(await getReviewState('late-voter')).toMatchObject({ state: 'complete', reviewed: 3 });
+    expect(await getLatestLeaderboard('late-voter')).toMatchObject({ provisional: true });
+    await db.update(result).set({ hiddenAt: new Date() }).where(eq(result.projectId, 'late-voter'));
+    expect(await getReviewState('late-voter')).toMatchObject({ state: 'ineligible' });
   });
 
   it('persists uploaded logos, preserves them on ordinary edits and resets public projections', async () => {
@@ -352,7 +373,10 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect(normal?.unfinishedWeeks.map((entry) => entry.id)).toContain(prior.id);
     const late = await getBuildState('publisher', prior.weekStartDate);
     expect(late).toMatchObject({ currentWeek: { id: prior.id }, currentCommitment: { id: oldGoal.id }, nextWeek: { id: current.id }, selectedLateWeek: true, late: true, canSetNextPromise: false });
-    expect(await getBuildState('another-user', prior.weekStartDate)).toBeNull();
+    await builder('another-project');
+    expect(await getBuildState('another-project', prior.weekStartDate)).toMatchObject({
+      currentWeek: { id: prior.id }, currentCommitment: null, currentResult: null, selectedLateWeek: true,
+    });
     expect(await getBuildState('publisher', 'not-a-date')).toBeNull();
     const published = await publishResult({ ...publication('publisher', prior.id), commitmentId: oldGoal.id, status: 'complete', nextPromise: '' });
     expect(published.result.onTime).toBe(false);
@@ -537,11 +561,11 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const [plan] = mode === 'late' ? await db.insert(commitment).values({ projectId: 'publisher', weekId: current.id, promise: 'Ship a prototype' }).returning() : [];
     const input = { ...publication('publisher', current.id), commitmentId: original?.result.commitmentId ?? plan?.id ?? null, status: mode === 'late' ? 'complete' as const : 'submitted' as const };
     const outcome = await crossDeadline(current.id, 'submissionClosesAt', () => publishResult(input));
-    if (mode === 'late') {
-      expect(outcome).toMatchObject({ result: { onTime: false } });
+    if (mode !== 'edit') {
+      expect(outcome).toMatchObject({ result: { onTime: false, status: mode === 'late' ? 'complete' : 'submitted' } });
     } else {
       expect(outcome).toBeInstanceOf(Error);
-      expect((outcome as Error).message).toBe(mode === 'edit' ? 'update_locked' : 'commitment_not_found');
+      expect((outcome as Error).message).toBe('update_locked');
       expect(await db.select().from(result)).toEqual(original ? [original.result] : []);
     }
   });

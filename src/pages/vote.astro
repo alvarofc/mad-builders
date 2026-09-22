@@ -49,14 +49,14 @@ const proofLabel = (status: string) =>
           <>
             <p class="work-label">sign in required</p>
             <h2 class="work-heading">Projects vote.</h2>
-            <p class="work-copy">Sign in with GitHub, create or join a project, and publish on time to vote on this week's work.</p>
+            <p class="work-copy">Sign in with GitHub, create or join a project, and publish an update to vote on this week's work.</p>
             <a class="work-button" href="/login?next=/vote">continue with GitHub</a>
           </>
         ) : review.state === 'profile_required' ? (
           <>
             <p class="work-label">finish your profile</p>
             <h2 class="work-heading">Create or join a project first.</h2>
-            <p class="work-copy">Voting opens to projects that published on time. Co-owners share the same votes.</p>
+            <p class="work-copy">Voting opens to projects that published an update for the week, including late updates. Co-owners share the same votes.</p>
             <a class="work-button" href="/build">make my page</a>
           </>
         ) : review.state === 'pair' ? (
@@ -123,8 +123,8 @@ const proofLabel = (status: string) =>
         ) : review.state === 'ineligible' ? (
           <>
             <p class="work-label">voting is open</p>
-            <h2 class="work-heading">Publish on time to vote.</h2>
-            <p class="work-copy">Late updates stay public, but they do not enter this week's voting.</p>
+            <h2 class="work-heading">Publish an update to vote.</h2>
+            <p class="work-copy">Publish an update for this week to cast votes. Late updates count too.</p>
             <a class="work-button" href="/leaderboard">see the board</a>
           </>
         ) : (
