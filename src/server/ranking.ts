@@ -634,8 +634,9 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
   if (!databaseConfigured) return null;
   const now = await getDatabaseNow();
   const provisional = userId ? await getProvisionalLeaderboard(userId, now, page) : null;
+  const votingAvailable = provisional?.provisional !== false;
   // Check the whole board, not this page: an out-of-range page must not switch weeks.
-  if (provisional?.hasRanks) return { ...provisional, votingComplete: true };
+  if (provisional?.hasRanks) return { ...provisional, votingAvailable, votingComplete: true };
   const [latestClosedWeek] = await db
     .select()
     .from(week)
@@ -663,7 +664,7 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
       .where(and(lte(week.votingClosesAt, now), eq(week.rankingStatus, 'final')))
       .orderBy(desc(week.startsAt)).limit(1);
     finalWeek = latestRankedWeek ?? finalWeek;
-    if (!latestRankedWeek && provisional) return { ...provisional, votingComplete: provisional.provisional };
+    if (!latestRankedWeek && provisional) return { ...provisional, votingAvailable, votingComplete: provisional.provisional };
   }
   const entries = finalWeek?.rankingStatus === 'final'
     ? await db
@@ -703,7 +704,7 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
         .limit(PAGE_SIZE + 1).offset((page - 1) * PAGE_SIZE)
     : [];
 
-  return { week: finalWeek, now, entries: entries.slice(0, PAGE_SIZE), provisional: false as const, votingComplete: provisional?.provisional ?? false, page, hasNext: entries.length > PAGE_SIZE };
+  return { week: finalWeek, now, entries: entries.slice(0, PAGE_SIZE), provisional: false as const, votingAvailable, votingComplete: provisional?.provisional ?? false, page, hasNext: entries.length > PAGE_SIZE };
 }
 
 export async function finalizeLatestClosedWeek() {

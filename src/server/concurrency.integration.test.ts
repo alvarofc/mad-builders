@@ -619,6 +619,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       const [plan] = await db.insert(commitment).values({ projectId, weekId: current.id, promise: 'Ship again' }).returning();
       await db.insert(result).values({ commitmentId: plan.id, projectId, weekId: current.id, status: 'complete', summary: 'Shipped again', onTime: true });
     }
+    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ votingAvailable: count === 6, votingComplete: false });
     if (count === 6) {
       for (let i = 0; i < 2; i++) {
         const pair = await getReviewState('candidate-0');
@@ -648,6 +649,18 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
       expect(await getLatestLeaderboard('candidate-0', 2)).toMatchObject({
         week: { id: current.id }, provisional: true, entries: [], page: 2,
       });
+      const removed = currentResults.find((entry) => entry.projectId === 'candidate-5')!;
+      for (const field of ['hiddenAt', 'withdrawnAt'] as const) {
+        await db.update(result).set({ [field]: new Date() }).where(eq(result.id, removed.id));
+        expect(await getLatestLeaderboard('candidate-0')).toMatchObject({
+          week: { id: targetWeek.id }, votingAvailable: false, entries: previous!.entries,
+        });
+        expect(await getReviewState('candidate-0')).toMatchObject({ state: 'unranked' });
+        await db.update(result).set({ [field]: null }).where(eq(result.id, removed.id));
+        expect(await getLatestLeaderboard('candidate-0')).toMatchObject({
+          week: { id: current.id }, votingAvailable: true, votingComplete: true,
+        });
+      }
       await db.update(comparison).set({ invalidatedAt: new Date() }).where(eq(comparison.weekId, current.id));
     }
     await db.update(week).set({ votingClosesAt: sql`now() - interval '1 minute'` }).where(eq(week.id, current.id));
@@ -673,7 +686,7 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const table = kind === 'profile' ? project : result;
     const identity = kind === 'profile' ? project.id : result.projectId;
     await db.update(table).set({ hiddenAt: new Date() }).where(eq(identity, 'candidate-5'));
-    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ week: { rankingStatus: 'unranked' }, provisional: false, entries: [] });
+    expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ week: { rankingStatus: 'unranked' }, provisional: false, votingAvailable: false, entries: [] });
     expect((await db.select().from(week))[0].finalizedAt).toBeNull();
     await db.update(table).set({ hiddenAt: null }).where(eq(identity, 'candidate-5'));
     expect(await getLatestLeaderboard('candidate-0')).toMatchObject({ provisional: true });
