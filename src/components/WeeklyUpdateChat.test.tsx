@@ -181,7 +181,10 @@ it('preserves catch-up goals and can reset the conversation without discarding t
   expect(container.querySelector('[aria-label="Suggested change: Next week’s goal"]')).toBeNull();
   await click('Apply to draft');
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I tested the counter.', nextPromise: 'Previously saved goal' });
+  vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ reply: 'A fresh start with your saved draft.', changes: { summary: null, nextPromise: null, feedbackRequest: null } }) } as Response);
   await click('New conversation, keep draft');
+  expect(container.querySelector('[data-message-id="welcome"]')!.textContent).toContain('A fresh start with your saved draft.');
+  expect(container.textContent).not.toContain('Here is your update.');
   expect(fetch).toHaveBeenCalledTimes(2);
   expect(JSON.parse(vi.mocked(fetch).mock.calls[1][1]!.body as string).opening).toBe(true);
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I tested the counter.' });
@@ -401,4 +404,15 @@ it('persists proposed edits, applies each field only on acceptance and dismisses
   expect(JSON.parse(localStorage.getItem(props.draftKey)!).feedbackRequest).toBe('');
   expect(container.querySelectorAll('[aria-label^="Suggested change:"]')).toHaveLength(0);
   expect(submit).not.toHaveBeenCalled();
+});
+
+it('does not offer a welcome retry for a failed manual social refresh', async () => {
+  localStorage.removeItem(`${props.draftKey}:chat:u1`);
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Temporary outage')));
+  await mount();
+  expect(container.textContent).toContain('Retry welcome');
+  await click('Refresh social activity');
+  expect(container.textContent).not.toContain('Retry welcome');
+  expect(container.querySelector('.coach-social-status')!.getAttribute('data-state')).toBe('error');
+  expect(container.textContent).toContain('Refresh social activity');
 });

@@ -229,7 +229,7 @@ function Conversation(props: Props) {
           <div className="coach-composer-actions"><small>Chat first. Review before publishing.</small><button className="work-button" type="submit" disabled={!ready || pending || saving || !input.trim() || messages.length >= 40}>Send ↑</button></div>
         </form>
         {error && <p role="alert" className="work-status">{error}</p>}
-        {error && !openingReply && !messages.length && <button type="button" className="coach-reset" disabled={pending || saving}
+        {error && pendingMessage === openingRequest && !openingReply && !messages.length && <button type="button" className="coach-reset" disabled={pending || saving}
           onClick={() => void send(false, true, false, true)}>Retry welcome</button>}
         {messages.length >= 40 && <p className="work-note">Review your draft, or start a new conversation to keep refining it.</p>}
         <div className="coach-next">

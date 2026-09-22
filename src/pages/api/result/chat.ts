@@ -12,6 +12,8 @@ import { gatherSocialContext } from '../../../server/social-context';
 import { reviewSocialContext } from '../../../server/social-review';
 
 export const prerender = false;
+// ponytail: coalesce identical welcomes within a worker; shared coordination only if cross-worker duplication becomes costly.
+const openings = new Map<string, ReturnType<typeof chatWithWeeklyCoach>>();
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'cache-control': 'no-store' } });
 
 export const POST: APIRoute = async ({ request, locals, url }) => {
@@ -78,9 +80,18 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
     const generate = () => chatWithWeeklyCoach(coachContext, body.opening
       ? [{ role: 'user', content: 'Help me start my weekly check-in using the context already available.' }]
       : body.includeSocialPosts ? [{ role: 'user', content: 'Suggest relevant new social evidence for this draft.' }] : body.messages, body.draft);
+    const generateOpening = () => {
+      const key = JSON.stringify([locals.user!.id, project.id, coachContext, body.draft, import.meta.env.CEREBRAS_MODEL]);
+      let pending = openings.get(key);
+      if (!pending) {
+        pending = generate().finally(() => openings.delete(key));
+        openings.set(key, pending);
+      }
+      return pending;
+    };
     const response = body.includeSocialPosts && !body.opening
       ? await cachedSocialRequest('social-draft-v1', [locals.user.id, project.id, coachContext, body.draft, import.meta.env.CEREBRAS_MODEL], generate, now)
-      : await generate();
+      : body.opening ? await generateOpening() : await generate();
     if (body.opening) response.changes = { summary: null, nextPromise: null, feedbackRequest: null };
     // Importing evidence is not agreement to a new goal.
     if (body.includeSocialPosts) { response.changes.nextPromise = null; response.changes.feedbackRequest = null; }

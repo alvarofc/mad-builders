@@ -201,3 +201,26 @@ it('retries a failed welcome without claiming a daily generation cache key', asy
   expect(mocks.chat).toHaveBeenCalledTimes(2);
   expect(mocks.cache).not.toHaveBeenCalled();
 });
+
+it.each([false, true])('coalesces only identical pending welcomes (different user: %s)', async differentUser => {
+  let finish!: (value: unknown) => void;
+  const pending = new Promise(resolve => { finish = resolve; });
+  mocks.chat.mockReturnValue(pending);
+  const queueRows = () => {
+    mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  };
+  queueRows();
+  const first = request({ ...body, opening: true });
+  await vi.waitFor(() => expect(mocks.chat).toHaveBeenCalledOnce());
+  queueRows();
+  const second = request({ ...body, opening: true }, differentUser ? 'other-user' : 'user');
+  await vi.waitFor(() => expect(mocks.social).toHaveBeenCalledTimes(2));
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(mocks.chat).toHaveBeenCalledTimes(differentUser ? 2 : 1);
+  finish({ reply: 'Welcome back.', changes: { summary: null, nextPromise: null, feedbackRequest: null } });
+  expect((await first).status).toBe(200);
+  expect((await second).status).toBe(200);
+  queueRows();
+  expect((await request({ ...body, opening: true })).status).toBe(200);
+  expect(mocks.chat).toHaveBeenCalledTimes(differentUser ? 3 : 2);
+});

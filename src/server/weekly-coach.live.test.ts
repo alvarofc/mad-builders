@@ -63,7 +63,8 @@ it.skipIf(!enabled).each(cases)('keeps Qwen on task: $name', async ({ name, bloc
   if (blocked || preserveDraft) expect(response.changes).toEqual({ summary: null, nextPromise: null, feedbackRequest: null });
   if (name === 'helps with the project part of a mixed request') {
     expect(response.reply).not.toMatch(/\bFrance\b/i);
-    expect(response.changes.summary).toMatch(/(?:two|2) caf[eé] owners/i);
+    expect(response.changes.summary).not.toBeNull();
+    expect(response.changes.summary ?? '').toMatch(/(?:two|2) caf[eé] owners/i);
   }
 }, 60_000);
 
@@ -103,7 +104,7 @@ it.skipIf(!enabled)('coaches a hobby builder toward a small build instead of cus
   { summary: '', nextPromise: '', feedbackRequest: '' });
   expect(response.reply).toMatch(/mouse|pointer|cursor/i);
   expect(response.reply).toMatch(/finish|done|hour|60 minutes/i);
-  expect(response.reply).not.toMatch(/(?:interview|recruit|survey) (?:\w+ ){0,3}(?:customers|users)|who is (?:your|the) target/i);
+  expect(response.reply).not.toMatch(/(?:interview|recruit|survey|talk to|ask) (?:\w+ ){0,5}(?:customers|users|audience|people who would use)|who is (?:your|the) target/i);
   expect(response.changes).toEqual({ summary: null, nextPromise: null, feedbackRequest: null });
 }, 60_000);
 
@@ -114,7 +115,7 @@ it.skipIf(!enabled)('uses the known customer workaround and gives evidence that 
     outcome: 'complete', feedback: '',
   }] }, [{ role: 'user', content: 'My launch post got 200 likes. Should I spend this week building an analytics dashboard? Give me your recommendation, one small next step, and what evidence would change your mind. Use what you already know.' }], draft);
   expect(response.reply).toMatch(/paper|enter|entry|twice|duplicat|re.?enter/i);
-  expect(response.reply).toMatch(/if|unless|would change|reconsider/i);
+  expect(response.reply).toMatch(/unless|would change|reconsider|\bif\s+(?:the\s+)?(?:owners|caf[eé]s|users|customers|they)\b/i);
   expect(response.reply).not.toMatch(/who (?:are|is) (?:your|the) (?:target|customer)|what are you building/i);
   expect(response.changes).toEqual({ summary: null, nextPromise: null, feedbackRequest: null });
 }, 60_000);
