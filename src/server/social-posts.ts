@@ -1,5 +1,9 @@
 import { z } from 'zod';
+import { setTimeout as delay } from 'node:timers/promises';
 import { normalizeSocialUrl, socialPostSchema, type SocialLinks, type SocialAccount, type SocialSnapshot } from '../lib/socials';
+
+// ponytail: serialize X reads within this worker; use a shared queue if cross-worker contention persists.
+let twitterReads = Promise.resolve();
 
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullish();
 const linkedinResponse = z.object({
@@ -60,12 +64,28 @@ export async function fetchSocialAccount(source: SocialAccount, now: Date): Prom
     postsUrl.searchParams.set('userName', handle); postsUrl.searchParams.set('includeReplies', 'true');
     profileUrl.searchParams.set('userName', handle);
   }
-  const get = async (url: URL) => {
-    const response = await fetch(url, { headers: { 'X-API-Key': key }, signal, redirect: 'error' });
+  const read = async (url: URL) => {
+    signal.throwIfAborted();
+    const request = () => fetch(url, { headers: { 'X-API-Key': key }, signal, redirect: 'error' });
+    let response = await request();
+    if (platform === 'x' && response.status === 429) {
+      // Free-tier TwitterAPI.io allows one request per five seconds. Retry only the rejected read.
+      const retryAfter = Number(response.headers.get('retry-after')) * 1000;
+      if (retryAfter > 10_000) throw new Error('provider_rate_limited');
+      await delay(Math.max(5100, Number.isFinite(retryAfter) ? retryAfter : 0), undefined, { signal });
+      response = await request();
+    }
+    if (response.status === 429) throw new Error('provider_rate_limited');
     if (!response.ok) throw new Error('provider_unavailable');
     const raw = await response.json();
     if (!raw || raw.error || (raw.status && raw.status !== 'success' && raw.status !== 200)) throw new Error('provider_unavailable');
     return raw;
+  };
+  const get = (url: URL) => {
+    if (platform !== 'x') return read(url);
+    const result = twitterReads.then(() => read(url));
+    twitterReads = result.then(() => undefined, () => undefined);
+    return result;
   };
   // ponytail: one recent page bounds cost and latency; paginate if busy accounts need more coverage.
   const [postResult, profileResult] = await Promise.allSettled([
@@ -112,7 +132,7 @@ export async function fetchSocialAccount(source: SocialAccount, now: Date): Prom
     providerId: profileResult.status === 'fulfilled' ? profileResult.value.providerId : null,
     followers: profileResult.status === 'fulfilled' ? profileResult.value.followers : null,
     description: profileResult.status === 'fulfilled' ? profileResult.value.description.slice(0, 2000) : '',
-    warnings: [postResult.status === 'rejected' ? `Could not read posts from ${account}.` : '',
-      profileResult.status === 'rejected' ? `Could not read follower counts from ${account}.` : ''].filter(Boolean),
+    warnings: [postResult.status === 'rejected' ? `Could not read posts from ${account}.${postResult.reason?.message === 'provider_rate_limited' ? ' The provider rate limit was reached.' : ''}` : '',
+      profileResult.status === 'rejected' ? `Could not read follower counts from ${account}.${profileResult.reason?.message === 'provider_rate_limited' ? ' The provider rate limit was reached.' : ''}` : ''].filter(Boolean),
   };
 }
