@@ -1,11 +1,14 @@
+vi.mock('./social-cache', () => ({ cachedSocialRequest: async (_kind: string, _input: unknown, run: () => Promise<unknown>) => run() }));
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { PgDialect } from 'drizzle-orm/pg-core';
-const mocks = vi.hoisted(() => ({ rows: vi.fn(), profile: vi.fn(), allow: vi.fn(), chat: vi.fn(), where: vi.fn(), execute: vi.fn() }));
+const mocks = vi.hoisted(() => ({ rows: vi.fn(), profile: vi.fn(), allow: vi.fn(), chat: vi.fn(), where: vi.fn(), execute: vi.fn(), personal: vi.fn(), social: vi.fn(), review: vi.fn() }));
 vi.mock('./db', () => ({ db: { execute: mocks.execute, select: () => {
   const query = { from: () => query, where: (condition: unknown) => { mocks.where(condition); return query; }, innerJoin: () => query, orderBy: () => query, limit: mocks.rows };
   return query;
 } } }));
-vi.mock('./profiles', () => ({ getProfileByUserId: mocks.profile }));
+vi.mock('./profiles', () => ({ getProfileByUserId: mocks.profile, getUserSocialLinks: mocks.personal }));
+vi.mock('./social-context', () => ({ gatherSocialContext: mocks.social }));
+vi.mock('./social-review', () => ({ reviewSocialContext: mocks.review }));
 vi.mock('./rate-limit', () => ({ allowWrite: mocks.allow }));
 vi.mock('./weeks', () => ({ getDatabaseNow: async () => new Date('2026-09-15T12:00:00Z') }));
 vi.mock('./weekly-coach', () => ({ chatWithWeeklyCoach: mocks.chat }));
@@ -21,6 +24,7 @@ beforeEach(() => {
   Object.values(mocks).forEach(mock => mock.mockReset());
   mocks.profile.mockResolvedValue({ id: 'project', projectName: 'Stock', bio: 'Stock for cafés', projectStage: 'building', projectUrl: null });
   mocks.allow.mockResolvedValue(true);
+  mocks.review.mockImplementation(async (_project, _goal, _draft, _history, evidence) => ({ posts: evidence.posts, audience: evidence.audience }));
 });
 afterEach(() => vi.unstubAllEnvs());
 it('returns JSON 429 without model access when rate-limit storage fails', async () => {
@@ -68,6 +72,7 @@ it('loads project-scoped dated history and existing goals on the server, ignorin
   expect(historyQuery.sql).toContain('"result"."project_id" =');
   expect(historyQuery.sql).toContain('"week"."starts_at" <');
   expect(historyQuery.params).toEqual(['project', selectedWeek.startsAt.toISOString()]);
+  expect(mocks.social).not.toHaveBeenCalled();
 });
 it('returns a recoverable error when the model fails', async () => {
   mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
@@ -107,4 +112,46 @@ it.each([{ pledges: [] }, { pledges: [{ promise: 'Test the counter' }] }])('allo
   mocks.chat.mockResolvedValue({ reply: 'What happened?', changes: { summary: null, nextPromise: null, feedbackRequest: null } });
   expect((await request()).status).toBe(200);
   expect(mocks.chat).toHaveBeenCalledWith(expect.objectContaining({ canSetNextGoal: false, existingNextGoal: '', previousUpdates: [] }), body.messages, body.draft);
+});
+
+it('imports only saved accounts on explicit request and passes dated source posts to the coach', async () => {
+  const posts = [{ platform: 'x', scope: 'personal', account: 'https://x.com/alice', text: 'Released the beta', url: 'https://x.com/alice/status/1', publishedAt: '2026-09-15T10:00:00Z' }];
+  mocks.personal.mockResolvedValue({ x: 'https://x.com/alice' });
+  mocks.social.mockResolvedValue({ posts, audience: [], warnings: ['Company LinkedIn unavailable'], accountCount: 2 });
+  mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([])
+    .mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  mocks.chat.mockResolvedValue({ reply: 'Check the draft.', changes: { summary: 'We released the beta.', nextPromise: 'An unapproved goal from a post', feedbackRequest: null } });
+  const response = await request({ ...body, includeSocialPosts: true, personal: { x: 'https://x.com/forged' } });
+  expect(response.status).toBe(200);
+  expect(mocks.personal).toHaveBeenCalledWith('user');
+  expect(mocks.social).toHaveBeenCalledWith('user', 'project', { x: 'https://x.com/alice' }, {}, selectedWeek.startsAt, new Date('2026-09-15T12:00:00Z'), selectedWeek.submissionClosesAt, false);
+  expect(mocks.chat).toHaveBeenCalledWith(expect.objectContaining({ socialPosts: posts }), [{ role: 'user', content: 'Suggest relevant new social evidence for this draft.' }], body.draft);
+  expect(await response.json()).toMatchObject({ socialPosts: posts, socialWarnings: ['Company LinkedIn unavailable'], changes: { nextPromise: null } });
+});
+
+it('preserves the draft without calling the coach when no posts are available', async () => {
+  mocks.personal.mockResolvedValue({});
+  mocks.social.mockResolvedValue({ posts: [], audience: [], warnings: [], accountCount: 0 });
+  mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  const response = await request({ ...body, includeSocialPosts: true });
+  expect(await response.json()).toMatchObject({ socialPosts: [], changes: { summary: null, nextPromise: null, feedbackRequest: null } });
+  expect(mocks.chat).not.toHaveBeenCalled();
+});
+
+it('applies the import limit before reading personal accounts or contacting providers', async () => {
+  mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  mocks.allow.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+  expect((await request({ ...body, includeSocialPosts: true })).status).toBe(429);
+  expect(mocks.personal).not.toHaveBeenCalled();
+  expect(mocks.social).not.toHaveBeenCalled();
+});
+
+it('does not draft when the relevance reviewer rejects all gathered evidence', async () => {
+  mocks.personal.mockResolvedValue({ x: 'https://x.com/alice' });
+  mocks.social.mockResolvedValue({ posts: [{ text: 'Unrelated popular joke' }], audience: [], warnings: [], accountCount: 1 });
+  mocks.review.mockResolvedValue({ posts: [], audience: [] });
+  mocks.rows.mockResolvedValueOnce([selectedWeek]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  const response = await request({ ...body, includeSocialPosts: true });
+  expect(await response.json()).toMatchObject({ changes: { summary: null, nextPromise: null, feedbackRequest: null }, socialPosts: [] });
+  expect(mocks.chat).not.toHaveBeenCalled();
 });

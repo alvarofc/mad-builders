@@ -17,6 +17,8 @@ export default defineConfig({
     ],
   },
   adapter: vercel({
+    // Social retrieval, relevance review and drafting have separate bounded timeouts.
+    maxDuration: 120,
     includeFiles: readdirSync(new URL('./src/server/fonts/', import.meta.url))
       .map((file) => `src/server/fonts/${file}`),
   }),

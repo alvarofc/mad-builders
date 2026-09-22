@@ -1,0 +1,36 @@
+.social-accounts { max-width: 680px; }
+.social-group { padding-block: 24px; border-top: 1px solid var(--green-line); }
+.social-group-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.social-group-heading h3 { font-size: 18px; letter-spacing: -0.02em; }
+.social-group-heading p, .social-help, .social-empty { color: var(--green-dim); font-size: 13px; line-height: 1.6; }
+.social-group-heading p { margin: 8px 0 20px; }
+.social-action { padding: 8px 0; border: 0; background: transparent; color: var(--green); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.social-action:disabled { opacity: .5; cursor: default; }
+.social-group-heading > .social-action { flex-shrink: 0; padding-top: 0; }
+.social-account { display: flex; align-items: center; gap: 14px; padding-block: 16px; border-top: 1px solid var(--green-line); }
+.social-platform { display: grid; place-items: center; flex: 0 0 36px; height: 36px; border: 1px solid var(--green-line); border-radius: 6px; font-weight: 600; font-size: 16px; }
+.social-account-info { min-width: 0; flex: 1; }
+.social-account-info a { font-size: 14px; text-decoration: none; overflow-wrap: anywhere; }
+.social-account-info a:hover { text-decoration: underline; }
+.social-account-info small { display: block; margin-top: 4px; color: var(--green-dim); font-size: 12px; }
+.social-row-actions, .social-editor-actions { display: flex; gap: 16px; }
+.social-editor { padding: 4px 0 8px; }
+.social-editor .work-field > span { font-size: 14px; }
+.social-editor .work-field input { min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--green-line); border-radius: 6px; font-size: 16px; line-height: 1.5; }
+.social-editor .work-field input:focus { border-color: var(--green); }
+.social-editor .work-field input:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.social-editor .social-help { margin: 8px 0 16px; }
+.social-editor-actions { align-items: center; }
+.social-editor-actions .work-button { padding: 10px 16px; }
+.social-empty { margin: 0; padding: 16px 0; }
+.social-save { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 8px 0 24px; }
+.social-save span { font-size: 13px; color: var(--green-dim); }
+.social-help summary { cursor: pointer; padding-block: 8px; }
+@media (max-width: 540px) {
+  .social-account { flex-wrap: wrap; }
+  .social-row-actions { width: 100%; padding-left: 50px; }
+  .social-action { min-height: 44px; }
+}
+.social-editor .social-url-input { position: relative; display: block; }
+.social-url-logo { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: flex; pointer-events: none; }
+.social-editor .social-url-input[data-detected="true"] input { padding-left: 42px; }

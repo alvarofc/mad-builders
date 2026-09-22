@@ -1,0 +1,16 @@
+.settings-tabs { padding-bottom: 64px; }
+.settings-tab-list { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--green-line); }
+.settings-tab { flex-shrink: 0; padding: 14px 18px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--green-dim); font: inherit; font-size: 14px; cursor: pointer; }
+.settings-tab:first-child { padding-left: 0; }
+.settings-tab[data-state="active"] { border-bottom-color: var(--green); color: var(--green); font-weight: 600; }
+.settings-tab:hover { color: var(--green); }
+.settings-tab:focus-visible { outline: 2px solid var(--green); outline-offset: -4px; }
+.settings-panel { padding-top: 36px; max-width: 760px; }
+.settings-panel[hidden] { display: none; }
+.settings-panel .work-note { max-width: 600px; }
+.settings-panel .work-form > .work-button { justify-self: start; }
+.settings-panel .work-heading { font-size: clamp(1.5rem, 3vw, 2rem); }
+@media (max-width: 600px) {
+  .settings-tab { padding: 12px; }
+  .settings-panel { padding-top: 28px; }
+}

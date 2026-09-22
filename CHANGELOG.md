@@ -2,6 +2,19 @@
 
 Changes to mad.builders.
 
+## [0.9.0.0] - 2026-09-22
+
+### Added
+
+- Add personal and project social accounts by pasting a profile URL, with automatic platform logos and saving.
+- Find relevant LinkedIn and X posts, engagement, and measured follower changes when writing a weekly update. Review suggested additions and source links before publishing.
+- Reuse daily social checks across accounts and co-owners, with one extra manual refresh per account per day. Reuse AI reviews and suggestions when the inputs match.
+
+### Changed
+
+- Organize settings into Profile, Social links, Team, Updates, and Danger zone tabs. Keep unsaved inputs when switching tabs.
+- Move project visibility controls into Danger zone.
+
 ## [0.8.4.0] - 2026-09-22
 
 ### Fixed

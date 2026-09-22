@@ -1,7 +1,7 @@
 {
   "name": "mad-builders",
   "type": "module",
-  "version": "0.8.4.0",
+  "version": "0.9.0.0",
   "packageManager": "pnpm@11.1.1",
   "engines": {
     "node": "24.x"
@@ -24,6 +24,7 @@
     "@fontsource/archivo": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@mastra/core": "^1.67.0",
+    "@radix-ui/react-tabs": "^1.1.21",
     "@shadcn/react": "^0.3.1",
     "@vercel/analytics": "^2.0.1",
     "astro": "^5.13.3",

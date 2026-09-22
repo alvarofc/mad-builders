@@ -3,7 +3,7 @@ import ProductLayout from '../layouts/ProductLayout.astro';
 import ShareButton from '../components/ShareButton.astro';
 import { getProjectInvite, listOwnedProjects } from '../server/projects';
 import { authConfigured } from '../server/auth';
-import { getProfileByUserId, normalizeHandle, validHandle } from '../server/profiles';
+import { getProfileByUserId, getUserSocialLinks, normalizeHandle, validHandle } from '../server/profiles';
 import { blocksWeeklyUpdate, getReviewState } from '../server/ranking';
 import WeeklyUpdateChat from '../components/WeeklyUpdateChat';
 import { projectStages } from '../server/results';
@@ -17,6 +17,9 @@ const invitation = inviteToken ? await getProjectInvite(inviteToken) : null;
 if (inviteToken) Astro.response.headers.set('Referrer-Policy', 'strict-origin');
 const currentUser = Astro.locals.user;
 const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
+const personalSocials = currentUser && currentProfile ? await getUserSocialLinks(currentUser.id) : {};
+const socialEnabled = Boolean((import.meta.env.HARVESTAPI_KEY && (personalSocials.linkedin || currentProfile?.socialLinks?.linkedin))
+  || (import.meta.env.TWITTERAPI_IO_KEY && (personalSocials.x || currentProfile?.socialLinks?.x)));
 const ownedProjects = currentUser ? await listOwnedProjects(currentUser.id) : [];
 const selectedWeekDate = Astro.url.searchParams.get('week');
 const buildState = currentProfile ? await Astro.locals.timing.measure('build_state', () => getBuildState(currentProfile.id, selectedWeekDate)) : null;
@@ -240,6 +243,8 @@ const askedToJoin = Astro.url.searchParams.has('join') || Astro.url.searchParams
                   userId={currentUser!.id}
                   projectName={currentProfile.projectName}
                   improveEnabled={Boolean(import.meta.env.CEREBRAS_API_KEY)}
+                  socialEnabled={socialEnabled}
+                  socialVersion={JSON.stringify([personalSocials, currentProfile.socialLinks])}
                   projectId={currentProfile.id}
                   draftKey={`weekly:${currentProfile.id}:${buildState.currentWeek?.id}`}
                   commitmentId={buildState.currentCommitment?.id}

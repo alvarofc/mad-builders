@@ -12,6 +12,8 @@ export const coachRequestSchema = z.object({
   projectId: z.string().min(1).max(100), weekId: z.number().int().positive(),
   messages: conversationSchema.min(1).refine(messages => messages.every((message, i) => message.role === (i % 2 ? 'assistant' : 'user')) && messages.at(-1)?.role === 'user'),
   draft: coachDraftSchema,
+  includeSocialPosts: z.boolean().optional(),
+  refreshSocialPosts: z.boolean().optional(),
 });
 export const coachResponseSchema = z.object({
   reply: z.string().trim().min(1).max(3000),

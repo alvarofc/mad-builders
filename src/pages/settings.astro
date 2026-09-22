@@ -1,8 +1,10 @@
 ---
+import SettingsTabs from '../components/SettingsTabs';
 import ProjectMark from '../components/ProjectMark.astro';
 import ProductLayout from '../layouts/ProductLayout.astro';
 import { getProjectTeam, listOwnedProjects } from '../server/projects';
-import { getProfileByUserId, listResultsForProject } from '../server/profiles';
+import { getProfileByUserId, getUserSocialLinks, listResultsForProject } from '../server/profiles';
+import SocialAccounts from '../components/SocialAccounts';
 
 export const prerender = false;
 const currentUser = Astro.locals.user;
@@ -15,6 +17,7 @@ Astro.response.headers.set('Referrer-Policy', 'strict-origin');
 const team = await getProjectTeam(currentProfile.id);
 const projects = await listOwnedProjects(Astro.locals.user.id);
 const results = await Astro.locals.timing.measure('results', () => listResultsForProject(currentProfile.id));
+const personalSocials = await getUserSocialLinks(currentUser.id);
 ---
 
 <ProductLayout
@@ -29,27 +32,12 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
       <div class="wrap">
         <p class="work-kicker">@{currentProfile.handle}</p>
         <h1 class="work-title">Settings</h1>
-        <p class="work-intro">You control whether your project and weekly updates stay public.</p>
+        <p class="work-intro">Your profile, accounts and project settings.</p>
       </div>
     </header>
-    <section class="wrap work-grid">
-      <aside class="work-aside">
-        <p class="work-label">project page</p>
-        <p class="work-note">
-          Taking your project offline also hides its metadata and social preview. Your account and history stay in the database.
-        </p>
-        <form method="post" action="/api/profile/visibility">
-          <input type="hidden" name="projectId" value={currentProfile?.id} />
-          <button
-            class="work-button secondary"
-            name="action"
-            value={currentProfile.withdrawnAt ? 'restore' : 'withdraw'}
-          >
-            {currentProfile.withdrawnAt ? 'put project back online' : 'take project offline'}
-          </button>
-        </form>
-      </aside>
-      <div class="work-main">
+    <section class="wrap">
+      <SettingsTabs client:load>
+      <div slot="profile">
         <p class="work-label">project and your account</p>
         <h2 class="work-heading">What people see.</h2>
         <form class="work-form" method="post" action="/api/profile" enctype="multipart/form-data">
@@ -88,8 +76,16 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
           </label>
           <button class="work-button" type="submit">save changes</button>
         </form>
-        <hr class="work-rule" />
-        <p class="work-label" id="team">co-owners</p>
+      </div>
+      <div slot="socials">
+        <p class="work-label">social links</p>
+        <h2 class="work-heading">Where you share your work.</h2>
+        <SocialAccounts client:load projectId={currentProfile.id} personal={personalSocials} company={currentProfile.socialLinks ?? {}}
+          available={{ linkedin: Boolean(import.meta.env.HARVESTAPI_KEY), x: Boolean(import.meta.env.TWITTERAPI_IO_KEY) }}
+          saved={Astro.url.searchParams.get('socials') === 'saved'} />
+      </div>
+      <div slot="team">
+        <p class="work-label">co-owners</p>
         <h2 class="work-heading">One project. Shared updates.</h2>
         <p class="work-copy">{team.owners.map((owner) => owner.name).join(', ')}</p>
         <p class="work-note">All co-owners can edit the project, publish its weekly update, manage visibility, and approve co-owners. Create an invite link and send it to your teammate. They can sign in and accept it to join as a co-owner.</p>
@@ -133,7 +129,8 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
           </form>
         )}
         <p class="work-note">To join another project, <a href="/build?join=1#join-project">request access</a>. Its owner must approve you.</p>
-        <hr class="work-rule" />
+      </div>
+      <div slot="updates">
         <p class="work-label">weekly updates</p>
         <h2 class="work-heading">Choose what stays public.</h2>
         {results.length ? (
@@ -159,6 +156,24 @@ const results = await Astro.locals.timing.measure('results', () => listResultsFo
           <p class="work-copy">No results yet.</p>
         )}
       </div>
+      <div slot="danger">
+        <p class="work-label">visibility</p>
+        <h2 class="work-heading">Danger zone</h2>
+        <p class="work-note">
+          Taking your project offline also hides its metadata and social preview. Your account and history stay in the database.
+        </p>
+        <form method="post" action="/api/profile/visibility">
+          <input type="hidden" name="projectId" value={currentProfile?.id} />
+          <button
+            class="work-button secondary"
+            name="action"
+            value={currentProfile.withdrawnAt ? 'restore' : 'withdraw'}
+          >
+            {currentProfile.withdrawnAt ? 'put project back online' : 'take project offline'}
+          </button>
+        </form>
+      </div>
+      </SettingsTabs>
     </section>
   </div>
 </ProductLayout>

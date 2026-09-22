@@ -92,6 +92,27 @@
       "when": 1790010000002,
       "tag": "0012_repair_extended_results",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790010000003,
+      "tag": "0013_social_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790010000004,
+      "tag": "0014_social_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790083360981,
+      "tag": "0015_social_cache",
+      "breakpoints": true
     }
   ]
 }
