@@ -352,7 +352,10 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect(normal?.unfinishedWeeks.map((entry) => entry.id)).toContain(prior.id);
     const late = await getBuildState('publisher', prior.weekStartDate);
     expect(late).toMatchObject({ currentWeek: { id: prior.id }, currentCommitment: { id: oldGoal.id }, nextWeek: { id: current.id }, selectedLateWeek: true, late: true, canSetNextPromise: false });
-    expect(await getBuildState('another-user', prior.weekStartDate)).toBeNull();
+    await builder('another-project');
+    expect(await getBuildState('another-project', prior.weekStartDate)).toMatchObject({
+      currentWeek: { id: prior.id }, currentCommitment: null, currentResult: null, selectedLateWeek: true,
+    });
     expect(await getBuildState('publisher', 'not-a-date')).toBeNull();
     const published = await publishResult({ ...publication('publisher', prior.id), commitmentId: oldGoal.id, status: 'complete', nextPromise: '' });
     expect(published.result.onTime).toBe(false);
@@ -537,11 +540,11 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     const [plan] = mode === 'late' ? await db.insert(commitment).values({ projectId: 'publisher', weekId: current.id, promise: 'Ship a prototype' }).returning() : [];
     const input = { ...publication('publisher', current.id), commitmentId: original?.result.commitmentId ?? plan?.id ?? null, status: mode === 'late' ? 'complete' as const : 'submitted' as const };
     const outcome = await crossDeadline(current.id, 'submissionClosesAt', () => publishResult(input));
-    if (mode === 'late') {
-      expect(outcome).toMatchObject({ result: { onTime: false } });
+    if (mode !== 'edit') {
+      expect(outcome).toMatchObject({ result: { onTime: false, status: mode === 'late' ? 'complete' : 'submitted' } });
     } else {
       expect(outcome).toBeInstanceOf(Error);
-      expect((outcome as Error).message).toBe(mode === 'edit' ? 'update_locked' : 'commitment_not_found');
+      expect((outcome as Error).message).toBe('update_locked');
       expect(await db.select().from(result)).toEqual(original ? [original.result] : []);
     }
   });
