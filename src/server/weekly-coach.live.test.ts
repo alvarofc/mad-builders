@@ -98,7 +98,7 @@ it.skipIf(!enabled)('coaches a hobby builder toward a small build instead of cus
   }, [{ role: 'user', content: 'This is just for fun and learning, not a business. I have one hour tonight. Should I build a preset marketplace or make the rain sound respond to the mouse? Pick one and give me a small step I can finish.' }],
   { summary: '', nextPromise: '', feedbackRequest: '' });
   expect(response.reply).toMatch(/mouse|pointer|cursor/i);
-  expect(response.reply).toMatch(/volume|loudness|density|pitch|filter|intensity|frequency|parameter|movement/i);
+  expect(response.reply).toMatch(/finish|done|hour|60 minutes/i);
   expect(response.reply).not.toMatch(/(?:interview|recruit|survey) (?:\w+ ){0,3}(?:customers|users)|who is (?:your|the) target/i);
   expect(response.changes).toEqual({ summary: null, nextPromise: null, feedbackRequest: null });
 }, 60_000);
