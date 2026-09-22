@@ -78,8 +78,8 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
     const generate = () => chatWithWeeklyCoach(coachContext, body.opening
       ? [{ role: 'user', content: 'Help me start my weekly check-in using the context already available.' }]
       : body.includeSocialPosts ? [{ role: 'user', content: 'Suggest relevant new social evidence for this draft.' }] : body.messages, body.draft);
-    const response = body.includeSocialPosts || body.opening
-      ? await cachedSocialRequest(body.opening ? 'coach-opening-v1' : 'social-draft-v1', [locals.user.id, project.id, coachContext, body.draft, import.meta.env.CEREBRAS_MODEL], generate, now)
+    const response = body.includeSocialPosts && !body.opening
+      ? await cachedSocialRequest('social-draft-v1', [locals.user.id, project.id, coachContext, body.draft, import.meta.env.CEREBRAS_MODEL], generate, now)
       : await generate();
     if (body.opening) response.changes = { summary: null, nextPromise: null, feedbackRequest: null };
     // Importing evidence is not agreement to a new goal.

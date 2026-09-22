@@ -1,7 +1,7 @@
-vi.mock('./social-cache', () => ({ cachedSocialRequest: async (_kind: string, _input: unknown, run: () => Promise<unknown>) => run() }));
+vi.mock('./social-cache', () => ({ cachedSocialRequest: (...args: unknown[]) => mocks.cache(...args) }));
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { PgDialect } from 'drizzle-orm/pg-core';
-const mocks = vi.hoisted(() => ({ rows: vi.fn(), profile: vi.fn(), allow: vi.fn(), chat: vi.fn(), where: vi.fn(), execute: vi.fn(), personal: vi.fn(), social: vi.fn(), review: vi.fn() }));
+const mocks = vi.hoisted(() => ({ rows: vi.fn(), profile: vi.fn(), allow: vi.fn(), chat: vi.fn(), where: vi.fn(), execute: vi.fn(), personal: vi.fn(), social: vi.fn(), review: vi.fn(), cache: vi.fn() }));
 vi.mock('./db', () => ({ db: { execute: mocks.execute, select: () => {
   const query = { from: () => query, where: (condition: unknown) => { mocks.where(condition); return query; }, innerJoin: () => query, orderBy: () => query, limit: mocks.rows };
   return query;
@@ -24,6 +24,7 @@ beforeEach(() => {
   Object.values(mocks).forEach(mock => mock.mockReset());
   mocks.profile.mockResolvedValue({ id: 'project', projectName: 'Stock', bio: 'Stock for cafés', projectStage: 'building', projectUrl: null });
   mocks.allow.mockResolvedValue(true);
+  mocks.cache.mockImplementation(async (_kind, _input, run) => run());
   mocks.personal.mockResolvedValue({});
   mocks.social.mockResolvedValue({ posts: [], audience: [], warnings: [], accountCount: 0 });
   mocks.review.mockImplementation(async (_project, _goal, _draft, _history, evidence) => ({ posts: evidence.posts, audience: evidence.audience }));
@@ -187,4 +188,16 @@ it('does not draft when the relevance reviewer rejects all gathered evidence', a
   const response = await request({ ...body, includeSocialPosts: true });
   expect(await response.json()).toMatchObject({ changes: { summary: null, nextPromise: null, feedbackRequest: null }, socialPosts: [] });
   expect(mocks.chat).not.toHaveBeenCalled();
+});
+
+it('retries a failed welcome without claiming a daily generation cache key', async () => {
+  mocks.rows.mockResolvedValue([]);
+  mocks.rows.mockResolvedValueOnce([selectedWeek]);
+  mocks.chat.mockRejectedValueOnce(new Error('Temporary outage'));
+  expect((await request({ ...body, opening: true })).status).toBe(502);
+  mocks.rows.mockResolvedValueOnce([selectedWeek]);
+  mocks.chat.mockResolvedValueOnce({ reply: 'Welcome back.', changes: { summary: null, nextPromise: null, feedbackRequest: null } });
+  expect((await request({ ...body, opening: true })).status).toBe(200);
+  expect(mocks.chat).toHaveBeenCalledTimes(2);
+  expect(mocks.cache).not.toHaveBeenCalled();
 });

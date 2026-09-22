@@ -177,7 +177,8 @@ it('preserves catch-up goals and can reset the conversation without discarding t
   await click('Send ↑');
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I tested the counter.', nextPromise: 'Previously saved goal' });
   await click('New conversation, keep draft');
-  expect(container.textContent).not.toContain('Here is your update.');
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(JSON.parse(vi.mocked(fetch).mock.calls[1][1]!.body as string).opening).toBe(true);
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I tested the counter.' });
   expect(JSON.parse(localStorage.getItem(`${props.draftKey}:chat:u1`)!).messages).toEqual([]);
   await click('Review & edit draft →');
@@ -341,4 +342,28 @@ it('allows typing and reviewing during an automatic check and does not refill a 
   expect(container.querySelector<HTMLTextAreaElement>('textarea[name="summary"]')!.value).toBe('');
   expect(JSON.parse(localStorage.getItem(`${props.draftKey}:chat:u1`)!).input).toBe('Unsent context.');
   expect(container.textContent).toContain('Suggested addition');
+});
+
+it.each(['   ', 'x'.repeat(3001), 42])('regenerates an invalid saved welcome (%s)', async openingReply => {
+  localStorage.setItem(`${props.draftKey}:chat:u1`, JSON.stringify({ messages: [], openingReply }));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reply: 'A fresh welcome.', changes: { summary: null, nextPromise: null, feedbackRequest: null } }) }));
+  await mount();
+  expect(fetch).toHaveBeenCalledOnce();
+  expect(container.querySelector('[data-message-id="welcome"]')!.textContent).toContain('A fresh welcome.');
+});
+
+it('retries a failed welcome without repeating the social check or losing unsent text', async () => {
+  localStorage.removeItem(`${props.draftKey}:chat:u1`);
+  const fetch = vi.fn().mockRejectedValueOnce(new Error('Temporary outage')).mockResolvedValue({ ok: true, json: async () => ({ reply: 'A fresh welcome.', changes: { summary: null, nextPromise: null, feedbackRequest: null } }) });
+  vi.stubGlobal('fetch', fetch);
+  await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled />));
+  await type('.coach-composer textarea', 'Keep these notes.');
+  await click('Retry welcome');
+  expect(JSON.parse(fetch.mock.calls[1][1].body)).toMatchObject({ opening: true });
+  expect(JSON.parse(fetch.mock.calls[1][1].body).includeSocialPosts).toBeUndefined();
+  expect(container.querySelector<HTMLTextAreaElement>('.coach-composer textarea')!.value).toBe('Keep these notes.');
+  await act(async () => root.render(<div />));
+  await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled />));
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(container.querySelector('.coach-social-status')!.getAttribute('data-state')).toBe('error');
 });

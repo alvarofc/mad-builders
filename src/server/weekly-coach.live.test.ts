@@ -56,11 +56,15 @@ const cases: { name: string; blocked: boolean; messages: CoachMessage[]; descrip
     { role: 'user', content: 'Yes, let’s do that.' },
   ] },
 ];
-it.skipIf(!enabled).each(cases)('keeps Qwen on task: $name', async ({ blocked, messages, description, preserveDraft }) => {
+it.skipIf(!enabled).each(cases)('keeps Qwen on task: $name', async ({ name, blocked, messages, description, preserveDraft }) => {
   const response = await chatWithWeeklyCoach({ ...context, project: { ...context.project, description: description ?? context.project.description } }, messages, draft);
   const redirected = response.reply.startsWith('I can help you think through your project') || response.reply.startsWith('Puedo ayudarte a pensar y avanzar');
   expect(redirected).toBe(blocked);
   if (blocked || preserveDraft) expect(response.changes).toEqual({ summary: null, nextPromise: null, feedbackRequest: null });
+  if (name === 'helps with the project part of a mixed request') {
+    expect(response.reply).not.toMatch(/\bFrance\b/i);
+    expect(response.changes.summary).toMatch(/(?:two|2) caf[eé] owners/i);
+  }
 }, 60_000);
 
 it.skipIf(!enabled)('allows a pitch request without project context in Studio', async () => {

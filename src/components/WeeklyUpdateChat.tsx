@@ -58,7 +58,8 @@ function Conversation(props: Props) {
       const parsed = conversationSchema.safeParse(chat?.messages);
       if (parsed.success && parsed.data.every((message, i) => message.role === (i % 2 ? 'assistant' : 'user')) && parsed.data.length % 2 === 0) {
         setMessages(parsed.data);
-        if (typeof chat.openingReply === 'string') setOpeningReply(chat.openingReply.slice(0, 3000));
+        const opening = coachResponseSchema.shape.reply.safeParse(chat.openingReply);
+        if (opening.success) setOpeningReply(opening.data);
         if (typeof chat.input === 'string') setInput(chat.input.slice(0, 3000));
         const sources = socialPostsSchema.safeParse(chat.socialPosts);
         if (sources.success) setSocialPosts(sources.data);
@@ -90,7 +91,7 @@ function Conversation(props: Props) {
   useEffect(() => {
     if (!ready || autoStarted.current || messages.length >= 40) return;
     const opening = !openingReply && !messages.length;
-    const checkSocial = Boolean(props.socialEnabled && (opening || socialCheckedKey !== checkKey));
+    const checkSocial = Boolean(props.socialEnabled && socialCheckedKey !== checkKey);
     if (!opening && !checkSocial) return;
     autoStarted.current = true;
     void send(checkSocial, true, false, opening);
@@ -137,7 +138,7 @@ function Conversation(props: Props) {
         setSocialWarnings(warnings);
         setSocialAudience(audience ?? []);
         setSocialStatus(warnings.length ? 'error' : data.socialAccountCount === 0 ? 'unlinked' : data.socialAccountCount > 0 ? 'ok' : 'idle');
-        setSocialCheckedKey(!warnings.length && data.socialAccountCount !== 0 ? checkKey : '');
+        setSocialCheckedKey(checkKey);
       }
       // A welcome is conversation, never permission to edit the draft.
       if (!opening && includeSocialPosts) {
@@ -153,7 +154,7 @@ function Conversation(props: Props) {
       }
       if (typeof data.historyCount === 'number') setHistoryCount(data.historyCount);
     } catch (error) {
-      if (includeSocialPosts) { setSocialStatus('error'); setSocialCheckedKey(''); }
+      if (includeSocialPosts) { setSocialStatus('error'); setSocialCheckedKey(checkKey); }
       setError(error instanceof Error && error.name !== 'AbortError' && error.name !== 'ZodError'
         ? error.message : 'The reply did not arrive. Your message and draft are still here. Try again.');
     } finally {
@@ -214,12 +215,14 @@ function Conversation(props: Props) {
           <div className="coach-composer-actions"><small>Chat first. Review before publishing.</small><button className="work-button" type="submit" disabled={!ready || pending || saving || !input.trim() || messages.length >= 40}>Send ↑</button></div>
         </form>
         {error && <p role="alert" className="work-status">{error}</p>}
+        {error && !openingReply && !messages.length && <button type="button" className="coach-reset" disabled={pending || saving}
+          onClick={() => void send(false, true, false, true)}>Retry welcome</button>}
         {messages.length >= 40 && <p className="work-note">Review your draft, or start a new conversation to keep refining it.</p>}
         <div className="coach-next">
           <button type="button" className="work-button secondary" disabled={!ready || (pending && !automatic)} onClick={() => setReviewing(true)}>Review & edit draft →</button>
         </div>
         <details className="coach-context"><summary>About this chat</summary>
-          {messages.length > 0 && <button type="button" className="coach-reset" disabled={pending || saving} onClick={() => { setMessages([]); setError(''); }}>New conversation, keep draft</button>}
+          {messages.length > 0 && <button type="button" className="coach-reset" disabled={pending || saving} onClick={() => { autoStarted.current = false; setOpeningReply(''); setMessages([]); setError(''); }}>New conversation, keep draft</button>}
           <p>To welcome you and reply, we share your project description and stage, this week’s goal, up to four previous updates, your draft and this conversation with Cerebras.</p>
           {historyCount !== null && <p>{historyCount ? `Using ${historyCount} previous ${historyCount === 1 ? 'update' : 'updates'} from this project.` : 'No previous updates yet. We’ll build from what you share here.'}</p>}
           <p>The conversation stays on this browser.</p>

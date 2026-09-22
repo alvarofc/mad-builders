@@ -47,7 +47,6 @@ export async function fetchSocialAccount(source: SocialAccount, now: Date): Prom
   const account = normalizeSocialUrl(source.account, platform, scope === 'company')!;
   const key = platform === 'linkedin' ? import.meta.env.HARVESTAPI_KEY : import.meta.env.TWITTERAPI_IO_KEY;
   if (!key) throw new Error('provider_unavailable');
-  const signal = AbortSignal.timeout(20_000);
   const companyPage = scope === 'company';
   const handle = new URL(account).pathname.split('/').at(-1)!;
   const postsUrl = platform === 'linkedin'
@@ -65,6 +64,7 @@ export async function fetchSocialAccount(source: SocialAccount, now: Date): Prom
     profileUrl.searchParams.set('userName', handle);
   }
   const read = async (url: URL) => {
+    const signal = AbortSignal.timeout(20_000);
     signal.throwIfAborted();
     const request = () => fetch(url, { headers: { 'X-API-Key': key }, signal, redirect: 'error' });
     let response = await request();

@@ -135,3 +135,23 @@ it('reads personal LinkedIn posts and follower counts from HarvestAPI responses'
   expect(fetch.mock.calls[0][0].searchParams.get('profile')).toBe('https://linkedin.com/in/alice');
   expect(fetch.mock.calls[1][0].searchParams.get('main')).toBe('true');
 });
+
+it('starts each X read timeout only when the queue admits it', async () => {
+  vi.stubEnv('TWITTERAPI_IO_KEY', 'test-key');
+  const timeout = vi.spyOn(AbortSignal, 'timeout');
+  let release!: () => void;
+  const waiting = new Promise<void>(resolve => { release = resolve; });
+  vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: URL) => {
+    await waiting;
+    return { ok: true, json: async () => url.pathname.endsWith('/info')
+      ? { data: { id: '123', userName: 'builder', followers: 100 } } : { tweets: [tweet('1')] } };
+  }));
+  try {
+    const result = fetchSocialAccount(source, now);
+    await Promise.resolve();
+    expect(timeout).toHaveBeenCalledTimes(1);
+    release();
+    await result;
+    expect(timeout).toHaveBeenCalledTimes(2);
+  } finally { release(); timeout.mockRestore(); }
+});
