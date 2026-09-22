@@ -2,6 +2,12 @@
 
 Changes to mad.builders.
 
+## [0.8.3.0] - 2026-09-22
+
+### Fixed
+
+- Vote after publishing a late weekly update, receive voting reminders, and see the early leaderboard after finishing your votes.
+
 ## [0.8.2.1] - 2026-09-21
 
 ### Fixed
