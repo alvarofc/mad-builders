@@ -32,9 +32,9 @@ function Conversation(props: Props) {
   const [historyCount, setHistoryCount] = useState<number | null>(null);
   const [socialAudience, setSocialAudience] = useState<AudienceChange[]>([]);
   const [socialSuggestion, setSocialSuggestion] = useState('');
+  const [suggestedChanges, setSuggestedChanges] = useState<ReturnType<typeof coachResponseSchema.parse>['changes'] | null>(null);
   const [socialCheckedKey, setSocialCheckedKey] = useState('');
   const autoStarted = useRef(false);
-  const summaryRevision = useRef(0);
   const [automatic, setAutomatic] = useState(false);
   const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
   const [socialWarnings, setSocialWarnings] = useState<string[]>([]);
@@ -65,6 +65,8 @@ function Conversation(props: Props) {
         if (sources.success) setSocialPosts(sources.data);
         const audience = audienceChangesSchema.safeParse(chat.socialAudience);
         if (audience.success) setSocialAudience(audience.data);
+        const suggestions = coachResponseSchema.shape.changes.safeParse(chat.suggestedChanges);
+        if (suggestions.success) setSuggestedChanges(suggestions.data);
         if (typeof chat.socialSuggestion === 'string') setSocialSuggestion(chat.socialSuggestion.slice(0, 1000));
         if (typeof chat.socialCheckedKey === 'string') setSocialCheckedKey(chat.socialCheckedKey);
         if (chat.socialStatus === 'error' || chat.socialStatus === 'unlinked') setSocialStatus(chat.socialStatus);
@@ -80,10 +82,10 @@ function Conversation(props: Props) {
     if (!ready) return;
     try {
       localStorage.setItem(props.draftKey, JSON.stringify(values));
-      localStorage.setItem(chatKey, JSON.stringify({ messages, openingReply, input, socialPosts, socialAudience, socialSuggestion, socialCheckedKey, socialStatus }));
+      localStorage.setItem(chatKey, JSON.stringify({ messages, openingReply, input, socialPosts, socialAudience, socialSuggestion, suggestedChanges, socialCheckedKey, socialStatus }));
       setDraftStatus('Draft and conversation saved on this browser.');
     } catch { setDraftStatus('Could not save on this browser. Keep this tab open.'); }
-  }, [ready, values, messages, openingReply, input, socialPosts, socialAudience, socialSuggestion, socialCheckedKey, socialStatus]);
+  }, [ready, values, messages, openingReply, input, socialPosts, socialAudience, socialSuggestion, suggestedChanges, socialCheckedKey, socialStatus]);
 
   useEffect(() => { if (reviewing) reviewRef.current?.focus(); else if (ready) inputRef.current?.focus(); }, [reviewing]);
 
@@ -105,7 +107,6 @@ function Conversation(props: Props) {
     if (!ready || inFlight.current || saving || (!opening && !includeSocialPosts && !input.trim()) || messages.length >= 40) return;
     const content = opening ? openingRequest : includeSocialPosts ? socialRequest : input.trim();
     const next: CoachMessage[] = [...messages, { role: 'user', content }];
-    const revisionAtStart = summaryRevision.current;
     inFlight.current = true;
     setPending(true);
     setPendingMessage(content);
@@ -143,14 +144,9 @@ function Conversation(props: Props) {
       // A welcome is conversation, never permission to edit the draft.
       if (!opening && includeSocialPosts) {
         const suggestion = answer.changes.summary;
-        if (suggestion) {
-          setSocialSuggestion(suggestion);
-          // Background evidence must never replace an existing or newly edited draft.
-          setValues(current => current.summary.trim() || props.editing || summaryRevision.current !== revisionAtStart ? current : { ...current, summary: suggestion });
-        }
+        if (suggestion) setSocialSuggestion(suggestion);
       } else if (!opening) {
-        setValues(current => ({ ...current, ...Object.fromEntries(Object.entries(answer.changes)
-          .filter(([key, value]) => value !== null && (key !== 'nextPromise' || props.canSetNextPromise))) }));
+        setSuggestedChanges({ ...answer.changes, nextPromise: props.canSetNextPromise ? answer.changes.nextPromise : null });
       }
       if (typeof data.historyCount === 'number') setHistoryCount(data.historyCount);
     } catch (error) {
@@ -182,7 +178,7 @@ function Conversation(props: Props) {
     return <label className="work-field" key={name}>
       <span>{label}</span>
       <textarea name={name} value={values[name] ?? ''} maxLength={max} minLength={required ? 5 : undefined} required={required}
-        disabled={saving} rows={name === 'summary' ? 6 : 3} onChange={event => { markStarted(); if (name === 'summary') summaryRevision.current += 1; setValues(current => ({ ...current, [name]: event.target.value })); }} />
+        disabled={saving} rows={name === 'summary' ? 6 : 3} onChange={event => { markStarted(); setValues(current => ({ ...current, [name]: event.target.value })); }} />
       <small>{(values[name] ?? '').length} / {max}</small>
     </label>;
   }
@@ -200,6 +196,24 @@ function Conversation(props: Props) {
                 {messages.map((message, index) => <MessageScroller.Item key={index} messageId={String(index)} scrollAnchor={message.role === 'user'} className="coach-message" data-role={message.role}>
                   <span className="coach-speaker">{message.content === socialRequest ? 'Social check' : message.role === 'user' ? 'You' : 'mad.builders'}</span><p>{message.content}</p>
                 </MessageScroller.Item>)}
+                {suggestedChanges && (['summary', 'nextPromise', 'feedbackRequest'] as const).map(key => {
+                  const suggestion = suggestedChanges[key];
+                  if (suggestion === null || (key === 'nextPromise' && !props.canSetNextPromise)) return null;
+                  const label = { summary: 'This week', nextPromise: 'Next week’s goal', feedbackRequest: 'Community question' }[key];
+                  return <MessageScroller.Item key={key} messageId={`suggestion-${key}`} className="coach-message coach-source">
+                    <section aria-label={`Suggested change: ${label}`}>
+                      <span className="coach-speaker">Suggested change · {label}</span>
+                      {values[key] && <><p className="work-label">Current draft</p><p>{values[key]}</p></>}
+                      <p className="work-label">Proposed text</p><p>{suggestion || 'Remove the community question.'}</p>
+                      <button type="button" className="work-button secondary" disabled={pending || saving} onClick={() => {
+                        markStarted(); setValues(current => ({ ...current, [key]: suggestion }));
+                        setSuggestedChanges(current => current ? { ...current, [key]: null } : null);
+                      }}>Apply to draft</button>
+                      <button type="button" className="coach-reset" disabled={pending || saving}
+                        onClick={() => setSuggestedChanges(current => current ? { ...current, [key]: null } : null)}>Dismiss</button>
+                    </section>
+                  </MessageScroller.Item>;
+                })}
                 {pending && pendingMessage !== openingRequest && <MessageScroller.Item messageId={String(messages.length)} scrollAnchor className="coach-message" data-role="user"><span className="coach-speaker">{importing ? 'Social check' : 'You'}</span><p>{pendingMessage}</p></MessageScroller.Item>}
               </MessageScroller.Content>
             </MessageScroller.Viewport>
@@ -222,7 +236,7 @@ function Conversation(props: Props) {
           <button type="button" className="work-button secondary" disabled={!ready || (pending && !automatic)} onClick={() => setReviewing(true)}>Review & edit draft →</button>
         </div>
         <details className="coach-context"><summary>About this chat</summary>
-          {messages.length > 0 && <button type="button" className="coach-reset" disabled={pending || saving} onClick={() => { autoStarted.current = false; setOpeningReply(''); setMessages([]); setError(''); }}>New conversation, keep draft</button>}
+          {messages.length > 0 && <button type="button" className="coach-reset" disabled={pending || saving} onClick={() => { autoStarted.current = false; setOpeningReply(''); setSuggestedChanges(null); setMessages([]); setError(''); }}>New conversation, keep draft</button>}
           <p>To welcome you and reply, we share your project description and stage, this week’s goal, up to four previous updates, your draft and this conversation with Cerebras.</p>
           {historyCount !== null && <p>{historyCount ? `Using ${historyCount} previous ${historyCount === 1 ? 'update' : 'updates'} from this project.` : 'No previous updates yet. We’ll build from what you share here.'}</p>}
           <p>The conversation stays on this browser.</p>

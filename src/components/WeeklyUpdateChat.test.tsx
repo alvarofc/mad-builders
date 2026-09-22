@@ -115,6 +115,8 @@ it('keeps a failed message, retries once, updates the draft and requires a separ
   expect(container.textContent).toContain('What surprised you?');
   expect(container.querySelector('[data-message-id="0"]')!.getAttribute('data-scroll-anchor')).toBe('true');
   expect(container.querySelector('[data-message-id="1"]')!.getAttribute('data-scroll-anchor')).toBe('false');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: '', nextPromise: '' });
+  await click('Apply to draft');
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I spoke to three café owners.', nextPromise: '' });
   expect(submit).not.toHaveBeenCalled();
   await click('Review & edit draft →');
@@ -175,6 +177,9 @@ it('preserves catch-up goals and can reset the conversation without discarding t
   await act(async () => root.render(<WeeklyUpdateChat {...props} canSetNextPromise={false} initialValues={{ ...initialValues, nextPromise: 'Previously saved goal' }} />));
   await type('.coach-composer textarea', 'I tested the counter.');
   await click('Send ↑');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: '', nextPromise: 'Previously saved goal' });
+  expect(container.querySelector('[aria-label="Suggested change: Next week’s goal"]')).toBeNull();
+  await click('Apply to draft');
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'I tested the counter.', nextPromise: 'Previously saved goal' });
   await click('New conversation, keep draft');
   expect(fetch).toHaveBeenCalledTimes(2);
@@ -294,6 +299,8 @@ it('imports on demand, keeps unsent notes, shows sources during review, and neve
   expect(container.textContent).toContain('Company LinkedIn unavailable');
   expect(JSON.parse(localStorage.getItem(`${props.draftKey}:chat:u1`)!).socialPosts).toEqual(posts);
   expect(submit).not.toHaveBeenCalled();
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: '' });
+  await click('Add to draft');
   await click('Use as proof link');
   await click('Review & edit draft →');
   expect(container.querySelector('.coach-socials')!.closest('[hidden]')).toBeNull();
@@ -302,13 +309,15 @@ it('imports on demand, keeps unsent notes, shows sources during review, and neve
   expect(container.querySelector<HTMLInputElement>('input[name="proofUrl"]')!.value).toBe(posts[0].url);
 });
 
-it('checks socials automatically once per day and fills an empty draft without publishing or changing goals', async () => {
+it('checks socials automatically once per day and requires acceptance even for an empty draft', async () => {
   const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reply: 'I found a relevant launch.',
     changes: { summary: 'We launched the café beta.', nextPromise: 'Unapproved goal', feedbackRequest: 'Unapproved question' }, socialPosts: [], socialAudience: [], socialWarnings: [] }) });
   vi.stubGlobal('fetch', fetch);
   await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled socialVersion="accounts-v1" />));
   expect(fetch).toHaveBeenCalledTimes(1);
   expect(JSON.parse(fetch.mock.calls[0][1].body).includeSocialPosts).toBe(true);
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: '', nextPromise: '', feedbackRequest: '', status: '' });
+  await click('Add to draft');
   expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'We launched the café beta.', nextPromise: '', feedbackRequest: '', status: '' });
   expect(submit).not.toHaveBeenCalled();
   await act(async () => root.render(<div />));
@@ -366,4 +375,30 @@ it('retries a failed welcome without repeating the social check or losing unsent
   await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled />));
   expect(fetch).toHaveBeenCalledTimes(2);
   expect(container.querySelector('.coach-social-status')!.getAttribute('data-state')).toBe('error');
+});
+
+it('persists proposed edits, applies each field only on acceptance and dismisses without losing manual edits', async () => {
+  const saved = { ...initialValues, summary: 'My original notes.', nextPromise: 'My existing goal', feedbackRequest: 'My question?' };
+  localStorage.setItem(props.draftKey, JSON.stringify(saved));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reply: 'Here are some options.',
+    changes: { summary: 'Suggested replacement.', nextPromise: 'Test with one owner', feedbackRequest: '' } }) }));
+  await mount();
+  await type('.coach-composer textarea', 'What do you think?');
+  await click('Send ↑');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toEqual(saved);
+  await act(async () => root.render(<div />));
+  await mount();
+  expect(container.querySelectorAll('[aria-label^="Suggested change:"]')).toHaveLength(3);
+  await click('Review & edit draft →');
+  await type('textarea[name="summary"]', 'My newer manual notes.');
+  await click('Back to chat');
+  const summary = container.querySelector('[aria-label="Suggested change: This week"]')!;
+  expect(summary.textContent).toContain('My newer manual notes.');
+  await act(async () => (summary.querySelector('.coach-reset') as HTMLButtonElement).click());
+  await click('Apply to draft');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'My newer manual notes.', nextPromise: 'Test with one owner', feedbackRequest: 'My question?' });
+  await click('Apply to draft');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!).feedbackRequest).toBe('');
+  expect(container.querySelectorAll('[aria-label^="Suggested change:"]')).toHaveLength(0);
+  expect(submit).not.toHaveBeenCalled();
 });
