@@ -46,7 +46,7 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
       .innerJoin(week, eq(result.weekId, week.id)).innerJoin(commitment, eq(result.commitmentId, commitment.id))
       .where(and(eq(result.projectId, project.id), lt(week.startsAt, selectedWeek.startsAt)))
       .orderBy(desc(week.startsAt)).limit(4);
-    let social: Awaited<ReturnType<typeof gatherSocialContext>> | undefined;
+    let social: Awaited<ReturnType<typeof gatherSocialContext>>;
     if (body.includeSocialPosts) {
       if (!(await allowWrite(request, locals.user.id, 'social-import', 2))) return reply({ error: 'Give it a minute before checking social activity again.' }, 429);
       const personal = await getUserSocialLinks(locals.user.id);
@@ -55,28 +55,37 @@ export const POST: APIRoute = async ({ request, locals, url }) => {
       const relevant = await cachedSocialRequest('review-v1', [locals.user.id, project.id, selectedWeek.weekStartDate, reviewProject, pledge?.promise, body.draft.summary, previousUpdates, social.posts, social.audience, import.meta.env.CEREBRAS_MODEL], () => reviewSocialContext({ name: project.projectName, description: project.bio, website: project.projectUrl },
         pledge?.promise ?? '', body.draft.summary, previousUpdates, social!), now);
       social = { ...social, ...relevant };
-      if (!social.posts.length && !social.audience.length) return reply({
+      if (!body.opening && !social.posts.length && !social.audience.length) return reply({
         reply: !social.accountCount ? 'Add your LinkedIn or X accounts in settings to use social activity.'
           : social.warnings.length ? 'Some social activity was unavailable. I found nothing relevant to add from what I could check.'
           : 'I found no new social activity clearly relevant to this update. What else moved forward this week?',
         changes: { summary: null, nextPromise: null, feedbackRequest: null },
-        socialPosts: [], socialAudience: [], socialWarnings: social.warnings, historyCount: previousUpdates.length,
+        socialPosts: [], socialAudience: [], socialWarnings: social.warnings, socialAccountCount: social.accountCount, historyCount: previousUpdates.length,
       });
+    } else {
+      const personal = await getUserSocialLinks(locals.user.id);
+      social = await gatherSocialContext(locals.user.id, project.id, personal, project.socialLinks ?? {}, selectedWeek.startsAt, now, selectedWeek.submissionClosesAt, false, true);
     }
     const coachContext = {
       project: { name: project.projectName, description: project.bio, stage: project.projectStage, website: project.projectUrl },
       week: selectedWeek.weekStartDate, goal: pledge?.promise ?? '', nextWeek: nextWeek?.weekStartDate ?? null,
       canSetNextGoal, existingNextGoal: nextGoal?.promise ?? '', previousUpdates,
-      ...(social ? { socialPosts: social.posts, socialAudience: social.audience, socialOnly: true } : {}),
+      socialPosts: social.posts, socialAudience: social.audience, socialWarnings: social.warnings,
+      socialAccountCount: social.accountCount, socialOnly: Boolean(body.includeSocialPosts && !body.opening),
+      ...(body.opening ? { opening: true } : {}),
+      ...(body.openingReply ? { openingReply: body.openingReply } : {}),
     };
-    const generate = () => chatWithWeeklyCoach(coachContext, social ? [{ role: 'user', content: 'Suggest relevant new social evidence for this draft.' }] : body.messages, body.draft);
-    const response = social
-      ? await cachedSocialRequest('social-draft-v1', [locals.user.id, project.id, coachContext, body.draft, import.meta.env.CEREBRAS_MODEL], generate, now)
+    const generate = () => chatWithWeeklyCoach(coachContext, body.opening
+      ? [{ role: 'user', content: 'Help me start my weekly check-in using the context already available.' }]
+      : body.includeSocialPosts ? [{ role: 'user', content: 'Suggest relevant new social evidence for this draft.' }] : body.messages, body.draft);
+    const response = body.includeSocialPosts || body.opening
+      ? await cachedSocialRequest(body.opening ? 'coach-opening-v1' : 'social-draft-v1', [locals.user.id, project.id, coachContext, body.draft, import.meta.env.CEREBRAS_MODEL], generate, now)
       : await generate();
+    if (body.opening) response.changes = { summary: null, nextPromise: null, feedbackRequest: null };
     // Importing evidence is not agreement to a new goal.
-    if (social) { response.changes.nextPromise = null; response.changes.feedbackRequest = null; }
+    if (body.includeSocialPosts) { response.changes.nextPromise = null; response.changes.feedbackRequest = null; }
     return reply({ ...response, historyCount: previousUpdates.length,
-      ...(social ? { socialPosts: social.posts, socialAudience: social.audience, socialWarnings: social.warnings } : {}),
+      socialPosts: social.posts, socialAudience: social.audience, socialWarnings: social.warnings, socialAccountCount: social.accountCount,
     });
   } catch {
     return reply({ error: 'Could not reply just now. Retry your message or continue editing the draft.' }, 502);

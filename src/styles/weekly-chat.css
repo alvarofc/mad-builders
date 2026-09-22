@@ -26,6 +26,11 @@
 .coach-context summary { cursor: pointer; }
 .coach-context p { margin: 8px 0; }
 .coach-socials { flex-shrink: 0; }
+.coach-social-status { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font-size: 11px; }
+.coach-status-dot { width: 7px; height: 7px; border: 1px solid currentColor; border-radius: 50%; flex-shrink: 0; }
+.coach-social-status[data-state="ok"] { color: var(--green); }
+.coach-social-status[data-state="error"] { color: var(--status-error); }
+.coach-social-status:is([data-state="ok"], [data-state="error"]) .coach-status-dot { background: currentColor; }
 .coach-socials[open] { max-height: 35dvh; overflow-y: auto; }
 .coach-source { border-top: 1px solid var(--green-line); padding-block: 12px; overflow-wrap: anywhere; }
 .coach-source p { white-space: pre-wrap; }

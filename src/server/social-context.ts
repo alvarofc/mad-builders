@@ -54,7 +54,7 @@ export function socialEvidence(snapshots: SocialSnapshot[], start: Date, now: Da
   return { posts: [...posts.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 20), audience: audience.slice(0, 4) };
 }
 
-export async function gatherSocialContext(userId: string, projectId: string, personal: SocialLinks, company: SocialLinks, start: Date, now: Date, measurementClosesAt?: Date, refresh = false) {
+export async function gatherSocialContext(userId: string, projectId: string, personal: SocialLinks, company: SocialLinks, start: Date, now: Date, measurementClosesAt?: Date, refresh = false, cachedOnly = false) {
   const accounts = socialAccounts(personal, company);
   const warnings: string[] = [];
   const snapshots: SocialSnapshot[] = [];
@@ -68,7 +68,7 @@ export async function gatherSocialContext(userId: string, projectId: string, per
       or(eq(socialSnapshot.observedOn, day), and(gte(socialSnapshot.observedOn, firstDay), lte(socialSnapshot.observedOn, lastDay))),
     )).orderBy(desc(socialSnapshot.observedOn)).limit(32);
     let current = history.find(row => row.payload.observedAt.startsWith(day))?.payload;
-    if (!current || refresh) {
+    if (!cachedOnly && (!current || refresh)) {
       try {
         current = await cachedSocialRequest(refresh ? 'provider-refresh-v1' : 'provider-v1', [source.platform, source.account.toLowerCase()], () => fetchSocialAccount(source, now), now);
         await db.insert(socialSnapshot).values({ userId, projectId, account: source.account, observedOn: day, payload: current })

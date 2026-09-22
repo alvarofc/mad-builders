@@ -14,10 +14,84 @@ const props = { userId: 'u1', projectId: 'p1', projectName: 'Stock', draftKey: '
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   localStorage.clear(); submit.mockReset();
+  // Most cases resume an existing welcome and exercise the subsequent chat.
+  localStorage.setItem(`${props.draftKey}:chat:u1`, JSON.stringify({ messages: [], openingReply: 'Your goal: Interview three owners. What did you learn?' }));
   container = document.createElement('div'); document.body.append(container); root = createRoot(container);
 });
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); });
 const mount = async () => { await act(async () => root.render(<WeeklyUpdateChat {...props} />)); };
+it.each([
+  { accountCount: 1, warnings: [], ok: true, state: 'ok', label: 'Last check succeeded' },
+  { accountCount: 1, warnings: ['LinkedIn unavailable'], ok: true, state: 'error', label: 'Check incomplete' },
+  { accountCount: 0, warnings: [], ok: true, state: 'unlinked', label: 'No accounts connected' },
+  { accountCount: 1, warnings: [], ok: false, state: 'error', label: 'Check incomplete' },
+])('shows accurate social fetch status: $state ($ok, $warnings)', async ({ accountCount, warnings, ok, state, label }) => {
+  let finish!: (value: unknown) => void;
+  vi.stubGlobal('fetch', vi.fn().mockImplementation(() => new Promise(resolve => { finish = resolve; })));
+  await mount();
+  const status = () => container.querySelector('.coach-social-status')!;
+  expect(status().getAttribute('data-state')).toBe('idle');
+  await click('Refresh social activity');
+  expect(status().getAttribute('data-state')).toBe('loading');
+  await act(async () => finish({ ok, json: async () => ({ reply: 'No new relevant posts.', error: 'Could not check social activity.',
+    changes: { summary: null, nextPromise: null, feedbackRequest: null }, socialPosts: [], socialAudience: [], socialWarnings: warnings, socialAccountCount: accountCount }) }));
+  expect(status().getAttribute('data-state')).toBe(state);
+  expect(status().textContent).toContain(label);
+  expect(status().getAttribute('role')).toBe('status');
+  await act(async () => root.render(<div />));
+  await mount();
+  expect(status().getAttribute('data-state')).toBe(state);
+});
+
+it('does not show a stale successful social check as green', async () => {
+  localStorage.setItem(`${props.draftKey}:chat:u1`, JSON.stringify({ messages: [], openingReply: 'Welcome back.', socialStatus: 'ok', socialCheckedKey: 'old-accounts:2020-01-01' }));
+  await mount();
+  expect(container.querySelector('.coach-social-status')!.getAttribute('data-state')).toBe('idle');
+});
+
+it('generates a welcome from restored context, preserves edits and reuses it on reload', async () => {
+  localStorage.removeItem(`${props.draftKey}:chat:u1`);
+  localStorage.setItem(props.draftKey, JSON.stringify({ ...initialValues, summary: 'I interviewed two owners.' }));
+  let finish!: (value: unknown) => void;
+  const fetch = vi.fn().mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  vi.stubGlobal('fetch', fetch);
+  await mount();
+  expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({ opening: true, draft: { summary: 'I interviewed two owners.' } });
+  expect(container.textContent).toContain('Let me catch up on your week');
+  await type('.coach-composer textarea', 'They both count stock on paper.');
+  await click('Review & edit draft →');
+  await type('textarea[name="summary"]', 'My corrected notes.');
+  await act(async () => finish({ ok: true, json: async () => ({ reply: 'Two café conversations already. What surprised you?',
+    changes: { summary: 'Do not replace notes.', nextPromise: 'Do not set a goal', feedbackRequest: 'Do not add this' } }) }));
+  await click('Back to chat');
+  expect(container.querySelector('[data-message-id="welcome"]')!.textContent).toContain('Two café conversations already.');
+  expect(container.querySelector<HTMLTextAreaElement>('.coach-composer textarea')!.value).toBe('They both count stock on paper.');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'My corrected notes.', nextPromise: '', feedbackRequest: '' });
+  expect(JSON.parse(localStorage.getItem(`${props.draftKey}:chat:u1`)!)).toMatchObject({ messages: [], openingReply: 'Two café conversations already. What surprised you?' });
+  await act(async () => root.render(<div />));
+  await mount();
+  expect(fetch).toHaveBeenCalledOnce();
+  fetch.mockResolvedValue({ ok: true, json: async () => ({ reply: 'That sounds useful.', changes: { summary: null, nextPromise: null, feedbackRequest: null } }) });
+  await click('Send ↑');
+  expect(JSON.parse(fetch.mock.calls[1][1].body)).toMatchObject({ openingReply: 'Two café conversations already. What surprised you?' });
+});
+
+it('uses the automatic social review to generate one welcome with sources and no synthetic chat turns', async () => {
+  localStorage.removeItem(`${props.draftKey}:chat:u1`);
+  const posts = [{ platform: 'x', scope: 'personal', account: 'https://x.com/alice', text: 'Released the beta.',
+    url: 'https://x.com/alice/status/1', publishedAt: '2026-09-15T10:00:00Z' }];
+  const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reply: 'Your post says the café beta is out. What have the first users told you?',
+    changes: { summary: null, nextPromise: null, feedbackRequest: null }, socialPosts: posts, socialAudience: [], socialWarnings: [] }) });
+  vi.stubGlobal('fetch', fetch);
+  await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled />));
+  expect(fetch).toHaveBeenCalledOnce();
+  expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({ opening: true, includeSocialPosts: true });
+  expect(container.querySelector('[data-message-id="welcome"]')!.textContent).toContain('Your post says the café beta is out.');
+  expect(container.querySelector('[data-message-id="0"]')).toBeNull();
+  expect(container.querySelector('.coach-source a')!.getAttribute('href')).toBe(posts[0].url);
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toEqual(initialValues);
+});
+
 async function type(selector: string, value: string) {
   const input = container.querySelector<HTMLTextAreaElement>(selector)!;
   await act(async () => { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); });

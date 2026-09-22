@@ -9,6 +9,7 @@ import '../styles/weekly-chat.css';
 
 type Props = WeeklyUpdateProps & { projectName: string; userId: string; socialEnabled?: boolean; socialVersion?: string };
 const socialRequest = 'Review my social activity for this project and week. Suggest only relevant new facts that are not already in my draft.';
+const openingRequest = 'Help me start my weekly check-in using the context already available.';
 
 export default function WeeklyUpdateChat(props: Props) {
   if (!props.improveEnabled) return <WeeklyUpdateForm {...props} />;
@@ -20,6 +21,7 @@ function Conversation(props: Props) {
   const chatKey = `${props.draftKey}:chat:${props.userId}`;
   const [values, setValues] = useState(props.initialValues);
   const [messages, setMessages] = useState<CoachMessage[]>([]);
+  const [openingReply, setOpeningReply] = useState('');
   const [input, setInput] = useState('');
   const [ready, setReady] = useState(false);
   const [pending, setPending] = useState(false);
@@ -36,6 +38,7 @@ function Conversation(props: Props) {
   const [automatic, setAutomatic] = useState(false);
   const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
   const [socialWarnings, setSocialWarnings] = useState<string[]>([]);
+  const [socialStatus, setSocialStatus] = useState<'idle' | 'ok' | 'error' | 'unlinked'>('idle');
   const [pendingMessage, setPendingMessage] = useState('');
   const [importing, setImporting] = useState(false);
   const startedAt = useRef(Date.now());
@@ -55,6 +58,7 @@ function Conversation(props: Props) {
       const parsed = conversationSchema.safeParse(chat?.messages);
       if (parsed.success && parsed.data.every((message, i) => message.role === (i % 2 ? 'assistant' : 'user')) && parsed.data.length % 2 === 0) {
         setMessages(parsed.data);
+        if (typeof chat.openingReply === 'string') setOpeningReply(chat.openingReply.slice(0, 3000));
         if (typeof chat.input === 'string') setInput(chat.input.slice(0, 3000));
         const sources = socialPostsSchema.safeParse(chat.socialPosts);
         if (sources.success) setSocialPosts(sources.data);
@@ -62,6 +66,8 @@ function Conversation(props: Props) {
         if (audience.success) setSocialAudience(audience.data);
         if (typeof chat.socialSuggestion === 'string') setSocialSuggestion(chat.socialSuggestion.slice(0, 1000));
         if (typeof chat.socialCheckedKey === 'string') setSocialCheckedKey(chat.socialCheckedKey);
+        if (chat.socialStatus === 'error' || chat.socialStatus === 'unlinked') setSocialStatus(chat.socialStatus);
+        else if (chat.socialStatus === 'ok' && chat.socialCheckedKey === checkKey) setSocialStatus('ok');
       }
     } catch { setDraftStatus('Browser saving is unavailable. Keep this tab open.'); }
     setReady(true);
@@ -73,27 +79,30 @@ function Conversation(props: Props) {
     if (!ready) return;
     try {
       localStorage.setItem(props.draftKey, JSON.stringify(values));
-      localStorage.setItem(chatKey, JSON.stringify({ messages, input, socialPosts, socialAudience, socialSuggestion, socialCheckedKey }));
+      localStorage.setItem(chatKey, JSON.stringify({ messages, openingReply, input, socialPosts, socialAudience, socialSuggestion, socialCheckedKey, socialStatus }));
       setDraftStatus('Draft and conversation saved on this browser.');
     } catch { setDraftStatus('Could not save on this browser. Keep this tab open.'); }
-  }, [ready, values, messages, input, socialPosts, socialAudience, socialSuggestion, socialCheckedKey]);
+  }, [ready, values, messages, openingReply, input, socialPosts, socialAudience, socialSuggestion, socialCheckedKey, socialStatus]);
 
   useEffect(() => { if (reviewing) reviewRef.current?.focus(); else if (ready) inputRef.current?.focus(); }, [reviewing]);
 
   const checkKey = `${props.socialVersion ?? ''}:${new Date().toISOString().slice(0, 10)}`;
   useEffect(() => {
-    if (!ready || !props.socialEnabled || autoStarted.current || socialCheckedKey === checkKey || messages.length >= 40) return;
+    if (!ready || autoStarted.current || messages.length >= 40) return;
+    const opening = !openingReply && !messages.length;
+    const checkSocial = Boolean(props.socialEnabled && (opening || socialCheckedKey !== checkKey));
+    if (!opening && !checkSocial) return;
     autoStarted.current = true;
-    void send(true, true);
-  }, [ready, props.socialEnabled, props.socialVersion]);
+    void send(checkSocial, true, false, opening);
+  }, [ready, props.socialEnabled, props.socialVersion, openingReply, messages.length]);
 
   function markStarted() {
     if (!tracked.current) { track('weekly_update_started'); tracked.current = true; }
   }
 
-  async function send(includeSocialPosts = false, automaticCheck = false, refreshSocialPosts = false) {
-    if (!ready || inFlight.current || saving || (!includeSocialPosts && !input.trim()) || messages.length >= 40) return;
-    const content = includeSocialPosts ? socialRequest : input.trim();
+  async function send(includeSocialPosts = false, automaticCheck = false, refreshSocialPosts = false, opening = false) {
+    if (!ready || inFlight.current || saving || (!opening && !includeSocialPosts && !input.trim()) || messages.length >= 40) return;
+    const content = opening ? openingRequest : includeSocialPosts ? socialRequest : input.trim();
     const next: CoachMessage[] = [...messages, { role: 'user', content }];
     const revisionAtStart = summaryRevision.current;
     inFlight.current = true;
@@ -111,6 +120,7 @@ function Conversation(props: Props) {
         method: 'POST', headers: { 'content-type': 'application/json' }, signal: controller.signal,
         body: JSON.stringify({ projectId: props.projectId, weekId: props.weekId, messages: next,
           draft: { summary: values.summary, nextPromise: values.nextPromise, feedbackRequest: values.feedbackRequest },
+          ...(opening ? { opening: true } : openingReply ? { openingReply } : {}),
           ...(includeSocialPosts ? { includeSocialPosts: true, ...(refreshSocialPosts ? { refreshSocialPosts: true } : {}) } : {}) }),
       });
       const data = await response.json();
@@ -118,28 +128,32 @@ function Conversation(props: Props) {
       const answer = coachResponseSchema.parse(data);
       const sources = includeSocialPosts ? socialPostsSchema.parse(data.socialPosts ?? []) : undefined;
       const audience = includeSocialPosts ? audienceChangesSchema.parse(data.socialAudience ?? []) : undefined;
-      setMessages([...next, { role: 'assistant', content: answer.reply }]);
-      if (!includeSocialPosts) setInput('');
+      if (opening) setOpeningReply(answer.reply);
+      else setMessages([...next, { role: 'assistant', content: answer.reply }]);
+      if (!includeSocialPosts && !opening) setInput('');
       if (sources) {
         setSocialPosts(current => [...new Map([...current, ...sources].map(post => [post.url, post])).values()].slice(-20));
         const warnings = Array.isArray(data.socialWarnings) ? data.socialWarnings.filter((warning: unknown) => typeof warning === 'string').slice(0, 8) : [];
         setSocialWarnings(warnings);
         setSocialAudience(audience ?? []);
-        if (!warnings.length) setSocialCheckedKey(checkKey);
+        setSocialStatus(warnings.length ? 'error' : data.socialAccountCount === 0 ? 'unlinked' : data.socialAccountCount > 0 ? 'ok' : 'idle');
+        setSocialCheckedKey(!warnings.length && data.socialAccountCount !== 0 ? checkKey : '');
       }
-      if (includeSocialPosts) {
+      // A welcome is conversation, never permission to edit the draft.
+      if (!opening && includeSocialPosts) {
         const suggestion = answer.changes.summary;
         if (suggestion) {
           setSocialSuggestion(suggestion);
           // Background evidence must never replace an existing or newly edited draft.
           setValues(current => current.summary.trim() || props.editing || summaryRevision.current !== revisionAtStart ? current : { ...current, summary: suggestion });
         }
-      } else {
+      } else if (!opening) {
         setValues(current => ({ ...current, ...Object.fromEntries(Object.entries(answer.changes)
           .filter(([key, value]) => value !== null && (key !== 'nextPromise' || props.canSetNextPromise))) }));
       }
       if (typeof data.historyCount === 'number') setHistoryCount(data.historyCount);
     } catch (error) {
+      if (includeSocialPosts) { setSocialStatus('error'); setSocialCheckedKey(''); }
       setError(error instanceof Error && error.name !== 'AbortError' && error.name !== 'ZodError'
         ? error.message : 'The reply did not arrive. Your message and draft are still here. Try again.');
     } finally {
@@ -153,9 +167,15 @@ function Conversation(props: Props) {
     }
   }
 
-  const welcome = props.promise
-    ? `Your goal this week: ${props.promise}\nWhat happened? Tell me what moved forward, what got stuck, or what surprised you.`
-    : `Let’s look at this week for ${props.projectName}. What moved forward, and what did you learn? Rough notes are fine.`;
+  const welcome = openingReply || (values.summary.trim()
+    ? `Welcome back. Your draft is here, so we’ve got a head start. What’s worth adding or changing?`
+    : props.promise
+      ? `The plan was: “${props.promise}”. How did reality compare? Rough notes welcome.`
+      : socialPosts.length || socialAudience.length
+        ? `We’ve got some clues from your socials. What’s the story behind this week’s work?`
+        : `What’s the story with ${props.projectName} this week? Small wins and messy bits count too.`);
+  const socialCheckState = importing ? 'loading' : socialStatus === 'ok' && socialCheckedKey !== checkKey ? 'idle' : socialStatus;
+  const socialCheckLabel = { idle: 'Not checked yet', loading: 'Checking…', ok: 'Last check succeeded', error: 'Check incomplete · retry', unlinked: 'No accounts connected' }[socialCheckState];
 
   function field(name: string, label: string, max: number, required = false) {
     return <label className="work-field" key={name}>
@@ -174,12 +194,12 @@ function Conversation(props: Props) {
             <MessageScroller.Viewport className="coach-viewport" aria-label="Conversation">
               <MessageScroller.Content className="coach-messages">
                 <MessageScroller.Item messageId="welcome" className="coach-message" data-role="assistant">
-                  <span className="coach-speaker">mad.builders · AI coach</span><p>{welcome}</p>
+                  <span className="coach-speaker">mad.builders · AI coach</span><p>{pending && automatic && !openingReply && !messages.length ? 'Let me catch up on your week…' : welcome}</p>
                 </MessageScroller.Item>
                 {messages.map((message, index) => <MessageScroller.Item key={index} messageId={String(index)} scrollAnchor={message.role === 'user'} className="coach-message" data-role={message.role}>
                   <span className="coach-speaker">{message.content === socialRequest ? 'Social check' : message.role === 'user' ? 'You' : 'mad.builders'}</span><p>{message.content}</p>
                 </MessageScroller.Item>)}
-                {pending && <MessageScroller.Item messageId={String(messages.length)} scrollAnchor className="coach-message" data-role="user"><span className="coach-speaker">{importing ? 'Social check' : 'You'}</span><p>{pendingMessage}</p></MessageScroller.Item>}
+                {pending && pendingMessage !== openingRequest && <MessageScroller.Item messageId={String(messages.length)} scrollAnchor className="coach-message" data-role="user"><span className="coach-speaker">{importing ? 'Social check' : 'You'}</span><p>{pendingMessage}</p></MessageScroller.Item>}
               </MessageScroller.Content>
             </MessageScroller.Viewport>
             <MessageScroller.Button className="coach-scroll-button" direction="end">Latest message ↓</MessageScroller.Button>
@@ -189,7 +209,7 @@ function Conversation(props: Props) {
         <form className="coach-composer" onSubmit={event => { event.preventDefault(); void send(); }}>
           <label htmlFor={`${id}-message`} className="visually-hidden">Your message</label>
           <textarea ref={inputRef} id={`${id}-message`} value={input} onChange={event => setInput(event.target.value)}
-            placeholder="What did you try, ship, or learn?" maxLength={3000} rows={2} disabled={!ready || (pending && !automatic) || saving}
+            placeholder="Ask about your project, talk through an idea, or share progress…" maxLength={3000} rows={2} disabled={!ready || (pending && !automatic) || saving}
             onKeyDown={event => { if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }} />
           <div className="coach-composer-actions"><small>Chat first. Review before publishing.</small><button className="work-button" type="submit" disabled={!ready || pending || saving || !input.trim() || messages.length >= 40}>Send ↑</button></div>
         </form>
@@ -200,7 +220,7 @@ function Conversation(props: Props) {
         </div>
         <details className="coach-context"><summary>About this chat</summary>
           {messages.length > 0 && <button type="button" className="coach-reset" disabled={pending || saving} onClick={() => { setMessages([]); setError(''); }}>New conversation, keep draft</button>}
-          <p>When you send a message, we share your project description and stage, this week’s goal, up to four previous updates, your draft and this conversation with Cerebras.</p>
+          <p>To welcome you and reply, we share your project description and stage, this week’s goal, up to four previous updates, your draft and this conversation with Cerebras.</p>
           {historyCount !== null && <p>{historyCount ? `Using ${historyCount} previous ${historyCount === 1 ? 'update' : 'updates'} from this project.` : 'No previous updates yet. We’ll build from what you share here.'}</p>}
           <p>The conversation stays on this browser.</p>
         </details>
@@ -245,7 +265,7 @@ function Conversation(props: Props) {
         </>}
       </aside>
       <details className="coach-context coach-socials">
-        <summary>Social context{socialPosts.length ? ` · ${socialPosts.length} sources` : ''}</summary>
+        <summary>Social context{socialPosts.length ? ` · ${socialPosts.length} sources` : ''}<span className="coach-social-status" data-state={socialCheckState} role="status"><span className="coach-status-dot" aria-hidden="true" />{socialCheckLabel}</span></summary>
         <p>When you open an update, we check your saved LinkedIn and X accounts for relevant progress. We share those URLs with HarvestAPI or TwitterAPI.io and send posts and metrics to Cerebras for review. You decide what to publish.</p>
         <p>We read one recent page per account and reuse daily snapshots. Older or busy weeks may be incomplete. Follower comparisons start after two dated observations; interactions are totals at the time checked. <a href="/settings#socials">Manage social links</a>.</p>
         <button type="button" className="work-button secondary" disabled={!ready || pending || saving || messages.length >= 40}
