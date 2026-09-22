@@ -36,7 +36,7 @@ it('keeps concurrent request timings separate and marks subsequent requests warm
 });
 
 it('loads the same session for app routes with or without trailing slashes', async () => {
-  for (const path of ['/build', '/vote', '/leaderboard', '/settings', '/api/review', '/api/commitment']) {
+  for (const path of ['/build', '/vote', '/leaderboard', '/settings', '/api/review', '/api/commitment', '/api/socials']) {
     for (const suffix of ['', '/']) {
       const session = { user: { id: 'builder' }, session: { id: 'session' } };
       const getSession = vi.fn().mockResolvedValue({ response: session, headers: new Headers() });

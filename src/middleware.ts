@@ -36,6 +36,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     path === '/api/moderation' ||
     path === '/api/commitment' ||
     path === '/api/project' ||
+    path === '/api/socials' ||
     path.startsWith('/api/result/') ||
     path === '/api/review';
 

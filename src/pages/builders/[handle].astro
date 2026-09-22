@@ -2,9 +2,11 @@
 import ProductLayout from '../../layouts/ProductLayout.astro';
 import ShareButton from '../../components/ShareButton.astro';
 import ProjectMark from '../../components/ProjectMark.astro';
+import { socialPlatforms } from '../../lib/socials';
 import { absoluteUrl } from '../../config/seo';
 import {
   getProfileByUserId,
+  getProjectSocialOwners,
   getPublicProjectActivity,
   getPublicProfileByHandle,
   listPublicResultsByProjectId,
@@ -17,6 +19,7 @@ const currentUser = Astro.locals.user;
 const handle = Astro.params.handle ?? '';
 const abuseEmail = import.meta.env.ABUSE_REPORT_EMAIL;
 const builder = await Astro.locals.timing.measure('builder', () => getPublicProfileByHandle(handle));
+const socialOwners = builder ? await getProjectSocialOwners(builder.id) : [];
 await Astro.locals.timing.measure('finalize', () => finalizeLatestClosedWeek());
 const results = builder ? await Astro.locals.timing.measure('results', () => listPublicResultsByProjectId(builder.id)) : [];
 const activity = builder ? await Astro.locals.timing.measure('activity', () => getPublicProjectActivity(builder.id)) : null;
@@ -71,6 +74,12 @@ const proofLabel = (status: string) =>
               <p class="builder-handle mono">by {builder.displayName} · @{builder.handle}{builder.location ? ` · ${builder.location}` : ''}</p>
               {builder.bio && <p class="builder-bio">{builder.bio}</p>}
               {builder.projectUrl && <p class="project-link"><a href={builder.projectUrl} target="_blank" rel="noopener noreferrer nofollow">visit project ↗</a></p>}
+              {[{ name: builder.projectName, links: builder.socialLinks }, ...socialOwners].map(owner =>
+                Object.keys(owner.links ?? {}).length > 0 && <div class="project-link">
+                  <span>{owner.name}: </span>
+                  {socialPlatforms.filter(({ key }) => owner.links?.[key]).map(({ key, label }) => <a class="social-link" href={owner.links[key]} target="_blank" rel="noopener noreferrer nofollow">{label} ↗</a>)}
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -138,3 +147,7 @@ const proofLabel = (status: string) =>
     )}
   </div>
 </ProductLayout>
+
+<style>
+  .social-link { display: inline-block; margin-inline-end: 1rem; }
+</style>

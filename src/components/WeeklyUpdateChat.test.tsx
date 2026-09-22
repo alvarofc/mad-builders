@@ -203,3 +203,68 @@ it('waits for saved history before opening the message scroller and does not aut
   expect(container.querySelector('[data-message-id="2"]')!.textContent).toContain('Last turn');
   expect(document.activeElement).not.toBe(container.querySelector('.coach-composer textarea'));
 });
+
+it('imports on demand, keeps unsent notes, shows sources during review, and never publishes automatically', async () => {
+  const posts = [{ platform: 'x', scope: 'personal', account: 'https://x.com/alice', text: 'Released the beta.', url: 'https://x.com/alice/status/1', publishedAt: '2026-09-15T10:00:00Z' }];
+  const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reply: 'Check the draft.', changes: { summary: 'I released the beta.', nextPromise: null, feedbackRequest: null }, socialPosts: posts, socialWarnings: ['Company LinkedIn unavailable'] }) });
+  vi.stubGlobal('fetch', fetch);
+  await mount();
+  expect(fetch).not.toHaveBeenCalled();
+  await type('.coach-composer textarea', 'Keep my unsent notes.');
+  await click('Refresh social activity');
+  expect(JSON.parse(fetch.mock.calls.at(-1)![1].body).refreshSocialPosts).toBe(true);
+  expect(JSON.parse(fetch.mock.calls[0][1].body).includeSocialPosts).toBe(true);
+  expect(container.querySelector<HTMLTextAreaElement>('.coach-composer textarea')!.value).toBe('Keep my unsent notes.');
+  expect(container.querySelector('.coach-source a')!.getAttribute('href')).toBe(posts[0].url);
+  expect(container.textContent).toContain('Company LinkedIn unavailable');
+  expect(JSON.parse(localStorage.getItem(`${props.draftKey}:chat:u1`)!).socialPosts).toEqual(posts);
+  expect(submit).not.toHaveBeenCalled();
+  await click('Use as proof link');
+  await click('Review & edit draft →');
+  expect(container.querySelector('.coach-socials')!.closest('[hidden]')).toBeNull();
+  expect(container.querySelector<HTMLTextAreaElement>('textarea[name="summary"]')!.value).toBe('I released the beta.');
+  expect(container.querySelector<HTMLSelectElement>('select[name="status"]')!.value).toBe('');
+  expect(container.querySelector<HTMLInputElement>('input[name="proofUrl"]')!.value).toBe(posts[0].url);
+});
+
+it('checks socials automatically once per day and fills an empty draft without publishing or changing goals', async () => {
+  const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reply: 'I found a relevant launch.',
+    changes: { summary: 'We launched the café beta.', nextPromise: 'Unapproved goal', feedbackRequest: 'Unapproved question' }, socialPosts: [], socialAudience: [], socialWarnings: [] }) });
+  vi.stubGlobal('fetch', fetch);
+  await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled socialVersion="accounts-v1" />));
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(JSON.parse(fetch.mock.calls[0][1].body).includeSocialPosts).toBe(true);
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'We launched the café beta.', nextPromise: '', feedbackRequest: '', status: '' });
+  expect(submit).not.toHaveBeenCalled();
+  await act(async () => root.render(<div />));
+  await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled socialVersion="accounts-v1" />));
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(document.activeElement).not.toBe(container.querySelector('.coach-composer textarea'));
+});
+
+it('preserves restored notes during automatic review and appends only when the builder chooses', async () => {
+  localStorage.setItem(props.draftKey, JSON.stringify({ ...initialValues, summary: 'My saved work.' }));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reply: 'There is a relevant launch.',
+    changes: { summary: 'We launched the café beta.', nextPromise: null, feedbackRequest: null }, socialPosts: [], socialWarnings: [] }) }));
+  await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled />));
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'My saved work.' });
+  expect(container.textContent).toContain('Suggested addition');
+  await click('Add to draft');
+  expect(JSON.parse(localStorage.getItem(props.draftKey)!)).toMatchObject({ summary: 'My saved work.\n\nWe launched the café beta.' });
+  expect(submit).not.toHaveBeenCalled();
+});
+
+it('allows typing and reviewing during an automatic check and does not refill a field the builder cleared', async () => {
+  let finish!: (result: unknown) => void;
+  vi.stubGlobal('fetch', vi.fn().mockImplementation(() => new Promise(resolve => { finish = resolve; })));
+  await act(async () => root.render(<WeeklyUpdateChat {...props} socialEnabled />));
+  expect(container.querySelector<HTMLTextAreaElement>('.coach-composer textarea')!.disabled).toBe(false);
+  await type('.coach-composer textarea', 'Unsent context.');
+  await click('Review & edit draft →');
+  await type('textarea[name="summary"]', 'I am still deciding what to write.');
+  await type('textarea[name="summary"]', '');
+  await act(async () => finish({ ok: true, json: async () => ({ reply: 'A suggestion is ready.', changes: { summary: 'We launched the beta.', nextPromise: null, feedbackRequest: null }, socialPosts: [], socialWarnings: [] }) }));
+  expect(container.querySelector<HTMLTextAreaElement>('textarea[name="summary"]')!.value).toBe('');
+  expect(JSON.parse(localStorage.getItem(`${props.draftKey}:chat:u1`)!).input).toBe('Unsent context.');
+  expect(container.textContent).toContain('Suggested addition');
+});

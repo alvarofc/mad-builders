@@ -41,6 +41,7 @@ const publicColumns = {
   bio: project.bio,
   projectName: project.projectName,
   projectUrl: project.projectUrl,
+  socialLinks: project.socialLinks,
   logo: project.logo,
   projectStage: project.projectStage,
   image: sql<string | null>`null`,
@@ -53,6 +54,16 @@ export async function getProfileByUserId(userId: string, connection: Pick<typeof
     .innerJoin(projectOwner, eq(project.id, projectOwner.projectId))
     .where(and(eq(projectOwner.userId, userId), eq(projectOwner.active, true))).limit(1);
   return record?.project ?? null;
+}
+
+export async function getUserSocialLinks(userId: string) {
+  const [record] = await db.select({ links: user.socialLinks }).from(user).where(eq(user.id, userId)).limit(1);
+  return record?.links ?? {};
+}
+
+export async function getProjectSocialOwners(projectId: string) {
+  return db.select({ name: user.name, links: user.socialLinks }).from(projectOwner)
+    .innerJoin(user, eq(projectOwner.userId, user.id)).where(eq(projectOwner.projectId, projectId)).orderBy(asc(user.name));
 }
 
 export async function getPublicProfileByHandle(handle: string) {
