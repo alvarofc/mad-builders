@@ -20,7 +20,7 @@ Deploy this repository to Vercel with the build command `astro build`. `vercel.j
 ## Proof of work setup
 
 1. Copy `.env.example` to `.env` and fill in the two Supabase connection strings.
-2. Create a GitHub OAuth app. Its local callback is `http://localhost:4321/api/auth/callback/github` and its production callback is `https://mad.builders/api/auth/callback/github`.
+2. Create a GitHub OAuth app. Its local callback is `http://localhost:4321/api/auth/callback/github` and its production callback is `https://mad.builders/api/auth/callback/github`. Leave `BETTER_AUTH_URL` unset in production or set it to `https://mad.builders`, since it overrides that host.
 3. Generate a random `BETTER_AUTH_SECRET` with at least 32 characters.
 4. Add comma-separated numeric GitHub account IDs to `ORGANIZER_GITHUB_IDS` and set `ABUSE_REPORT_EMAIL`.
 5. Run `pnpm db:migrate` with the migration connection string.
