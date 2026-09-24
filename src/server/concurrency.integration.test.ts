@@ -670,6 +670,51 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
     expect((await db.select().from(week).where(eq(week.id, current.id)))[0].rankingStatus).toBe('unranked');
   });
 
+  it('pages back to earlier final weeks and falls back to the latest board for any other week', async () => {
+    const { targetWeek } = await votingFixture('closed');
+    await ensureWeekFinalized(targetWeek.id);
+    const ranked = await getLatestLeaderboard();
+    expect(ranked).toMatchObject({ week: { id: targetWeek.id }, archived: false, previousWeek: null, nextWeek: null });
+    // an unranked week in between must be skipped, and a week still running is not public yet
+    await db.insert(week).values({
+      weekStartDate: '2000-01-05',
+      startsAt: sql`now() - interval '50 minutes'`,
+      submissionClosesAt: sql`now() - interval '45 minutes'`,
+      votingClosesAt: sql`now() - interval '40 minutes'`,
+      rankingStatus: 'unranked', finalizedAt: sql`now()`,
+    });
+    const [latest] = await db.insert(week).values({
+      weekStartDate: '2000-01-10',
+      startsAt: sql`now() - interval '30 minutes'`,
+      submissionClosesAt: sql`now() - interval '20 minutes'`,
+      votingClosesAt: sql`now() - interval '10 minutes'`,
+      rankingStatus: 'final', finalizedAt: sql`now()`,
+    }).returning();
+    await db.insert(week).values({
+      weekStartDate: '2000-01-17',
+      startsAt: sql`now() - interval '5 minutes'`,
+      submissionClosesAt: sql`now() + interval '1 hour'`,
+      votingClosesAt: sql`now() + interval '2 hours'`,
+    });
+    expect(await getLatestLeaderboard()).toMatchObject({
+      week: { id: latest.id }, entries: [], archived: false, previousWeek: '2000-01-03', nextWeek: null,
+    });
+    for (const userId of [undefined, 'candidate-0']) {
+      expect(await getLatestLeaderboard(userId, 1, '2000-01-03')).toMatchObject({
+        week: { id: targetWeek.id }, entries: ranked!.entries, provisional: false, archived: true,
+        previousWeek: null, nextWeek: '2000-01-10',
+      });
+    }
+    expect(await getLatestLeaderboard(undefined, 2, '2000-01-03')).toMatchObject({
+      week: { id: targetWeek.id }, entries: [], page: 2, archived: true,
+    });
+    for (const requested of ['2000-01-05', '2000-01-17', '1999-12-27', '2000-1-3', '2000-02-30', '']) {
+      expect(await getLatestLeaderboard(undefined, 1, requested)).toMatchObject({
+        week: { id: latest.id }, archived: false, previousWeek: '2000-01-03',
+      });
+    }
+  });
+
   it.each(['profile', 'result'] as const)('removes provisional ranks below six candidates after hiding a %s, and restores them', async (kind) => {
     const { targetWeek, candidates } = await votingFixture('voting');
     for (let i = 0; i < 8; i++) {

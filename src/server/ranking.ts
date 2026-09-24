@@ -7,13 +7,14 @@ import {
   inArray,
   isNotNull,
   isNull,
+  lt,
   lte,
   sql,
 } from 'drizzle-orm';
 import { db, databaseConfigured } from './db';
 import { commitment, comparison, project, ranking, result, week } from './schema';
 import { getProfileByUserId, ownerNames } from './profiles';
-import { getDatabaseNow } from './weeks';
+import { getDatabaseNow, isCalendarDate } from './weeks';
 import { PAGE_SIZE, pageNumber } from './pagination';
 
 export type CandidateScore = {
@@ -528,7 +529,7 @@ async function getProvisionalLeaderboard(userId: string, now: Date, page: number
       ),
     );
   if (candidates.length < 6) {
-    return { week: { ...votingWeek, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const, page, hasNext: false, hasRanks: false };
+    return { week: { ...votingWeek, rankingStatus: 'unranked' }, now, entries: [], provisional: false as const, page, hasNext: false, hasRanks: false, publishedCount: candidates.length };
   }
   const related = await db.execute<{ project_id: string }>(sql`
     select distinct other.project_id from app_private.project_owner own
@@ -629,14 +630,83 @@ export async function getLiveWeek(userId?: string) {
   return { week: live, now, phase, published: Boolean(published) };
 }
 
-export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
+// the only weeks whose ranks are public: voting has closed and a rank was set
+const publicFinalWeek = (now: Date) => and(lte(week.votingClosesAt, now), eq(week.rankingStatus, 'final'));
+
+// Final weeks either side of the one on show, so the board can page back through
+// earlier results instead of only ever showing the latest.
+async function adjacentRankedWeeks(shown: { startsAt: Date }, now: Date) {
+  const [[previous], [next]] = await Promise.all([
+    db.select({ weekStartDate: week.weekStartDate }).from(week)
+      .where(and(publicFinalWeek(now), lt(week.startsAt, shown.startsAt)))
+      .orderBy(desc(week.startsAt)).limit(1),
+    db.select({ weekStartDate: week.weekStartDate }).from(week)
+      .where(and(publicFinalWeek(now), gt(week.startsAt, shown.startsAt)))
+      .orderBy(asc(week.startsAt)).limit(1),
+  ]);
+  return { previousWeek: previous?.weekStartDate ?? null, nextWeek: next?.weekStartDate ?? null };
+}
+
+async function finalEntries(weekId: number, page: number) {
+  return db
+    .select({
+      rank: ranking.rank,
+      wins: ranking.wins,
+      ties: ranking.ties,
+      decisions: ranking.decisions,
+      scoreNumerator: ranking.scoreNumerator,
+      scoreDenominator: ranking.scoreDenominator,
+      handle: project.handle,
+      displayName: ownerNames,
+      projectName: project.projectName,
+      projectUrl: project.projectUrl,
+      projectSentence: project.bio,
+      logo: project.logo,
+      promise: commitment.promise,
+      summary: result.summary,
+      weekStartDate: week.weekStartDate,
+    })
+    .from(ranking)
+    .innerJoin(result, eq(ranking.resultId, result.id))
+    .innerJoin(commitment, eq(result.commitmentId, commitment.id))
+    .innerJoin(project, eq(result.projectId, project.id))
+    .innerJoin(week, eq(ranking.weekId, week.id))
+    .where(
+      and(
+        eq(ranking.weekId, weekId),
+        eq(project.isPublic, true),
+        isNull(project.hiddenAt),
+        isNull(project.withdrawnAt),
+        isNull(result.hiddenAt),
+        isNull(result.withdrawnAt),
+      ),
+    )
+    .orderBy(asc(ranking.rank), asc(project.handle))
+    .limit(PAGE_SIZE + 1).offset((page - 1) * PAGE_SIZE);
+}
+
+export async function getLatestLeaderboard(userId?: string, requestedPage = 1, requestedWeek: string | null = null) {
   const page = pageNumber(requestedPage);
   if (!databaseConfigured) return null;
   const now = await getDatabaseNow();
+  // an earlier week, by its start date. only closed, final weeks are served;
+  // anything else falls through to the latest board.
+  const [requested] = isCalendarDate(requestedWeek)
+    ? await db.select().from(week).where(and(eq(week.weekStartDate, requestedWeek), lte(week.votingClosesAt, now))).limit(1)
+    : [];
+  // a week nobody opened since its voting closed may not be finalized yet
+  const archivedWeek = requested && !requested.finalizedAt ? await ensureWeekFinalized(requested.id) : requested;
+  if (archivedWeek?.rankingStatus === 'final') {
+    const [entries, adjacent] = await Promise.all([finalEntries(archivedWeek.id, page), adjacentRankedWeeks(archivedWeek, now)]);
+    // earlier weeks hide the running week's voting prompt, so the live
+    // provisional board (every vote of the week, scored) is not worth computing
+    return { week: archivedWeek, now, entries: entries.slice(0, PAGE_SIZE), provisional: false as const, votingAvailable: false, votingComplete: false, page, hasNext: entries.length > PAGE_SIZE, archived: true, ...adjacent };
+  }
   const provisional = userId ? await getProvisionalLeaderboard(userId, now, page) : null;
   const votingAvailable = provisional?.provisional !== false;
+  const votingComplete = provisional?.provisional ?? false;
   // Check the whole board, not this page: an out-of-range page must not switch weeks.
-  if (provisional?.hasRanks) return { ...provisional, votingAvailable, votingComplete: true };
+  if (provisional?.hasRanks) return { ...provisional, votingAvailable, votingComplete, archived: false, ...await adjacentRankedWeeks(provisional.week, now) };
   const [latestClosedWeek] = await db
     .select()
     .from(week)
@@ -651,60 +721,27 @@ export async function getLatestLeaderboard(userId?: string, requestedPage = 1) {
         .where(lte(week.startsAt, now))
         .orderBy(desc(week.startsAt))
         .limit(1);
-  const [nextWeek] = latestClosedWeek || latestStartedWeek
+  const [firstWeek] = latestClosedWeek || latestStartedWeek
     ? []
     : await db.select().from(week).orderBy(asc(week.startsAt)).limit(1);
-  const latestWeek = latestClosedWeek ?? latestStartedWeek ?? nextWeek;
+  const latestWeek = latestClosedWeek ?? latestStartedWeek ?? firstWeek;
   if (!latestWeek) return null;
   let finalWeek = latestClosedWeek && !latestClosedWeek.finalizedAt
     ? await ensureWeekFinalized(latestWeek.id)
     : latestWeek;
   if (finalWeek?.rankingStatus !== 'final') {
     const [latestRankedWeek] = await db.select().from(week)
-      .where(and(lte(week.votingClosesAt, now), eq(week.rankingStatus, 'final')))
+      .where(publicFinalWeek(now))
       .orderBy(desc(week.startsAt)).limit(1);
     finalWeek = latestRankedWeek ?? finalWeek;
-    if (!latestRankedWeek && provisional) return { ...provisional, votingAvailable, votingComplete: provisional.provisional };
+    if (!latestRankedWeek && provisional) return { ...provisional, votingAvailable, votingComplete, archived: false, ...await adjacentRankedWeeks(provisional.week, now) };
   }
-  const entries = finalWeek?.rankingStatus === 'final'
-    ? await db
-        .select({
-          rank: ranking.rank,
-          wins: ranking.wins,
-          ties: ranking.ties,
-          decisions: ranking.decisions,
-          scoreNumerator: ranking.scoreNumerator,
-          scoreDenominator: ranking.scoreDenominator,
-          handle: project.handle,
-          displayName: ownerNames,
-          projectName: project.projectName,
-          projectUrl: project.projectUrl,
-          projectSentence: project.bio,
-          logo: project.logo,
-          promise: commitment.promise,
-          summary: result.summary,
-          weekStartDate: week.weekStartDate,
-        })
-        .from(ranking)
-        .innerJoin(result, eq(ranking.resultId, result.id))
-        .innerJoin(commitment, eq(result.commitmentId, commitment.id))
-        .innerJoin(project, eq(result.projectId, project.id))
-        .innerJoin(week, eq(ranking.weekId, week.id))
-        .where(
-          and(
-            eq(ranking.weekId, finalWeek.id),
-            eq(project.isPublic, true),
-            isNull(project.hiddenAt),
-            isNull(project.withdrawnAt),
-            isNull(result.hiddenAt),
-            isNull(result.withdrawnAt),
-          ),
-        )
-        .orderBy(asc(ranking.rank), asc(project.handle))
-        .limit(PAGE_SIZE + 1).offset((page - 1) * PAGE_SIZE)
-    : [];
+  const [entries, adjacent] = await Promise.all([
+    finalWeek?.rankingStatus === 'final' ? finalEntries(finalWeek.id, page) : [],
+    finalWeek ? adjacentRankedWeeks(finalWeek, now) : { previousWeek: null, nextWeek: null },
+  ]);
 
-  return { week: finalWeek, now, entries: entries.slice(0, PAGE_SIZE), provisional: false as const, votingAvailable, votingComplete: provisional?.provisional ?? false, page, hasNext: entries.length > PAGE_SIZE };
+  return { week: finalWeek, now, entries: entries.slice(0, PAGE_SIZE), provisional: false as const, votingAvailable, votingComplete, page, hasNext: entries.length > PAGE_SIZE, archived: false, ...adjacent };
 }
 
 export async function finalizeLatestClosedWeek() {
