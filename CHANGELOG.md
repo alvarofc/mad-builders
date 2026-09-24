@@ -2,6 +2,31 @@
 
 Changes to mad.builders.
 
+## [0.10.0.0] - 2026-09-24
+
+### Added
+
+- Browse earlier weeks on the leaderboard, with links to the previous and next ranked week. A ranked weekly update now links to the leaderboard for its own week.
+- Read how the weekly leaderboard works from the homepage, and open it from there. Anyone can join, from anywhere.
+- See tied projects marked as tied, and each project's wins, ties and vote count next to its win rate.
+
+### Changed
+
+- Read the week's status in plain words ("early results", "final", "updates only", "shipping now"), with the week's date and when early results become final.
+- Small weeks now lead with what shipped instead of what was missing.
+- The leaderboard column header stays in view while you scroll, and the top three ranks and your own row stand out more.
+- Use one link per leaderboard row, so keyboard users get a single tab stop and the whole row stays tappable.
+- Call the leaderboard "leaderboard" everywhere, use lowercase for vote buttons, and match page title sizes and spacing across app pages.
+- See your rank at a glance in your project's update history.
+- The brand page now lists the green-on-cream colours the app uses.
+
+### Fixed
+
+- A malformed or unknown week in a leaderboard link now redirects to the latest leaderboard instead of erroring or showing another week under the wrong address.
+- Earlier weeks no longer show this week's voting prompt or recent updates, and a week whose ranked projects were all taken down no longer asks you to vote on it.
+- The explanation for a week that ended unranked no longer claims it had too few projects when it had too few votes.
+- Load the leaderboard with fewer database round trips, and skip the live early-results calculation when viewing an earlier week.
+
 ## [0.9.1.0] - 2026-09-22
 
 ### Changed
