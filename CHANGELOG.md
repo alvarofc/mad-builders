@@ -8,7 +8,7 @@ Changes to mad.builders.
 
 - Browse earlier weeks on the leaderboard, with links to the previous and next ranked week. A ranked weekly update now links to the leaderboard for its own week.
 - Read how the weekly leaderboard works from the homepage, and open it from there. Anyone can join, from anywhere.
-- See tied projects marked as tied, and each project's wins, ties and vote count next to its win rate.
+- See tied projects marked as tied, and each project's vote count next to its win rate, plus wins and ties on wider screens.
 
 ### Changed
 
@@ -23,9 +23,9 @@ Changes to mad.builders.
 ### Fixed
 
 - A malformed or unknown week in a leaderboard link now redirects to the latest leaderboard instead of erroring or showing another week under the wrong address.
-- Earlier weeks no longer show this week's voting prompt or recent updates, and a week whose ranked projects were all taken down no longer asks you to vote on it.
+- Earlier weeks no longer show this week's voting prompt or recent updates, and an earlier week whose ranked projects were all taken down no longer asks you to vote on it.
 - The explanation for a week that ended unranked no longer claims it had too few projects when it had too few votes.
-- Load the leaderboard with fewer database round trips, and skip the live early-results calculation when viewing an earlier week.
+- Skip the live early-results calculation when viewing an earlier week.
 
 ## [0.9.1.0] - 2026-09-22
 
