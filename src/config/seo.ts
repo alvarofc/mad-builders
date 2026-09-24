@@ -1,6 +1,6 @@
 import { externalLinks } from '../data/site'
 
-export const SITE = 'https://www.mad.builders'
+export const SITE = 'https://mad.builders'
 
 export const DEFAULT_TITLE = "mad.builders - The builders' house in Madrid"
 export const DEFAULT_DESCRIPTION = "The builders' house, where builders, founders and VCs meet in the heart of Madrid. AI, hardware & robotics, healthtech, digital assets."

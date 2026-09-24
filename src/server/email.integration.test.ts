@@ -81,7 +81,7 @@ it.skipIf(!process.env.DATABASE_TEST_URL)('deduplicates delivery, preserves retr
           expect(request.headers['Idempotency-Key']).toBe(votingKey);
         }
         const sentCount = fetch.mock.calls.length;
-        const url = new URL(`https://www.mad.builders/api/email/unsubscribe?token=${user.token}`);
+        const url = new URL(`https://mad.builders/api/email/unsubscribe?token=${user.token}`);
         const context = (method: string) => ({ url, request: new Request(url, { method }) }) as Parameters<typeof GET>[0];
         expect((await GET(context('GET'))).status).toBe(200);
         const [before] = await tx.execute(sql`select email_unsubscribed_at from app_private."user" where id = ${id}`);

@@ -31,7 +31,7 @@ it.skipIf(!process.env.DATABASE_TEST_URL)('selects welcome mail only after activ
                 ${new Date(Date.now() - (state === 'expired' ? 24 * 3600000 : 0)).toISOString()})`);
           }
         }
-        const response = await GET({ request: new Request('https://www.mad.builders/api/email/cron', { headers: { authorization: 'Bearer test-cron' } }) } as Parameters<typeof GET>[0]);
+        const response = await GET({ request: new Request('https://mad.builders/api/email/cron', { headers: { authorization: 'Bearer test-cron' } }) } as Parameters<typeof GET>[0]);
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ sent: 1, failed: 0 });
         expect(sendEmailOnce).toHaveBeenCalledExactlyOnceWith('welcome', { userId: ids.eligible });

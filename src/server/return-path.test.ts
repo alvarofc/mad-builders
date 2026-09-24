@@ -48,7 +48,7 @@ it('points every signed-out prompt at /login with a destination the guard accept
       .map((match) => match[1]));
   expect(links).toEqual(expect.arrayContaining(['/login', '/login?next=/vote']));
   for (const link of links) {
-    const next = new URL(link, 'https://www.mad.builders').searchParams.get('next');
+    const next = new URL(link, 'https://mad.builders').searchParams.get('next');
     if (next) expect(safeReturnPath(next)).toBe(next);
   }
 });

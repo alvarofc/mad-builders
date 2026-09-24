@@ -11,7 +11,7 @@ import { POST as review } from '../pages/api/review';
 import { POST as publish } from '../pages/api/result/publish';
 import { POST as profile } from '../pages/api/profile';
 
-const origin = 'https://www.mad.builders';
+const origin = 'https://mad.builders';
 const validUpdate = { projectId: 'startup', weekId: '1', status: 'submitted', summary: 'Shipped a demo', projectStage: 'building' };
 function context(data: Record<string, string>, user: { id: string } | null = { id: 'builder' }, requestOrigin = origin) {
   return {

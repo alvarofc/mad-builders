@@ -8,7 +8,7 @@ import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://www.mad.builders',
+  site: 'https://mad.builders',
   security: {
     // Astro must preserve the public host when Vercel forwards a request.
     allowedDomains: [

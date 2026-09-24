@@ -6,10 +6,10 @@ vi.mock('./rate-limit', () => ({ allowWrite: mocks.allow }));
 import { POST } from '../pages/api/socials';
 import { project, user } from './schema';
 
-const request = (fields: Record<string, string> = {}, userId = 'alice', origin = 'https://www.mad.builders', accept = 'text/html') => POST({
-  locals: { user: userId ? { id: userId } : null }, url: new URL('https://www.mad.builders/api/socials'),
+const request = (fields: Record<string, string> = {}, userId = 'alice', origin = 'https://mad.builders', accept = 'text/html') => POST({
+  locals: { user: userId ? { id: userId } : null }, url: new URL('https://mad.builders/api/socials'),
   redirect: (location: string, status: number) => new Response(null, { status, headers: { location } }),
-  request: new Request('https://www.mad.builders/api/socials', { method: 'POST', headers: { origin, accept }, body: new URLSearchParams({ projectId: 'project-a', ...fields }) }),
+  request: new Request('https://mad.builders/api/socials', { method: 'POST', headers: { origin, accept }, body: new URLSearchParams({ projectId: 'project-a', ...fields }) }),
 } as any);
 beforeEach(() => {
   Object.values(mocks).forEach(mock => mock.mockReset());
@@ -52,7 +52,7 @@ it('stores personal links only on the current user, company links on the project
 });
 
 it('confirms automatic saves without redirecting', async () => {
-  const response = await request({}, 'alice', 'https://www.mad.builders', 'application/json');
+  const response = await request({}, 'alice', 'https://mad.builders', 'application/json');
   expect(response.status).toBe(200);
   expect(await response.json()).toEqual({ saved: true });
 });

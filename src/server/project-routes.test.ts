@@ -12,7 +12,7 @@ import { requestProjectAccess, acceptProjectInvite, createProjectInvite, revokeP
 import { allowWrite } from './rate-limit';
 
 const token = 'a'.repeat(64);
-const origin = 'https://www.mad.builders';
+const origin = 'https://mad.builders';
 function post(data: Record<string, string>, userId: string | null = 'owner', requestOrigin = origin) {
   const url = new URL('/api/project', origin);
   return POST({

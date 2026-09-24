@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.mad.builders/sitemap-index.xml
-Host: https://www.mad.builders
+Sitemap: https://mad.builders/sitemap-index.xml
+Host: https://mad.builders

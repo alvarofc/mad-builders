@@ -10,7 +10,7 @@ import '@fontsource/archivo/latin-700.css';
 import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-500.css';
 import '@fontsource-variable/bricolage-grotesque/wght.css';
-import { SITE_NAME } from '../config/seo';
+import { SITE, SITE_NAME } from '../config/seo';
 interface Props {
   title?: string;
   description?: string;
@@ -25,7 +25,7 @@ const {
   image = '/og-sz.png',
 } = Astro.props;
 
-const base = Astro.site ?? new URL('https://www.mad.builders');
+const base = Astro.site ?? new URL(SITE);
 const ogImage = new URL(image, base).toString();
 const canonical = new URL(Astro.url.pathname, base).toString();
 ---
