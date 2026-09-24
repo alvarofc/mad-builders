@@ -99,10 +99,10 @@ const proofLabel = (status: string) =>
             <form class="pair-form" method={demo ? 'get' : 'post'} action={demo ? '/vote' : '/api/review'} data-review-form data-demo-next={demo ? `/vote?demo=1&round=${review.reviewed + 1}` : undefined}>
               {demo && <><input type="hidden" name="demo" value="1" /><input type="hidden" name="round" value={review.reviewed + 1} /></>}
               <input type="hidden" name="assignmentId" value={review.assignmentId} />
-              <button class="work-button" name="selected" value="first">Choose A</button>
-              <button class="work-button" name="selected" value="second">Choose B</button>
-              <button class="work-button secondary" name="selected" value="tie">About equal</button>
-              <button class="work-button secondary" name="selected" value="pass">Skip</button>
+              <button class="work-button" name="selected" value="first">choose A</button>
+              <button class="work-button" name="selected" value="second">choose B</button>
+              <button class="work-button secondary" name="selected" value="tie">about equal</button>
+              <button class="work-button secondary" name="selected" value="pass">skip</button>
             </form>
             <p class="work-status" data-review-status aria-live="polite"></p>
           </>
@@ -115,9 +115,9 @@ const proofLabel = (status: string) =>
           </>
         ) : review.state === 'unranked' ? (
           <>
-            <p class="work-label">unranked week</p>
-            <h2 class="work-heading">Not enough updates yet.</h2>
-            <p class="work-copy">Six published updates unlock voting. Meet the projects taking part while more arrive.</p>
+            <p class="work-label">updates only</p>
+            <h2 class="work-heading">Shipped, not ranked.</h2>
+            <p class="work-copy">Voting starts at six projects. This week had fewer, so the updates stand on their own. Meet the projects taking part.</p>
             <a class="work-button" href="/builders">meet the projects</a>
           </>
         ) : review.state === 'ineligible' ? (
@@ -125,7 +125,7 @@ const proofLabel = (status: string) =>
             <p class="work-label">voting is open</p>
             <h2 class="work-heading">Publish an update to vote.</h2>
             <p class="work-copy">Publish an update for this week to cast votes. Late updates count too.</p>
-            <a class="work-button" href="/leaderboard">see the board</a>
+            <a class="work-button" href="/leaderboard">see the leaderboard</a>
           </>
         ) : (
           <>

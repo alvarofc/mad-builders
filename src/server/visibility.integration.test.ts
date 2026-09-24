@@ -86,7 +86,8 @@ it.skipIf(!process.env.PUBLIC_VISIBILITY_TEST_URL || !process.env.DATABASE_VISIB
       expect(finalizedProfile).toContain('unranked');
       expect(finalizedProfile).not.toContain('awaiting rank');
       await sql`update app_private.result set on_time = false where project_id = ${id}`;
-      expect((await html(profilePath)).match(/class="result-meta"[^>]*>([^<]*)/)?.[1].trim()).toBe('late');
+      // the status is the first child of .result-meta, above the proof label
+      expect((await html(profilePath)).match(/class="result-meta"[^>]*>\s*<span[^>]*>([^<]*)/)?.[1].trim()).toBe('late');
       await sql`update app_private.result set on_time = true where project_id = ${id}`;
 
       // There is no server-side result draft: drafts are localStorage only. is_public=false is the unpublished profile state.

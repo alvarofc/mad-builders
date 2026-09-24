@@ -10,8 +10,18 @@ export const prerender = false;
 const currentUser = Astro.locals.user;
 
 const demo = import.meta.env.DEV && Astro.url.searchParams.get('demo') !== '0';
-const board = demo ? demoLeaderboard : await Astro.locals.timing.measure('leaderboard', () => getLatestLeaderboard(currentUser?.id, pageNumber(Astro.url.searchParams.get('page'))));
-const live = demo ? null : await Astro.locals.timing.measure('live-week', () => getLiveWeek(currentUser?.id));
+const board = demo ? demoLeaderboard : await Astro.locals.timing.measure('leaderboard', () => getLatestLeaderboard(currentUser?.id, pageNumber(Astro.url.searchParams.get('page')), Astro.url.searchParams.get('week')));
+// a week the board can't show (unknown, unranked, still running, malformed)
+// would otherwise render the latest week under a URL naming another one
+if (Astro.url.searchParams.has('week') && !board?.archived) {
+  const latest = new URL('/leaderboard', Astro.url);
+  latest.search = Astro.url.search;
+  latest.searchParams.delete('week');
+  latest.searchParams.delete('page');
+  return Astro.redirect(`${latest.pathname}${latest.search}`, 302);
+}
+// the running week's prompt is hidden on earlier weeks, so skip its query there
+const live = demo || board?.archived ? null : await Astro.locals.timing.measure('live-week', () => getLiveWeek(currentUser?.id));
 const currentProfile = currentUser ? await Astro.locals.timing.measure('profile', () => getProfileByUserId(currentUser.id)) : null;
 Astro.response.headers.set('Cache-Control', 'no-store');
 ---
