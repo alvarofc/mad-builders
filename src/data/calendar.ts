@@ -446,6 +446,17 @@ export const calendarEvents: CalendarEvent[] = [
       'A one-day build challenge for 40 people, with real datasets and unsolved problems from Talky, Reversa and Tunen. Teams of three can use any stack or model; briefs and data credits arrive the week before, and registration closes on September 25.',
   },
   {
+    title: 'Seguridad en IA, juegos de rol y soft skills',
+    date: '2026-10-08',
+    time: '18:30',
+    endTime: '21:30',
+    location: 'Google Madrid, Plaza Pablo Ruiz Picasso 1, Tetuán',
+    url: 'https://gdg.community.dev/events/details/google-gdg-madrid-presents-seguridad-en-ia-juegos-de-rol-y-soft-skills/',
+    image: '/events/gdg-seguridad-ia-rol-soft-skills.png',
+    description:
+      'Mía Salazar explora cómo los juegos de rol ayudan a desarrollar soft skills en equipos de desarrollo, y Carlos Rodríguez López analiza los riesgos de seguridad de agentes, servidores MCP y LLMs con ejemplos de Wiz. El encuentro de GDG Madrid termina con networking.',
+  },
+  {
     title: 'Hacktoberfest Hack Day Madrid 2026',
     date: '2026-10-10',
     time: '15:00',
