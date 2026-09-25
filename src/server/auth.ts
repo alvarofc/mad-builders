@@ -3,7 +3,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from './db';
 import * as schema from './schema';
 
-const productionOrigin = 'https://www.mad.builders';
+const productionOrigin = 'https://mad.builders';
 const configuredOrigin = import.meta.env.BETTER_AUTH_URL ?? productionOrigin;
 
 export const authConfigured = Boolean(

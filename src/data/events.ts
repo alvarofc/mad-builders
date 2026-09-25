@@ -43,7 +43,7 @@ export const events: CommunityEvent[] = [
   },
   {
     slug: 'spec-kitty',
-    title: 'Spec Kitty: Structured AI Coding for Real Teams',
+    title: 'Spec Kitty: Structured AI Coding for Teams',
     date: '2026-09-22',
     time: '18:00',
     endTime: '19:00',

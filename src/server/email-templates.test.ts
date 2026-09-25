@@ -6,12 +6,12 @@ vi.mock('../styles/global.css?raw', async () => {
 });
 import { renderEmail } from './email-templates';
 
-const unsubscribeUrl = 'https://www.mad.builders/api/email/unsubscribe?token=test';
+const unsubscribeUrl = 'https://mad.builders/api/email/unsubscribe?token=test';
 
 it('renders the approved messages with working destinations and an unsubscribe footer', () => {
   for (const kind of ['welcome', 'checkin', 'voting'] as const) {
     const email = renderEmail(kind, { unsubscribeUrl });
-    const destination = `https://www.mad.builders/${kind === 'voting' ? 'vote' : 'build'}`;
+    const destination = `https://mad.builders/${kind === 'voting' ? 'vote' : 'build'}`;
     expect(email.html).toContain(`href="${destination}"`);
     expect(email.text).toContain(destination);
     expect(email.html).toContain(`href="${unsubscribeUrl}"`);

@@ -11,7 +11,7 @@ import { POST } from '../pages/api/profile';
 import { createProfile, updateProfile, getProfileByUserId } from './profiles';
 import { allowWrite } from './rate-limit';
 
-const origin = 'https://www.mad.builders';
+const origin = 'https://mad.builders';
 function form() {
   const data = new FormData();
   for (const [key, value] of Object.entries({ projectId: 'project', handle: 'ana', displayName: 'Ana', projectName: 'Example', bio: 'Shipping tools', projectUrl: 'https://example.com' })) data.set(key, value);
