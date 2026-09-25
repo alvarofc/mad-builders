@@ -27,6 +27,14 @@ Changes to mad.builders.
 - The explanation for a week that ended unranked no longer claims it had too few projects when it had too few votes.
 - Skip the live early-results calculation when viewing an earlier week.
 
+## [0.9.2.0] - 2026-09-24
+
+### Fixed
+
+- Point canonical links, the sitemap and robots.txt at mad.builders, the host the site actually serves. Search engines no longer see canonical URLs that redirect.
+- Sign-in now uses mad.builders as its default address.
+- Give the projects page a full search description, shorten the Spec Kitty event title so it fits in search results, and keep the Madrid guide's heading order intact.
+
 ## [0.9.1.0] - 2026-09-22
 
 ### Changed

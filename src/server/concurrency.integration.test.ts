@@ -69,7 +69,7 @@ async function votingFixture(phase: 'voting' | 'closed', count = 6) {
   return { targetWeek, candidates };
 }
 function requestContext(userId: string, fields: Record<string, string>) {
-  const url = new URL('https://www.mad.builders/api/test');
+  const url = new URL('https://mad.builders/api/test');
   return { url, locals: { user: { id: userId } }, request: new Request(url, { method: 'POST', headers: { origin: url.origin }, body: new URLSearchParams({ projectId: userId, ...fields }) }), redirect: (path: string, status: number) => new Response(null, { status, headers: { location: path } }) } as Parameters<typeof withdraw>[0];
 }
 
@@ -813,12 +813,12 @@ describe.skipIf(!databaseUrl)('committed multi-connection Postgres mutations', (
   });
 
   it('enforces user and IP limits atomically and resets expired windows', async () => {
-    const request = new Request('https://www.mad.builders');
+    const request = new Request('https://mad.builders');
     const users = await Promise.all(Array.from({ length: 40 }, () => allowWrite(request, 'rate-user', 'test-user')));
     expect(users.filter(Boolean)).toHaveLength(30);
     await db.execute(sql`update app_private.rate_limit set last_request = floor(extract(epoch from now()) * 1000) - 61000`);
     expect(await allowWrite(request, 'rate-user', 'test-user')).toBe(true);
-    const ipRequest = new Request('https://www.mad.builders', { headers: { 'x-forwarded-for': '192.0.2.1' } });
+    const ipRequest = new Request('https://mad.builders', { headers: { 'x-forwarded-for': '192.0.2.1' } });
     const ips = await Promise.all(Array.from({ length: 130 }, (_, i) => allowWrite(ipRequest, `ip-user-${i}`, 'test-ip')));
     expect(ips.filter(Boolean)).toHaveLength(120);
   });

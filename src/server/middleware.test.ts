@@ -44,7 +44,7 @@ it('loads the same session for app routes with or without trailing slashes', asy
         defineMiddleware: (callback: unknown) => callback, requestTiming, Headers, Response,
         authConfigured: true, databaseConfigured: false, auth: { api: { getSession } },
       });
-      const context = { url: new URL(`https://www.mad.builders${path}${suffix}`), request: new Request('https://www.mad.builders'), locals: { user: null, session: null } };
+      const context = { url: new URL(`https://mad.builders${path}${suffix}`), request: new Request('https://mad.builders'), locals: { user: null, session: null } };
       const response = new Response('rendered');
       const next = vi.fn().mockResolvedValue(response);
       const rendered = await handler(context, next);
@@ -69,15 +69,15 @@ it('forwards renewal and deletion cookies without losing page or redirect respon
         defineMiddleware: (callback: unknown) => callback, requestTiming, Headers, Response,
         authConfigured: true, databaseConfigured: false, auth: { api: { getSession } },
       });
-      const context = { url: new URL('https://www.mad.builders/build'), request: new Request('https://www.mad.builders/build'), locals: { user: null, session: null } };
-      const downstream = redirect ? Response.redirect('https://www.mad.builders/settings', 303)
+      const context = { url: new URL('https://mad.builders/build'), request: new Request('https://mad.builders/build'), locals: { user: null, session: null } };
+      const downstream = redirect ? Response.redirect('https://mad.builders/settings', 303)
         : new Response('rendered', { headers: { 'set-cookie': 'existing=keep; Path=/', 'cache-control': 'no-store' } });
       const response = await handler(context, async () => downstream);
       expect(getSession).toHaveBeenCalledWith({ headers: context.request.headers, returnHeaders: true });
       expect(context.locals).toMatchObject(session ?? { user: null, session: null });
       expect(response.status).toBe(redirect ? 303 : 200);
       expect(response.headers.getSetCookie()).toEqual(redirect ? cookies : ['existing=keep; Path=/', ...cookies]);
-      if (redirect) expect(response.headers.get('location')).toBe('https://www.mad.builders/settings');
+      if (redirect) expect(response.headers.get('location')).toBe('https://mad.builders/settings');
       else {
         expect(await response.text()).toBe('rendered');
         expect(response.headers.get('cache-control')).toBe('no-store');
@@ -96,7 +96,7 @@ it.each([
       defineMiddleware: (callback: unknown) => callback, requestTiming, Headers, Response,
       authConfigured: true, databaseConfigured: false, auth: { api: { getSession } },
     });
-    const context = { url: new URL(`https://www.mad.builders${path}`), request: new Request('https://www.mad.builders'), locals: { user: null, session: null } };
+    const context = { url: new URL(`https://mad.builders${path}`), request: new Request('https://mad.builders'), locals: { user: null, session: null } };
     const response = await handler(context, async () => new Response('demo'));
     expect(await response.text()).toBe('demo');
     expect(getSession).toHaveBeenCalledOnce();
@@ -110,7 +110,7 @@ it('still serves dev demo pages when auth cannot load, and skips the session on 
     defineMiddleware: (callback: unknown) => callback, requestTiming, Headers, Response,
     authConfigured: true, databaseConfigured: false, auth: { api: { getSession: failing } },
   });
-  const demoContext = { url: new URL('https://www.mad.builders/leaderboard'), request: new Request('https://www.mad.builders'), locals: { user: null, session: null } };
+  const demoContext = { url: new URL('https://mad.builders/leaderboard'), request: new Request('https://mad.builders'), locals: { user: null, session: null } };
   expect(await (await offline(demoContext, async () => new Response('demo'))).text()).toBe('demo');
   expect(demoContext.locals).toMatchObject({ user: null, session: null });
 
@@ -120,7 +120,7 @@ it('still serves dev demo pages when auth cannot load, and skips the session on 
     defineMiddleware: (callback: unknown) => callback, requestTiming, Headers, Response,
     authConfigured: true, databaseConfigured: false, auth: { api: { getSession } },
   });
-  const realContext = { url: new URL('https://www.mad.builders/leaderboard?demo=0'), request: new Request('https://www.mad.builders'), locals: { user: null, session: null } };
+  const realContext = { url: new URL('https://mad.builders/leaderboard?demo=0'), request: new Request('https://mad.builders'), locals: { user: null, session: null } };
   await real(realContext, async () => new Response('real'));
   expect(getSession).toHaveBeenCalledWith({ headers: realContext.request.headers, returnHeaders: true });
   expect(realContext.locals).toMatchObject({ user: { id: 'builder' } });
@@ -132,7 +132,7 @@ it('skips the demo session read entirely when auth has no credentials', async ()
     defineMiddleware: (callback: unknown) => callback, requestTiming, Headers, Response,
     authConfigured: false, databaseConfigured: false, auth: { api: { getSession } },
   });
-  const context = { url: new URL('https://www.mad.builders/leaderboard'), request: new Request('https://www.mad.builders'), locals: { user: null, session: null } };
+  const context = { url: new URL('https://mad.builders/leaderboard'), request: new Request('https://mad.builders'), locals: { user: null, session: null } };
   expect(await (await handler(context, async () => new Response('demo'))).text()).toBe('demo');
   expect(getSession).not.toHaveBeenCalled();
   expect(context.locals).toMatchObject({ user: null, session: null });
@@ -146,7 +146,7 @@ it('loads the session for /login so a signed-in builder is redirected instead of
     authConfigured: true, databaseConfigured: false, auth: { api: { getSession } },
   });
   for (const path of ['/login', '/login/', '/login?next=%2Fvote']) {
-    const context = { url: new URL(`https://www.mad.builders${path}`), request: new Request('https://www.mad.builders'), locals: { user: null, session: null } };
+    const context = { url: new URL(`https://mad.builders${path}`), request: new Request('https://mad.builders'), locals: { user: null, session: null } };
     const response = await handler(context, async () => new Response(null, { status: 302, headers: { location: '/vote' } }));
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe('/vote');

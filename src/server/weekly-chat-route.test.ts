@@ -15,9 +15,9 @@ vi.mock('./weekly-coach', () => ({ chatWithWeeklyCoach: mocks.chat }));
 import { POST } from '../pages/api/result/chat';
 const selectedWeek = { id: 3, weekStartDate: '2026-09-14', startsAt: new Date('2026-09-13T22:00Z'), submissionClosesAt: new Date('2026-09-20T16:00Z') };
 const body = { projectId: 'project', weekId: 3, messages: [{ role: 'user', content: 'I spoke to three owners.' }], draft: { summary: '', nextPromise: '', feedbackRequest: '' } };
-const request = (data: unknown = body, user = 'user', origin = 'https://www.mad.builders') => POST({
-  locals: { user: user ? { id: user } : null }, url: new URL('https://www.mad.builders/api/result/chat'),
-  request: new Request('https://www.mad.builders/api/result/chat', { method: 'POST', headers: { origin }, body: JSON.stringify(data) }),
+const request = (data: unknown = body, user = 'user', origin = 'https://mad.builders') => POST({
+  locals: { user: user ? { id: user } : null }, url: new URL('https://mad.builders/api/result/chat'),
+  request: new Request('https://mad.builders/api/result/chat', { method: 'POST', headers: { origin }, body: JSON.stringify(data) }),
 } as any);
 beforeEach(() => {
   vi.stubEnv('CEREBRAS_API_KEY', 'test-only');
