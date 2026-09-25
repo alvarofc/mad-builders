@@ -42,6 +42,8 @@ Finishing all available pairs unlocks the provisional leaderboard once it has qu
 
 The project directory and leaderboard show up to 50 projects per page. Previous and Next links use `?page=2` and preserve other query parameters. Rankings keep their overall position across pages. `/build` focuses on your weekly check-in; rankings live on `/leaderboard`.
 
+`/leaderboard?week=YYYY-MM-DD` shows an earlier week by its Monday start date. Only weeks whose voting has closed with final ranks are served, and each one links to the previous and next ranked week. An unknown, malformed, still-running or unranked week redirects to the latest leaderboard. A ranked weekly update page links to the leaderboard for its own week.
+
 Apply `drizzle/0005_company_scale_indexes.sql` through `pnpm db:migrate` for directory and ranking lookup indexes. After a large import, run `ANALYZE` on the affected tables so Postgres plans queries using current row counts. Stale statistics caused very slow leaderboard reads in the local 5,000-project smoke test; this is import maintenance, not work for each page request.
 
 Pagination bounds rendered rows and full project details, but provisional rankings still recalculate scores from the week's candidates and votes on each request. Voting still uses a shared week lock. Load-test those paths before increasing concurrent voting traffic; the local final-leaderboard smoke test does not establish their capacity.
@@ -181,7 +183,7 @@ things.
 
 ## Structure
 
-- `src/pages/index.astro`: home (hero, events, residents, projects, friends, madrid teaser)
+- `src/pages/index.astro`: home (hero, the deal with the weekly leaderboard explainer, events, residents, projects, friends, madrid teaser)
 - `src/pages/madrid.astro`: builder's guide to Madrid (stats, communities, calendar, Leaflet map)
 - `src/pages/events/[slug].astro`: photo gallery per event, with lightbox
 - `src/pages/login.astro`: GitHub sign-in and account creation

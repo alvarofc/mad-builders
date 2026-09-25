@@ -14,6 +14,7 @@ const surfaces = [
   '../pages/builders/index.astro',
   '../pages/builders/[handle].astro',
   '../pages/builders/[handle]/weeks/[week].astro',
+  '../layouts/Layout.astro',
   './LeaderboardPanel.astro',
   '../server/email-templates.ts',
 ].map((file) => {
@@ -33,7 +34,9 @@ it.each(['comparison', 'startup', 'weekly ledger', 'build log'])(
 
 it('uses one label per destination', () => {
   const all = surfaces.map(([, markup]) => markup).join('\n');
-  for (const stale of ['meet the builders', 'discover projects', 'see all builders']) {
+  // "rankings →" was the nav label for the leaderboard. the word itself can still
+  // appear in prose ("Rankings start at six projects").
+  for (const stale of ['meet the builders', 'discover projects', 'see all builders', 'see the board', 'rankings →']) {
     expect(all).not.toContain(stale);
   }
   expect(all).toContain('meet the projects');
@@ -46,7 +49,7 @@ it('keeps every page pointing at the next step of the loop', () => {
   // the owner's own project page used to offer only /settings
   expect(byFile['../pages/builders/[handle].astro']).toContain('href="/build#this-week"');
   // the ineligible voter used to get no action at all
-  expect(byFile['../pages/vote.astro']).toContain('href="/leaderboard">see the board');
+  expect(byFile['../pages/vote.astro']).toContain('href="/leaderboard">see the leaderboard');
   // the project list promised ranks but never linked to them
   expect(byFile['../pages/builders/index.astro']).toContain('href="/leaderboard"');
 });

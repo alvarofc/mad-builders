@@ -73,7 +73,7 @@
 
 .work-hero {
   position: relative;
-  padding: 48px 0 36px;
+  padding: 28px 0;
   overflow: hidden;
   border-bottom: 1px solid var(--green-line);
 }
@@ -84,7 +84,7 @@
 
 .work-kicker {
   margin: 0 0 20px;
-  color: var(--green-faint);
+  color: var(--green-dim);
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.16em;
@@ -93,7 +93,7 @@
 
 .work-title {
   max-width: 860px;
-  font-size: 3rem;
+  font-size: 2rem;
   letter-spacing: -0.045em;
   line-height: 1;
 }
@@ -129,9 +129,9 @@
 
 .work-label {
   margin: 0 0 12px;
-  color: var(--green-faint);
+  color: var(--green-dim);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -211,10 +211,8 @@
 }
 
 .work-field > span {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .work-field small {
@@ -259,10 +257,8 @@
 .work-options legend {
   width: 100%;
   margin-bottom: 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .work-options label {
@@ -446,9 +442,28 @@
 .result-meta {
   color: var(--green-faint);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* status on top, proof label under it */
+.result-meta {
+  display: grid;
+  align-content: start;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+}
+
+/* the rank is the result; the proof label is a footnote to it */
+.result-rank {
+  color: var(--green);
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: none;
 }
 
 .result-promise {
@@ -489,8 +504,8 @@
 
 .pair-card {
   display: flex;
-  min-height: 360px;
   flex-direction: column;
+  gap: 12px;
 }
 
 .pair-card .work-heading {
@@ -499,7 +514,7 @@
 
 .pair-proof {
   margin-top: auto;
-  padding-top: 28px;
+  padding-top: 8px;
   color: var(--green-dim);
   font-size: 14px;
 }
@@ -507,19 +522,23 @@
 .pair-proof summary {
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .pair-form {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: grid;
-  grid-template-columns: 1fr auto auto 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 36px;
+  border-top: 1px solid var(--green-line);
+  padding: 12px;
+  background: var(--cream);
 }
-
-.pair-form { grid-template-columns: 1fr 1fr; }
 
 .update-shell { max-width: 760px; padding-top: 24px; padding-bottom: 48px; }
 .update-copy { white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -527,25 +546,16 @@
 .project-context summary { cursor: pointer; font-weight: 500; }
 .project-context summary span { display: block; margin-top: 8px; color: var(--green-dim); font-weight: 400; }
 .project-context[open] .work-field { margin-top: 16px; }
-.work-field > span, .work-options legend { font-family: var(--font-sans); font-size: 1rem; font-weight: 500; letter-spacing: 0; text-transform: none; }
-.work-label, .work-kicker { color: var(--green-dim); }
 .work-field input:focus-visible, .work-field textarea:focus-visible, .work-field select:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
 .work-form textarea { min-height: 88px; }
-.work-title { font-size: 2rem; }
-.work-hero { padding: 28px 0; }
-.app-shell { padding-bottom: 24px; }
-.section-heading { padding-top: 24px; }
 #this-week, #review-content { scroll-margin-top: 76px; }
-.pair-card { min-height: 0; gap: 12px; }
 .pair-card .work-copy, .pair-card .work-label, .pair-card .work-heading { margin: 0; }
 .pair-context { color: var(--green-dim); font-size: 0.9375rem; }
 .pair-context summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
 .pair-context .summary-preview { display: block; color: var(--green); }
 .summary-preview span { display: block; text-decoration: underline; color: var(--green-dim); font-size: 0.875rem; }
-.pair-proof { padding-top: 8px; }
 #review-content progress { width: 100%; height: 6px; accent-color: var(--green); }
 #review-content .draft-status { margin: 12px 0 24px; }
-.pair-form { position: sticky; bottom: 0; padding: 12px; background: var(--cream); border-top: 1px solid var(--green-line); z-index: 2; }
 .pair-form .secondary { border-color: transparent; }
 .product-nav-inner > .wordmark { color: var(--cream); font-family: var(--font-display); font-size: 1.2rem; letter-spacing: -0.04em; }
 .recent-updates { margin-top: 24px; }
@@ -559,6 +569,13 @@
 .app-shell {
   padding-top: 32px;
   padding-bottom: 64px;
+}
+
+/* /builders and /vote reuse the marketing .section wrapper. on cream its 72px
+   padding and cream hairline pushed them far below every other app page */
+.work-page .section {
+  padding: 32px 0 48px;
+  border-top: 0;
 }
 
 .app-context {
@@ -606,13 +623,9 @@
 .app-title,
 .app-section-title {
   margin: 0;
-  font-size: 3rem;
+  font-size: 2rem;
   letter-spacing: -0.045em;
   line-height: 1;
-}
-
-.app-section-title {
-  font-size: 2rem;
 }
 
 .leaderboard-status {
@@ -620,7 +633,7 @@
   justify-items: end;
   gap: 6px;
   color: var(--green-faint);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
 }
 
@@ -641,19 +654,49 @@
   letter-spacing: 0.08em;
 }
 
+.leaderboard-weeks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -12px 0 12px;
+  font-size: 0.75rem;
+}
+
+.leaderboard-weeks a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--green-dim);
+}
+
+.leaderboard-weeks a:not([rel='prev']) {
+  margin-left: auto;
+}
+
+.leaderboard-weeks a:hover {
+  color: var(--green);
+}
+
 .leaderboard-columns,
 .leaderboard-row {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 0.9fr) minmax(0, 1.1fr) 92px;
+  grid-template-columns: 5rem minmax(0, 0.9fr) minmax(0, 1.1fr) 7.5rem;
   gap: 20px;
   align-items: center;
 }
 
+/* stays under the product nav so a 50-row board keeps its column names */
 .leaderboard-columns {
+  position: sticky;
+  top: var(--product-nav-h);
+  z-index: 1;
   min-height: 32px;
   border-top: 1px solid var(--green-line);
+  border-bottom: 1px solid var(--green-line);
   color: var(--green-faint);
-  font-size: 0.625rem;
+  background: var(--cream);
+  font-size: 0.75rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -669,6 +712,7 @@
 }
 
 .leaderboard-row {
+  position: relative;
   min-height: 88px;
   border-bottom: 1px solid var(--green-line);
 }
@@ -681,7 +725,19 @@
    column grid stays aligned with every other row */
 .leaderboard-row.is-viewer {
   background: color-mix(in srgb, var(--green) 7%, transparent);
-  scroll-margin-top: 80px;
+  /* clear the nav and the sticky column header above the row */
+  scroll-margin-top: calc(var(--product-nav-h) + 40px);
+}
+
+/* a bar in the page gutter, outside the grid, so the tint is not the only cue */
+.leaderboard-row.is-viewer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -12px;
+  width: 3px;
+  background: var(--green);
 }
 
 .leaderboard-you {
@@ -696,14 +752,29 @@
 }
 
 .leaderboard-rank {
+  color: var(--green-dim);
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
-.leaderboard-project,
-.leaderboard-update {
-  /* stretch so the whole row height is tappable, not just the text */
+.leaderboard-row.is-top .leaderboard-rank {
+  color: var(--green);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.leaderboard-rank small {
+  display: block;
+  color: var(--green-faint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.leaderboard-project {
   align-self: stretch;
   color: var(--green);
   text-decoration: none;
@@ -714,6 +785,23 @@
   grid-template-columns: 44px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
+}
+
+/* stretch the one link over the whole row */
+.leaderboard-project::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* ring the row it now covers, not just the name */
+.leaderboard-project:focus-visible {
+  outline: 0;
+}
+
+.leaderboard-project:focus-visible::after {
+  outline: 2px solid var(--green);
+  outline-offset: -2px;
 }
 
 .leaderboard-project-copy {
@@ -731,7 +819,7 @@
 .leaderboard-project-copy > span {
   color: var(--green-faint);
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .leaderboard-update {
@@ -751,19 +839,30 @@
   overflow: hidden;
 }
 
-.leaderboard-project:hover strong,
-.leaderboard-update:hover {
+.leaderboard-row:hover .leaderboard-project strong {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .leaderboard-score {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
   color: var(--green-faint);
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  line-height: 1.6;
+  font-size: 0.75rem;
+  line-height: 1.4;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* the number that sets the order, so it outweighs everything else in the row */
+.leaderboard-score strong {
+  color: var(--green);
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .leaderboard-join {
@@ -841,6 +940,7 @@
   margin-top: 40px;
   border-top: 1px solid var(--green-line);
   padding-top: 28px;
+  scroll-margin-top: 64px;
 }
 
 .leaderboard-about .work-copy {
@@ -941,8 +1041,12 @@
   .product-nav-inner { gap: 12px; font-size: 0.6875rem; }
   .product-nav-inner > .wordmark { font-size: 0.875rem; }
   .work-title,
-  .builder-title,
-  .app-title {
+  .app-title,
+  .app-section-title {
+    font-size: 1.75rem;
+  }
+
+  .builder-title {
     font-size: 2.25rem;
   }
 
@@ -1004,10 +1108,6 @@
     height: 1px;
   }
 
-  .pair-card {
-    min-height: 0;
-  }
-
   .pair-form {
     grid-template-columns: 1fr 1fr;
   }
@@ -1059,11 +1159,16 @@
     min-height: 80px;
   }
 
-  .leaderboard-rank {
+  .leaderboard-rank,
+  .leaderboard-row.is-top .leaderboard-rank {
     align-self: center;
     grid-column: 1;
     grid-row: 1 / 3;
     font-size: 1rem;
+  }
+
+  .leaderboard-rank small {
+    font-size: 0.75rem;
   }
 
   .leaderboard-project {
@@ -1074,6 +1179,15 @@
   .leaderboard-score {
     grid-column: 3;
     grid-row: 1;
+  }
+
+  .leaderboard-score strong {
+    font-size: 1.0625rem;
+  }
+
+  /* too wide beside the name on a phone; the vote count stays */
+  .leaderboard-record {
+    display: none;
   }
 
   .leaderboard-update {

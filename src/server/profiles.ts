@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gt, isNull, lte, sql } from 'drizzle-orm';
 import { db, databaseConfigured } from './db';
 import { commitment, project, projectOwner, ranking, result, user, week } from './schema';
-import { getDatabaseNow } from './weeks';
+import { getDatabaseNow, isCalendarDate } from './weeks';
 import { PAGE_SIZE, pageNumber } from './pagination';
 
 export const reservedHandles = new Set([
@@ -155,9 +155,7 @@ export async function listResultsForProject(projectId: string) {
 }
 
 export async function getPublicResult(handle: string, weekStartDate: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStartDate)) return null;
-  const date = new Date(`${weekStartDate}T00:00:00Z`);
-  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== weekStartDate || weekStartDate.startsWith('0000')) return null;
+  if (!isCalendarDate(weekStartDate)) return null;
   if (!databaseConfigured) return null;
   const [published] = await db
     .select({

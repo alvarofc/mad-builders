@@ -125,8 +125,10 @@ const proofLabel = (status: string) =>
                       <span class="result-summary">{published.summary}</span>
                     </span>
                     <span class="result-meta">
-                      {published.rank ? `#${published.rank}` : !published.onTime ? 'late' : published.weekFinalizedAt ? 'unranked' : 'awaiting rank'}<br />
-                      {proofLabel(published.proofStatus)}
+                      {published.rank
+                        ? <strong class="result-rank">#{published.rank}</strong>
+                        : <span>{!published.onTime ? 'late' : published.weekFinalizedAt ? 'unranked' : 'awaiting rank'}</span>}
+                      <span>{proofLabel(published.proofStatus)}</span>
                     </span>
                   </a>
                 ))}

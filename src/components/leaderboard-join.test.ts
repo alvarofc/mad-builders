@@ -22,7 +22,10 @@ it('sends signed-out visitors to /login and signed-in builders straight to /buil
 it('keeps the rank explainer but moves it below the board', () => {
   expect(panel.indexOf('class="leaderboard-about"')).toBeGreaterThan(panel.indexOf('class="leaderboard-list"'));
   expect(panel).toContain('how the rank works');
-  expect(panel).toContain('Eight votes unlock a rank.');
+  // smaller weeks rank on fewer votes, so the copy must not promise exactly eight
+  expect(panel).toContain('Eight votes unlock a rank, or fewer in a small week.');
+  expect(panel).toContain('id="how-ranks-work"');
+  expect(panel).toContain('href="#how-ranks-work"');
 });
 
 it.each([
@@ -58,23 +61,53 @@ it('keeps the board itself near the top', () => {
   expect(head).not.toContain('leaderboard-key');
   expect(panel).toContain('{todo && (');
   // the score is defined in the column header rather than in a line of its own
-  expect(panel).toContain('<span>peer win rate</span>');
+  expect(panel).toContain('<span>win rate</span>');
   expect(panel).not.toContain('class="leaderboard-columns mono" aria-hidden');
 });
 
-it('shows the project description and links it to the project profile', () => {
-  const description = panel.split('class="leaderboard-update"')[1].split('</a>')[0];
+it('shows the project description and links the row to the project profile', () => {
+  const row = panel.split("class:list={['leaderboard-row'")[1].split('</li>')[0];
+  const description = row.split('class="leaderboard-update"')[1].split('class="leaderboard-score"')[0];
   expect(panel).toContain('<span>description</span>');
   expect(description).toContain('<span>{entry.projectSentence}</span>');
-  expect(description).toContain('`/builders/${entry.handle}`');
   expect(description).not.toContain('entry.summary');
-  expect(description).not.toContain('/weeks/');
+  // one link per row, stretched over the whole row, so keyboard users get one tab stop
+  expect(row.match(/<a\b/g)).toHaveLength(1);
+  expect(row).toContain('`/builders/${entry.handle}`');
+  expect(css).toMatch(/\.leaderboard-project::after\s*\{[^}]*inset:\s*0/);
+  // the row is the containing block, or the overlay would swallow clicks outside it
+  expect(css).toMatch(/\.leaderboard-row\s*\{[^}]*position:\s*relative/);
+});
+
+it('leads each score with the win rate and explains it with the record', () => {
+  const score = panel.split('class="leaderboard-score"')[1].split('</li>')[0];
+  const rate = score.indexOf('<strong>{Math.round((entry.scoreNumerator / entry.scoreDenominator) * 100)}%');
+  const record = score.indexOf('{entry.wins} won');
+  const votes = score.indexOf('of {entry.decisions} votes');
+  expect(rate).toBeGreaterThan(-1);
+  expect(rate).toBeLessThan(record);
+  expect(record).toBeLessThan(votes);
+});
+
+it('marks tied ranks and links earlier weeks', () => {
+  expect(panel).toContain('sharedRanks.has(entry.rank)');
+  expect(panel).toContain('<small>tied</small>');
+  expect(panel).toContain('<a href={boardUrl(board.previousWeek)} rel="prev">');
+  expect(page).toContain("Astro.url.searchParams.get('week')");
 });
 
 it('keeps the project description visible on the mobile board', () => {
   const mobile = css.split('@media (max-width: 720px)')[1];
   expect(mobile).not.toMatch(/\.leaderboard-update\s*\{[^}]*display:\s*none/);
   expect(mobile).toContain('.leaderboard-update {');
+});
+
+it('releases the sticky column header when the list ends', () => {
+  // sticky resolves against the parent; the panel parent pinned it over the explainer
+  const table = panel.split('<div class="leaderboard-table">')[1].split('</ol>')[0];
+  expect(table).toContain('<div class="leaderboard-columns mono">');
+  expect(table).toContain('<ol class="leaderboard-list" role="list">');
+  expect(css).toMatch(/\.leaderboard-columns\s*\{[^}]*position:\s*sticky;\s*top:\s*var\(--product-nav-h\)/);
 });
 
 it('gives every empty board a way out', () => {

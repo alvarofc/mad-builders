@@ -16,6 +16,13 @@ const inks = [
   { name: '--cream-faint', hex: 'rgba(246,245,240,0.38)', use: 'kickers / tertiary text' },
   { name: '--line', hex: 'rgba(246,245,240,0.14)', use: 'hairline borders' },
 ];
+// the app (leaderboard, vote, projects) is green ink on cream
+const creamInks = [
+  { name: '--green', hex: '#1a342b', use: 'primary ink on cream' },
+  { name: '--green-dim', hex: 'rgba(26,52,43,0.82)', use: 'secondary text on cream' },
+  { name: '--green-faint', hex: 'rgba(26,52,43,0.7)', use: 'small labels on cream' },
+  { name: '--green-line', hex: 'rgba(26,52,43,0.16)', use: 'hairline borders on cream' },
+];
 
 const fonts = [
   {
@@ -39,7 +46,7 @@ const fonts = [
   {
     name: 'IBM Plex Mono',
     role: 'other',
-    where: 'kickers, buttons, nav, ticker, footer. uppercase and letter-spaced',
+    where: 'kickers, labels, buttons, nav, ticker, footer. kickers and labels are uppercase and letter-spaced; buttons and nav links are lowercase',
     sample: 'WHAT THIS IS ///',
     family: "'IBM Plex Mono', monospace",
     weight: 500,
@@ -148,6 +155,18 @@ const donts = [
         {inks.map((c) => (
           <div class="swatch">
             <span class={`chip ${c.name === '--cream' ? '' : 'chip-on-green'}`} style={`background:${c.hex}`}></span>
+            <p class="sw-name mono">{c.name}</p>
+            <p class="sw-hex mono">{c.hex}</p>
+            <p class="sw-use">{c.use}</p>
+          </div>
+        ))}
+      </div>
+      <div class="kicker sub mono">ink &amp; lines on cream</div>
+      <div class="swatches">
+        {creamInks.map((c) => (
+          <div class="swatch">
+            {/* layered over cream so the translucent inks show as they render */}
+            <span class="chip" style={`background:linear-gradient(var(${c.name}), var(${c.name})), var(--cream)`}></span>
             <p class="sw-name mono">{c.name}</p>
             <p class="sw-hex mono">{c.hex}</p>
             <p class="sw-use">{c.use}</p>

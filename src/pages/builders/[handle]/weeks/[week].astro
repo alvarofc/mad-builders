@@ -50,7 +50,7 @@ const description = published
             <h1 class="work-title">{published.projectName}</h1>
             <p class="work-copy">{published.projectSentence}</p>
             <p class="work-intro update-copy">{published.summary}</p>
-            <p class="work-copy">Built by <a href={`/builders/${published.handle}`}>{published.displayName}</a>{published.rank ? <> · <a href="/leaderboard">#{published.rank} this week</a></> : ''}</p>
+            <p class="work-copy">Built by <a href={`/builders/${published.handle}`}>{published.displayName}</a>{published.rank ? <> · <a href={`/leaderboard?week=${published.weekStartDate}`}>ranked #{published.rank}</a></> : ''}</p>
             {published.nextPromise && <p class="work-copy update-copy">Next week: {published.nextPromise}</p>}
             {published.feedbackRequest && <p class="work-copy update-copy">Feedback wanted: {published.feedbackRequest}</p>}
             <div class="work-actions">
@@ -59,7 +59,7 @@ const description = published
                 ? <a class="work-button" href={currentProfile ? '/build#this-week' : `/build?ref=${published.handle}#this-week`}>what are you building?</a>
                 /* publishing redirects here, so the owner needs a way onward. the
                    board knows whether voting is open and routes there. */
-                : <a class="work-button" href="/leaderboard">see the board</a>}
+                : <a class="work-button" href="/leaderboard">see the leaderboard</a>}
               {canEdit && <a class="work-button secondary" href="/build?edit#this-week">edit update</a>}
               <ShareButton path={`/builders/${published.handle}/weeks/${published.weekStartDate}?ref=${published.handle}`} title={[`Weekly update · week of ${published.weekStartDate}\n\n${currentProfile?.handle === published.handle ? "This week I worked on" : `${published.displayName} shared progress on`} ${published.projectName}:\n${published.summary}`, published.feedbackRequest].filter(Boolean).join("\n\n")} eventName="weekly_result_shared" handle={published.handle} />
             </div>

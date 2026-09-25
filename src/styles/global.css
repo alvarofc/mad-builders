@@ -26,6 +26,8 @@
   /* the wordmark / logo face — self-hosted variable font */
   --font-display: 'Bricolage Grotesque Variable', var(--font-sans);
   --max: 1180px;
+  /* the sticky app nav: a 46px row plus its 1px bottom rule */
+  --product-nav-h: 47px;
   --z-nav: 1200;
   --z-subnav: 1100;
 }
@@ -195,11 +197,11 @@ section[id] {
 }
 
 .section.light .kicker {
-  color: rgba(26, 52, 43, 0.45);
+  color: var(--green-faint);
 }
 
 .section.light .lede {
-  color: rgba(26, 52, 43, 0.72);
+  color: var(--green-dim);
 }
 
 .section.light .btn {

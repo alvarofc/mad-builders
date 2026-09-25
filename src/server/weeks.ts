@@ -56,11 +56,18 @@ async function refreshWeeklySchedule() {
   scheduleFreshUntil = Date.now() + 60_000;
 }
 
+// a real YYYY-MM-DD day. the round trip rejects shapes like 2026-02-30, which
+// postgres would refuse as a date and turn a bad link into a 500.
+export function isCalendarDate(value: string | null | undefined): value is string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value) || value.startsWith('0000')) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 export async function getBuildState(projectId: string, selectedWeekDate?: string | null) {
   if (!databaseConfigured) return null;
 
-  if (selectedWeekDate && (!/^\d{4}-\d{2}-\d{2}$/.test(selectedWeekDate) ||
-    !Number.isFinite(Date.parse(selectedWeekDate)) || new Date(selectedWeekDate).toISOString().slice(0, 10) !== selectedWeekDate)) return null;
+  if (selectedWeekDate && !isCalendarDate(selectedWeekDate)) return null;
   const now = await getDatabaseNow();
   const [currentMonday] = madridWeekStartDates(now);
   const unfinishedWeeks = await db.select({ week }).from(week)
