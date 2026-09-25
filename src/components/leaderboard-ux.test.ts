@@ -122,7 +122,7 @@ it('redirects a ?week= it cannot show, so the URL always names the week on scree
   const page = read('../pages/leaderboard.astro');
   expect(page).toContain("if (Astro.url.searchParams.has('week') && !board?.archived) {");
   expect(page).toContain("latest.searchParams.delete('week');");
-  expect(page).toContain('return Astro.redirect(`${latest.pathname}${latest.search}`, 302);');
+  expect(page).toContain('Astro.redirect(`${latest.pathname}${latest.search}`, 302)');
 });
 
 it('keeps an earlier week free of running-week prompts and dead ends', () => {

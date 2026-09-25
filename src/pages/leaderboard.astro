@@ -18,7 +18,9 @@ if (Astro.url.searchParams.has('week') && !board?.archived) {
   latest.search = Astro.url.search;
   latest.searchParams.delete('week');
   latest.searchParams.delete('page');
-  return Astro.redirect(`${latest.pathname}${latest.search}`, 302);
+  const redirect = Astro.redirect(`${latest.pathname}${latest.search}`, 302);
+  redirect.headers.set('Cache-Control', 'no-store');
+  return redirect;
 }
 // the running week's prompt is hidden on earlier weeks, so skip its query there
 const live = demo || board?.archived ? null : await Astro.locals.timing.measure('live-week', () => getLiveWeek(currentUser?.id));

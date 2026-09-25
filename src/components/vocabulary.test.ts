@@ -14,6 +14,7 @@ const surfaces = [
   '../pages/builders/index.astro',
   '../pages/builders/[handle].astro',
   '../pages/builders/[handle]/weeks/[week].astro',
+  '../layouts/Layout.astro',
   './LeaderboardPanel.astro',
   '../server/email-templates.ts',
 ].map((file) => {
