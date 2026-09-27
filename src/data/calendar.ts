@@ -436,6 +436,7 @@ export const calendarEvents: CalendarEvent[] = [
   },
   {
     title: 'Madrid Open - Vol.1',
+    madbuilders: true,
     date: '2026-10-03',
     time: '09:00',
     endTime: '21:00',
@@ -457,6 +458,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Mía Salazar explora cómo los juegos de rol ayudan a desarrollar soft skills en equipos de desarrollo, y Carlos Rodríguez López analiza los riesgos de seguridad de agentes, servidores MCP y LLMs con ejemplos de Wiz. El encuentro de GDG Madrid termina con networking.',
   },
   {
+    title: 'Encuentro con Samuel Gil, CEO y General Partner en JME Ventures',
+    date: '2026-10-08',
+    time: '19:00',
+    endTime: '21:30',
+    location: 'Calle del Príncipe de Vergara 26, Salamanca',
+    url: 'https://luma.com/nwip9952',
+    image: '/events/encuentro-samuel-gil-jme.jpg',
+    description:
+      'El Club de Marketing Innovación y Talento by Pangea organiza un encuentro con Samuel Gil, CEO y General Partner de JME Ventures y autor de Suma Positiva. Compartirá su visión sobre tecnología y emprendimiento a partir de su experiencia acompañando a startups en sus primeras etapas.',
+  },
+  {
     title: 'Hacktoberfest Hack Day Madrid 2026',
     date: '2026-10-10',
     time: '15:00',
@@ -466,6 +478,28 @@ export const calendarEvents: CalendarEvent[] = [
     image: '/events/hacktoberfest-madrid-2026.jpg',
     description:
       'Hack Day gratuito para construir proyectos open source con modelos y herramientas de IA abiertos. Los equipos se forman allí y la tarde termina con demos; no hace falta llevar una idea cerrada, solo portátil y cargador.',
+  },
+  {
+    title: 'La nueva generación de la IA en finanzas',
+    date: '2026-10-15',
+    time: '11:45',
+    endTime: '15:00',
+    location: 'Zenit The Studio, Calle de Cartagena 126, Chamartín',
+    url: 'https://luma.com/fxr1j097',
+    image: '/events/ia-agentica-finanzas-embat.png',
+    description:
+      'Encuentro de Embat sobre IA agéntica en finanzas. Francesca Fortique, de Anthropic, hablará de agentes en producción; también habrá un panel sobre su uso en banca, una presentación de Embat y tiempo para conversar.',
+  },
+  {
+    title: 'Anatomía de un agente de soporte en producción: del contacto real a la resolución',
+    date: '2026-10-15',
+    time: '19:00',
+    endTime: '20:30',
+    location: 'Puerta Innovación, Calle de Toledo 110, Centro',
+    url: 'https://luma.com/e43g6p3z',
+    image: '/events/agente-soporte-produccion-groupon.jpg',
+    description:
+      'Daniel Lledó, responsable de ML e IA en Groupon, cuenta cómo llevaron un agente de soporte a producción y qué falló por el camino. Hablará de cómo controlar el contexto y las acciones del agente, y de cómo puede mantenerlo un equipo sin escribir código.',
   },
   {
     title: 'DevFest Madrid 2026',
