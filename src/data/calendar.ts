@@ -491,6 +491,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Hack Day gratuito para construir proyectos open source con modelos y herramientas de IA abiertos. Los equipos se forman allí y la tarde termina con demos; no hace falta llevar una idea cerrada, solo portátil y cargador.',
   },
   {
+    title: 'PyTorch Madrid Kickoff',
+    date: '2026-10-14',
+    time: '18:00',
+    endTime: '20:30',
+    location: 'Red Hat, Paseo de la Castellana 259C, La Paz',
+    url: 'https://luma.com/uys5qucv',
+    image: '/events/pytorch-madrid-kickoff.png',
+    description:
+      'Primera reunión de PyTorch Madrid, con charlas sobre el ecosistema PyTorch, entrenamiento de agentes e inferencia para sistemas multiagente. También se hablará de modelos pequeños para entender documentos y habrá tiempo para conversar en las oficinas de Red Hat.',
+  },
+  {
     title: 'La nueva generación de la IA en finanzas',
     date: '2026-10-15',
     time: '11:45',
