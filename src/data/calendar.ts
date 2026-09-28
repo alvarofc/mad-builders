@@ -447,6 +447,17 @@ export const calendarEvents: CalendarEvent[] = [
       'A one-day build challenge for 40 people, with real datasets and unsolved problems from Talky, Reversa and Tunen. Teams of three can use any stack or model; briefs and data credits arrive the week before, and registration closes on September 25.',
   },
   {
+    title: 'KERNEL PANIC! #01 Madrid: IA aplicada a escala',
+    date: '2026-10-06',
+    time: '16:30',
+    endTime: '21:00',
+    location: 'Casa del Lector, Matadero, Arganzuela',
+    url: 'https://luma.com/p50cydsf',
+    image: '/events/kernel-panic-01-madrid.png',
+    description:
+      'Cuatro charlas técnicas sobre IA de código abierto en producción: infraestructura cloud, modelos a escala y agentes de código. Helmcode organiza el encuentro con Hugging Face, InditexTech y Cloudflare; habrá tiempo para conversar al terminar.',
+  },
+  {
     title: 'Seguridad en IA, juegos de rol y soft skills',
     date: '2026-10-08',
     time: '18:30',
