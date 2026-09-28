@@ -1,5 +1,5 @@
 // One entry per event. To add a new event: drop a folder of photos in
-// src/assets/events/<slug>/ (with a cover.jpeg) and add an entry here.
+// src/assets/events/<slug>/ (with a cover.jpeg or cover.png) and add an entry here.
 //
 // This is the SINGLE source of truth for mad.builders' own events. It powers
 // the home-page past-events grid AND the /madrid calendar widget — `madrid.astro`
@@ -8,7 +8,7 @@
 // place: add the event here and it shows up in both.
 //
 // The cover for the calendar is resolved automatically from
-// src/assets/events/<slug>/cover.jpeg, so no separate image path is needed.
+// src/assets/events/<slug>/cover.jpeg or cover.png, so no separate image path is needed.
 //
 // Adding an event from a link: see the "Adding an event from just a link"
 // workflow in `calendar.ts`. Read the event page and write `blurb` as a 1-2
@@ -40,6 +40,19 @@ export const events: CommunityEvent[] = [
     luma: 'https://luma.com/grokbotmadrid1',
     blurb:
       'Taller práctico para probar Grok Bot y construir bots que resuelvan un reto o automaticen una tarea. Trae portátil o móvil; habrá créditos para usar durante el evento, demos de la comunidad y picoteo al terminar.',
+  },
+  {
+    slug: 'exponential-beers-francois-derbaix',
+    title: 'Exponential Beers: François Derbaix',
+    date: '2026-09-28',
+    time: '19:30',
+    endTime: '21:30',
+    location: 'mad.builders hub, Centro',
+    luma: 'https://luma.com/pz3otdck',
+    coverPosition: 'center 15%',
+    private: true,
+    blurb:
+      'François Derbaix, cofundador y co-CEO de Indexa Capital, contó cómo construyeron la empresa y respondió preguntas del público. Exponential organizó el encuentro en el hub con el apoyo de Acurio Ventures.',
   },
   {
     slug: 'spec-kitty',

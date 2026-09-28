@@ -6,11 +6,15 @@ import { resolve } from 'node:path';
 const publicCovers = readdirSync('public/events')
   .filter((name) => /\.(jpe?g|png|webp)$/i.test(name))
   .map((name) => ({ key: `/events/${name}`, path: resolve('public/events', name) }));
-const communityCovers = readdirSync('src/assets/events', { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .flatMap(({ name: slug }) => readdirSync(`src/assets/events/${slug}`)
-    .filter((name) => /^cover\.(jpe?g|png)$/i.test(name))
-    .map((name) => ({ key: `community:${slug}`, path: resolve('src/assets/events', slug, name) })));
+// Let Vite track added, removed and replaced covers so the calendar updates in dev too.
+const communityCoverAssets = import.meta.glob('../assets/events/*/cover.{jpeg,jpg,png}', {
+  eager: true,
+  import: 'default',
+});
+const communityCovers = Object.keys(communityCoverAssets).map((file) => ({
+  key: `community:${file.split('/').at(-2)}`,
+  path: resolve('src/lib', file),
+}));
 
 export const calendarCovers = [...publicCovers, ...communityCovers].map((cover) => ({
   ...cover,

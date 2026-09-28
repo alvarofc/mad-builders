@@ -21,8 +21,9 @@ const HOME_PAGE = {
   primaryImageOfPage: absoluteUrl(primaryHomeImage.src),
 };
 
-const covers = import.meta.glob<{ default: ImageMetadata }>('../assets/events/*/cover.jpeg', { eager: true });
-const coverFor = (slug: string) => covers[`../assets/events/${slug}/cover.jpeg`]?.default;
+const covers = import.meta.glob<{ default: ImageMetadata }>('../assets/events/*/cover.{jpeg,png}', { eager: true });
+const coverFor = (slug: string) =>
+  covers[`../assets/events/${slug}/cover.jpeg`]?.default ?? covers[`../assets/events/${slug}/cover.png`]?.default;
 
 // Hand-picked hero shots. Order matters: each strip alternates wide and tall
 // frames and keeps same-event photos apart. Only these get shipped.
