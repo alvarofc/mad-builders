@@ -24,5 +24,5 @@ export const sisters: Sister[] = [
   { name: '706 Youth Space', logo: '706_youth_space.jpg', url: 'https://x.com/Labs706', flag: 'cn' },
   { name: 'Nonce', logo: 'nonce.png', url: 'https://nonce.community/', flag: 'kr', ink: true },
   { name: 'Xiji Incubator', logo: 'xiji_incubator.jpg', url: 'https://www.xijiincubator.com/', flag: 'cn' },
-  { name: 'Urbe', logo: 'urbe.svg', url: 'https://urbe.build/', flag: 'it' },
+  { name: 'Mana Tech', logo: 'mana-tech.svg', url: 'https://tech.manacommon.com/', flag: 'us', ink: true },
 ];
