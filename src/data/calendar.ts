@@ -446,6 +446,19 @@ export const calendarEvents: CalendarEvent[] = [
       'Cuatro charlas técnicas sobre IA de código abierto en producción: infraestructura cloud, modelos a escala y agentes de código. Helmcode organiza el encuentro con Hugging Face, InditexTech y Cloudflare; habrá tiempo para conversar al terminar.',
   },
   {
+    title: 'GTM cañas Madrid',
+    madbuilders: true,
+    private: true,
+    date: '2026-10-06',
+    time: '18:30',
+    endTime: '21:30',
+    location: 'Madrid',
+    url: 'https://luma.com/lvhzfscv',
+    image: '/events/gtm-canas-madrid.jpg',
+    description:
+      'Cañas for people building go-to-market in tech and AI, with the kind of conversations that usually happen after an event.',
+  },
+  {
     title: 'Seguridad en IA, juegos de rol y soft skills',
     date: '2026-10-08',
     time: '18:30',
