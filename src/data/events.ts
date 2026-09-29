@@ -31,6 +31,17 @@ export interface CommunityEvent {
 
 export const events: CommunityEvent[] = [
   {
+    slug: 'madrid-open-vol-1',
+    title: 'Madrid Open - Vol.1',
+    date: '2026-10-03',
+    time: '09:00',
+    endTime: '21:00',
+    location: 'Mad Tech Campus, Matadero',
+    luma: 'https://luma.com/2js2w670',
+    blurb:
+      'A one-day build challenge for 40 people. Teams of three will work on real datasets and unsolved problems from Talky, Reversa and Tunen, using any stack or model.',
+  },
+  {
     slug: 'grok-bot-madrid',
     title: 'Grok Bot Madrid Meetup',
     date: '2026-09-29',
