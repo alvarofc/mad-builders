@@ -99,7 +99,7 @@ export const spots: Spot[] = [
   {
     name: 'Embat',
     kind: 'company',
-    note: 'Treasury software for cash visibility, bank reconciliation and corporate payments',
+    note: 'Treasury management platform for cash visibility, bank reconciliation and corporate payments',
     lat: 40.44897,
     lng: -3.69618,
     logo: '/map/embat.png',
