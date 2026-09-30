@@ -514,6 +514,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Encuentro de Embat sobre IA agéntica en finanzas. Francesca Fortique, de Anthropic, hablará de agentes en producción; también habrá un panel sobre su uso en banca, una presentación de Embat y tiempo para conversar.',
   },
   {
+    title: 'AI Builders Night by Embat & Netlight',
+    date: '2026-10-15',
+    time: '18:00',
+    endTime: '21:00',
+    location: 'Embat, Calle de la Basílica 17, Tetuán',
+    url: 'https://luma.com/3csk6ah3',
+    image: '/events/ai-builders-night-embat-netlight.png',
+    description:
+      "Embat and Netlight host a prompt-engineering competition at Embat's Madrid office, starting with a talk from Anthropic. Participants will test prompts against practical cases in beginner or advanced tracks, with no coding experience required.",
+  },
+  {
     title: 'Anatomía de un agente de soporte en producción: del contacto real a la resolución',
     date: '2026-10-15',
     time: '19:00',
