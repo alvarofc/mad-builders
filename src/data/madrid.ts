@@ -97,6 +97,15 @@ export const spots: Spot[] = [
     twitter: 'https://twitter.com/Celonis',
   },
   {
+    name: 'Embat',
+    kind: 'company',
+    note: 'Treasury software for cash visibility, bank reconciliation and corporate payments',
+    lat: 40.44897,
+    lng: -3.69618,
+    logo: '/map/embat.png',
+    url: 'https://www.embat.io/es',
+  },
+  {
     name: 'Tinybird',
     kind: 'company',
     note: 'Real-time data platform for building analytics APIs at scale',
