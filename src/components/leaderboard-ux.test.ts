@@ -13,6 +13,7 @@ const globalCss = read('../styles/global.css');
 const productCss = read('../styles/product.css');
 const weekPage = read('../pages/builders/[handle]/weeks/[week].astro');
 const profilePage = read('../pages/builders/[handle].astro');
+const votePage = read('../pages/vote.astro');
 
 // run one `const name = ...;` statement from the real source against a fake scope,
 // so the rules are checked as behaviour rather than as spelling. parameter type
@@ -22,6 +23,18 @@ function evaluate<T>(code: string, name: string, scope: Record<string, unknown>)
   return new Function(...Object.keys(scope), `return (${source});`)(...Object.values(scope)) as T;
 }
 const fromPanel = <T>(name: string, scope: Record<string, unknown>) => evaluate<T>(frontmatter, name, scope);
+
+it('names the voting week and links to its update rather than the newer published week', () => {
+  const review = { state: 'ineligible', week: { weekStartDate: '2026-09-21' } };
+  const votingWeek = evaluate(votePage, 'votingWeek', { review });
+  expect(evaluate(votePage, 'publishHref', { votingWeek })).toBe('/build?week=2026-09-21#this-week');
+  expect(evaluate(votePage, 'publishHref', { votingWeek: null })).toBe('/build#this-week');
+  const gate = votePage.split("review.state === 'ineligible' ? (")[1].split(') : (')[0];
+  expect(gate).toContain('the week of ${votingWeek.weekStartDate}');
+  expect(gate).toContain("Publishing a newer week's update does not unlock these votes.");
+  expect(gate).toContain('href={publishHref}');
+  expect(gate).not.toContain('href="/leaderboard"');
+});
 
 it('labels a week by its calendar day, adding the year only for other years', () => {
   const board = { now: new Date('2026-09-24T12:00:00Z') };
