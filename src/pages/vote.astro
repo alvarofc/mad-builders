@@ -18,6 +18,9 @@ const review = demo ? demoReview(Astro.url.searchParams.get('round')) : !current
     ? { state: 'profile_required' as const }
     : await Astro.locals.timing.measure('review', () => getReviewState(currentUser.id));
 
+const votingWeek = 'week' in review ? review.week : null;
+const publishHref = votingWeek ? `/build?week=${votingWeek.weekStartDate}#this-week` : '/build#this-week';
+
 const proofLabel = (status: string) =>
   status === 'github_account_matched'
     ? 'GitHub account matched'
@@ -123,9 +126,9 @@ const proofLabel = (status: string) =>
         ) : review.state === 'ineligible' ? (
           <>
             <p class="work-label">voting is open</p>
-            <h2 class="work-heading">Publish an update to vote.</h2>
-            <p class="work-copy">Publish an update for this week to cast votes. Late updates count too.</p>
-            <a class="work-button" href="/leaderboard">see the leaderboard</a>
+            <h2 class="work-heading">Publish an update for {votingWeek ? `the week of ${votingWeek.weekStartDate}` : 'the week being voted on'}.</h2>
+            <p class="work-copy">Voting is for that week's work. Publishing a newer week's update does not unlock these votes. Late updates count too.</p>
+            <a class="work-button" href={publishHref}>publish this update</a>
           </>
         ) : (
           <>
