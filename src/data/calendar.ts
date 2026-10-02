@@ -470,6 +470,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Mía Salazar explora cómo los juegos de rol ayudan a desarrollar soft skills en equipos de desarrollo, y Carlos Rodríguez López analiza los riesgos de seguridad de agentes, servidores MCP y LLMs con ejemplos de Wiz. El encuentro de GDG Madrid termina con networking.',
   },
   {
+    title: 'DevDay Exchange Community Meetup: Madrid',
+    date: '2026-10-08',
+    time: '18:30',
+    endTime: '21:00',
+    location: 'CaféOlé! Clubworking, Fernández de los Ríos 3, Chamberí',
+    url: 'https://luma.com/bv9i3cgl',
+    image: '/events/devday-exchange-madrid.png',
+    description:
+      "A recap of OpenAI's DevDay announcements, followed by short demos from local builders and time to try the new tools. Bring your laptop to work on a project and compare ideas with other attendees.",
+  },
+  {
     title: 'Encuentro con Samuel Gil, CEO y General Partner en JME Ventures',
     date: '2026-10-08',
     time: '19:00',
