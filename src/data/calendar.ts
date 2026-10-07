@@ -547,6 +547,16 @@ export const calendarEvents: CalendarEvent[] = [
       'Daniel Lledó, responsable de ML e IA en Groupon, cuenta cómo llevaron un agente de soporte a producción y qué falló por el camino. Hablará de cómo controlar el contexto y las acciones del agente, y de cómo puede mantenerlo un equipo sin escribir código.',
   },
   {
+    title: 'Humans in the Loop · i = 1',
+    date: '2026-11-12',
+    time: '18:00',
+    endTime: '21:00',
+    location: 'Orbitant, Torre Emperador, Paseo de la Castellana 259D, planta 9, La Paz',
+    url: 'https://luma.com/tx2ao2t6',
+    image: '/events/humans-in-the-loop-1.png',
+    description: 'DevExpert reúne a desarrolladores que trabajan con IA para compartir experiencias reales en tres charlas propuestas por los asistentes. El encuentro termina con tiempo para conversar.',
+  },
+  {
     title: 'DevFest Madrid 2026',
     date: '2026-11-27',
     time: '15:30',
