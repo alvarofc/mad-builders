@@ -547,6 +547,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Daniel Lledó, responsable de ML e IA en Groupon, cuenta cómo llevaron un agente de soporte a producción y qué falló por el camino. Hablará de cómo controlar el contexto y las acciones del agente, y de cómo puede mantenerlo un equipo sin escribir código.',
   },
   {
+    title: 'Clay Club Madrid: Launch Event',
+    date: '2026-10-28',
+    time: '18:00',
+    endTime: '21:00',
+    location: 'Madrid',
+    url: 'https://luma.com/bo4cnq0f',
+    image: '/events/clay-club-madrid-launch.png',
+    description:
+      'The first Clay Club Madrid meetup covers how to build a go-to-market system, with demos and a hands-on clinic led by mentors. Bring your laptop for the clinic, or join the networking downstairs.',
+  },
+  {
     title: 'Humans in the Loop · i = 1',
     date: '2026-11-12',
     time: '18:00',
