@@ -503,6 +503,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Hack Day gratuito para construir proyectos open source con modelos y herramientas de IA abiertos. Los equipos se forman allí y la tarde termina con demos; no hace falta llevar una idea cerrada, solo portátil y cargador.',
   },
   {
+    title: 'Claude Community x Shakers | HR Tech · Madrid',
+    date: '2026-10-13',
+    time: '19:00',
+    endTime: '20:00',
+    location: 'Shakers Madrid, Calle de Zurbano 71, Chamberí',
+    url: 'https://luma.com/claude-adr1',
+    image: '/events/claude-community-shakers-hr-tech.png',
+    description:
+      'Encuentro de Claude Community y Shakers sobre el uso de Claude Code y agentes en equipos de recursos humanos. Eusebio Graciani, Pablo Lozano y Ramón Egea compartirán cómo usan estas herramientas en sus productos y para automatizar tareas y revisar procesos.',
+  },
+  {
     title: 'PyTorch Madrid Kickoff',
     date: '2026-10-14',
     time: '18:00',
