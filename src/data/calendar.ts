@@ -569,6 +569,17 @@ export const calendarEvents: CalendarEvent[] = [
       'The first Clay Club Madrid meetup covers how to build a go-to-market system, with demos and a hands-on clinic led by mentors. Bring your laptop for the clinic, or join the networking downstairs.',
   },
   {
+    title: 'AI Builders and Databases Madrid',
+    date: '2026-11-03',
+    time: '18:30',
+    endTime: '21:30',
+    location: 'AWS, Torre Foster, Paseo de la Castellana 259A, La Paz',
+    url: 'https://luma.com/clickh-1qqg',
+    image: '/events/ai-builders-databases-madrid.png',
+    description:
+      'ClickHouse meetup at AWS on real-time analytics, with talks by Daniel Phiri on SQL enrichment and Abed Habli on building data apps with Metabase. Advance registration with ID or passport details is required for building access.',
+  },
+  {
     title: 'Humans in the Loop · i = 1',
     date: '2026-11-12',
     time: '18:00',
