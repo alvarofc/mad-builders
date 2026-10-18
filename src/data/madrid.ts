@@ -106,6 +106,15 @@ export const spots: Spot[] = [
     url: 'https://www.embat.io/es',
   },
   {
+    name: 'Shakers',
+    kind: 'company',
+    note: 'Platform connecting companies with vetted freelance tech and AI specialists',
+    lat: 40.4374816,
+    lng: -3.6930651,
+    logo: '/map/shakers.png',
+    url: 'https://www.shakersworks.com/',
+  },
+  {
     name: 'Tinybird',
     kind: 'company',
     note: 'Real-time data platform for building analytics APIs at scale',
