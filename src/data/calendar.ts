@@ -558,6 +558,61 @@ export const calendarEvents: CalendarEvent[] = [
       'Daniel Lledó, responsable de ML e IA en Groupon, cuenta cómo llevaron un agente de soporte a producción y qué falló por el camino. Hablará de cómo controlar el contexto y las acciones del agente, y de cómo puede mantenerlo un equipo sin escribir código.',
   },
   {
+    title: 'Madrid | Claude Meetup - formato 4x10 (español)',
+    date: '2026-10-19',
+    time: '19:00',
+    endTime: '21:00',
+    location: 'Madrid',
+    url: 'https://luma.com/claude-7ey9',
+    image: '/events/claude-community-shakers-hr-tech.png',
+    description:
+      'Cuatro ponentes presentan casos de uso de Claude en ciencias de la salud, con diez minutos de charla y cinco de preguntas cada uno. Las sesiones son en español y después hay una hora para conversar; la dirección se comparte con los inscritos.',
+  },
+  {
+    title: '#TRG26',
+    date: '2026-10-23',
+    time: '09:00',
+    endTime: '22:30',
+    location: 'La Nave, Calle Cifuentes 5, Villaverde',
+    url: 'https://www.eventbrite.es/e/entradas-trg26-1985907372410',
+    image: '/events/trg26.jpg',
+    description:
+      'Conferencia sobre software y productos digitales, este año centrada en experiencias prácticas con IA, del 22 al 24 de octubre en La Nave. La jornada principal es el viernes 23; el jueves hay talleres y el sábado se celebra el Community Day.',
+  },
+  {
+    title: 'AI Tour Workshop: cómo construimos un repositorio de insights con tres agentes de IA',
+    date: '2026-10-27',
+    time: '17:30',
+    endTime: '19:30',
+    location: 'Shakers Madrid, Calle de Zurbano 71, Chamberí',
+    url: 'https://luma.com/rb7oeffp',
+    image: '/events/ai-tour-workshop-shakers.png',
+    description:
+      'Ignacio Alonso, Head of Product de Shakers, muestra cómo construyeron un sistema de tres agentes para convertir entrevistas y feedback en insights en Notion, consultar la información y mantenerla actualizada. Incluye una demo y práctica por parejas; trae tu portátil, no hace falta saber programar.',
+  },
+  {
+    title: 'Construyendo sin filtros #16: Levantar ronda, construir agentes y crecer con IA',
+    date: '2026-10-27',
+    time: '18:30',
+    endTime: '21:00',
+    location: 'Aticco Castellana, Paseo de la Castellana 268, Chamartín',
+    url: 'https://luma.com/eusxkzkb',
+    image: '/events/construyendo-sin-filtros-16.png',
+    description:
+      'David Zafra, cofundador de heydiga, y Maximilian Letón, cofundador y COO de Talky Labs, conversan sobre cómo convertir agentes de IA en productos que consigan clientes e inversión. Borja Vega modera el encuentro de Startup Grind Madrid, con tiempo después para conocer a otros asistentes.',
+  },
+  {
+    title: 'MERGE Madrid 2026',
+    date: '2026-10-28',
+    time: '09:00',
+    endTime: '19:00',
+    location: 'Palacio de Cibeles, Plaza de Cibeles 1, Retiro',
+    url: 'https://www.mmerge.io/es/merge-madrid-2026',
+    image: '/events/merge-madrid-2026.jpg',
+    description:
+      'Conferencia sobre cripto, blockchain y activos digitales, con bancos, reguladores y empresas del sector. El congreso principal se celebra el 28 y 29 de octubre en el Palacio de Cibeles, precedido por un Institutional Summit el 27 en la Bolsa de Madrid para ponentes y titulares de entradas Business.',
+  },
+  {
     title: 'Clay Club Madrid: Launch Event',
     date: '2026-10-28',
     time: '18:00',
