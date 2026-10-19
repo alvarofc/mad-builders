@@ -569,6 +569,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Cuatro ponentes presentan casos de uso de Claude en ciencias de la salud, con diez minutos de charla y cinco de preguntas cada uno. Las sesiones son en español y después hay una hora para conversar; la dirección se comparte con los inscritos.',
   },
   {
+    title: "Let's talk about Taste & Design - Taste Labs x ms studio",
+    date: '2026-10-22',
+    time: '18:30',
+    endTime: '20:30',
+    location: 'mendesaltaren, Hermanos Álvarez Quintero 2, semisótano A, Justicia',
+    url: 'https://luma.com/xe8rdgn7',
+    image: '/events/taste-design-taste-labs-ms-studio.png',
+    description:
+      'Maria T. Bastos and Ana Abreu from Taste Labs join mendesaltaren to discuss taste and judgment in design, whether AI models can learn them, and what that means for designers.',
+  },
+  {
     title: '#TRG26',
     date: '2026-10-23',
     time: '09:00',

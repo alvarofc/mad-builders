@@ -115,6 +115,16 @@ export const spots: Spot[] = [
     url: 'https://www.shakersworks.com/',
   },
   {
+    name: 'mendesaltaren',
+    kind: 'company',
+    note: 'Digital product and branding studio working across strategy, design and technology',
+    lat: 40.4271996,
+    lng: -3.6974219,
+    logo: '/map/mendesaltaren.png',
+    url: 'https://www.mendesaltaren.com/',
+    twitter: 'https://twitter.com/mendesaltaren',
+  },
+  {
     name: 'Tinybird',
     kind: 'company',
     note: 'Real-time data platform for building analytics APIs at scale',
