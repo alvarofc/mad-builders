@@ -646,6 +646,17 @@ export const calendarEvents: CalendarEvent[] = [
       'ClickHouse meetup at AWS on real-time analytics, with talks by Daniel Phiri on SQL enrichment and Abed Habli on building data apps with Metabase. Advance registration with ID or passport details is required for building access.',
   },
   {
+    title: 'Claude Code Hackathon - Close the Books',
+    date: '2026-11-07',
+    time: '09:00',
+    endTime: '21:00',
+    location: 'La Nave, Calle Cifuentes 5, Villaverde',
+    url: 'https://luma.com/claude-kggz',
+    image: '/events/claude-code-hackathon-close-the-books.png',
+    description:
+      'A one-day Claude Code hackathon to build an AI finance team that closes the books for a synthetic company, with a challenge and dataset designed by Talky and UCppM. Teams are scored on accounting accuracy, reconciliation, fraud detection and auditability; bring your laptop, with food and drinks provided.',
+  },
+  {
     title: 'Humans in the Loop · i = 1',
     date: '2026-11-12',
     time: '18:00',
