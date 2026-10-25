@@ -668,6 +668,17 @@ export const calendarEvents: CalendarEvent[] = [
       'A one-day Claude Code hackathon to build an AI finance team that closes the books for a synthetic company, with a challenge and dataset designed by Talky and UCppM. Teams are scored on accounting accuracy, reconciliation, fraud detection and auditability; bring your laptop, with food and drinks provided.',
   },
   {
+    title: "Building the Connected Finance Stack: An Evening with Madrid's Finance Leaders",
+    date: '2026-11-11',
+    time: '18:30',
+    endTime: '22:30',
+    location: 'Casa Suecia Rooftop, Marqués de Casa Riera 4, Cortes',
+    url: 'https://luma.com/4pvdrilp',
+    image: '/events/connected-finance-stack-madrid.jpg',
+    description:
+      'Novutech, Embat and Invopop bring finance and technology leaders together to discuss connecting ERP, e-invoicing and treasury systems, and using AI in daily finance work. An evening of drinks and conversation at Casa Suecia Rooftop, marking Novutech\'s arrival in Spain.',
+  },
+  {
     title: 'Humans in the Loop · i = 1',
     date: '2026-11-12',
     time: '18:00',
@@ -676,6 +687,17 @@ export const calendarEvents: CalendarEvent[] = [
     url: 'https://luma.com/tx2ao2t6',
     image: '/events/humans-in-the-loop-1.png',
     description: 'DevExpert reúne a desarrolladores que trabajan con IA para compartir experiencias reales en tres charlas propuestas por los asistentes. El encuentro termina con tiempo para conversar.',
+  },
+  {
+    title: 'Madrid vLLM & llm-d AI Inference Meetup',
+    date: '2026-11-12',
+    time: '18:00',
+    endTime: '22:00',
+    location: 'MOA Institute, Calle de Dulcinea 4, Tetuán',
+    url: 'https://luma.com/gl1d2loa',
+    image: '/events/vllm-llm-d-madrid.png',
+    description:
+      'Red Hat and NVIDIA host talks on open source inference with vLLM, multimodal serving with vLLM-omni, safe agentic systems and distributed inference on Kubernetes with llm-d. Registration closes 24 hours before the event; bring photo ID for entry.',
   },
   {
     title: 'Dar cuerpo a la IA: integrando LLMs en la robótica del mundo real',
