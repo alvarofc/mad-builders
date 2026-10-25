@@ -591,6 +591,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Conferencia sobre software y productos digitales, este año centrada en experiencias prácticas con IA, del 22 al 24 de octubre en La Nave. La jornada principal es el viernes 23; el jueves hay talleres y el sábado se celebra el Community Day.',
   },
   {
+    title: 'Madrid | Claude Meetup: GovTech & Fintech',
+    date: '2026-10-26',
+    time: '18:00',
+    endTime: '20:00',
+    location: 'Lucernario, Digitaliza Madrid, Comunidad de Madrid',
+    url: 'https://luma.com/claude-04sq',
+    image: '/events/claude-community-shakers-hr-tech.png',
+    description:
+      'Encuentro de Claude Madrid con demos sobre el uso de Claude en la administración pública, fintech y activos digitales. Participan Miguel Ángel Domínguez y Alberto Gómez Toribio, con apertura y cierre de Ignacio Azorín y tiempo para preguntas y conversación.',
+  },
+  {
     title: 'AI Tour Workshop: cómo construimos un repositorio de insights con tres agentes de IA',
     date: '2026-10-27',
     time: '17:30',
@@ -665,6 +676,17 @@ export const calendarEvents: CalendarEvent[] = [
     url: 'https://luma.com/tx2ao2t6',
     image: '/events/humans-in-the-loop-1.png',
     description: 'DevExpert reúne a desarrolladores que trabajan con IA para compartir experiencias reales en tres charlas propuestas por los asistentes. El encuentro termina con tiempo para conversar.',
+  },
+  {
+    title: 'Dar cuerpo a la IA: integrando LLMs en la robótica del mundo real',
+    date: '2026-11-26',
+    time: '19:00',
+    endTime: '20:30',
+    location: 'Puerta Innovación, Calle de Toledo 110, La Latina',
+    url: 'https://luma.com/dr5oz7ra',
+    image: '/events/dar-cuerpo-ia-llms-robotica.jpg',
+    description:
+      'Iñaki Dellibarda Varela, investigador del CAR (CSIC-UPM), comparte cómo integra LLMs y sistemas multiagente en robots de rehabilitación. La charla recorre ejemplos reales de percepción corporal, traducción de instrucciones en acciones y adaptación mediante la información del entorno.',
   },
   {
     title: 'DevFest Madrid 2026',
