@@ -700,6 +700,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Red Hat and NVIDIA host talks on open source inference with vLLM, multimodal serving with vLLM-omni, safe agentic systems and distributed inference on Kubernetes with llm-d. Registration closes 24 hours before the event; bring photo ID for entry.',
   },
   {
+    title: '2 founders, 2 problemas - No Lazy People Madrid #002',
+    date: '2026-11-20',
+    time: '17:00',
+    endTime: '20:00',
+    location: 'Madrid',
+    url: 'https://luma.com/syi74ogy',
+    image: '/events/2-founders-2-problemas-no-lazy-people-002.png',
+    description:
+      'Dos fundadores comparten sus proyectos y un problema real con un grupo de 20 personas, que podrán hacer preguntas y aportar ideas tras cada intervención. El encuentro termina tomando algo; la ubicación exacta se comunica a los asistentes antes del evento.',
+  },
+  {
     title: 'Dar cuerpo a la IA: integrando LLMs en la robótica del mundo real',
     date: '2026-11-26',
     time: '19:00',
