@@ -711,6 +711,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Dos fundadores comparten sus proyectos y un problema real con un grupo de 20 personas, que podrán hacer preguntas y aportar ideas tras cada intervención. El encuentro termina tomando algo; la ubicación exacta se comunica a los asistentes antes del evento.',
   },
   {
+    title: 'Tertulia + Networking en Madrid | Itnig',
+    date: '2026-11-26',
+    time: '18:00',
+    endTime: '22:00',
+    location: 'Mutua Madrileña, Paseo de la Castellana 33, Chamberí',
+    url: 'https://itnig.net/events/d23d2553-81da-4b2d-9b51-d099146cc4b2/',
+    image: '/events/itnig-tertulia-madrid-noviembre.webp',
+    description:
+      'Jordi Romero, Bernat Farrero y Marcel Queralt comentan la actualidad tecnológica en una tertulia de Itnig grabada en directo. Después hay preguntas del público, un pitch de una startup que busca inversión y tiempo para conversar.',
+  },
+  {
     title: 'Dar cuerpo a la IA: integrando LLMs en la robótica del mundo real',
     date: '2026-11-26',
     time: '19:00',
