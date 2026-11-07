@@ -700,6 +700,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Red Hat and NVIDIA host talks on open source inference with vLLM, multimodal serving with vLLM-omni, safe agentic systems and distributed inference on Kubernetes with llm-d. Registration closes 24 hours before the event; bring photo ID for entry.',
   },
   {
+    title: 'Construyendo sin filtros #17: ¿Cómo se decide la inversión dentro del venture capital?',
+    date: '2026-11-18',
+    time: '18:15',
+    endTime: '21:15',
+    location: 'Aticco Castellana, Paseo de la Castellana 268, Chamartín',
+    url: 'https://luma.com/2zaj58ny',
+    image: '/events/construyendo-sin-filtros-17.png',
+    description:
+      'Jacobo Wirz Rivera (Encomenda), Nicolás Campo Ros (Lanai Ventures) y Javier Sánchez-Marco (APTKI) explican cómo evalúan startups y qué buscan antes de invertir. Borja Vega modera la conversación de Startup Grind Madrid, con preguntas del público y tiempo para conocer a otros asistentes.',
+  },
+  {
     title: '2 founders, 2 problemas - No Lazy People Madrid #002',
     date: '2026-11-20',
     time: '17:00',
