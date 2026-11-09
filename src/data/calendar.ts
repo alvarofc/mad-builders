@@ -711,6 +711,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Jacobo Wirz Rivera (Encomenda), Nicolás Campo Ros (Lanai Ventures) y Javier Sánchez-Marco (APTKI) explican cómo evalúan startups y qué buscan antes de invertir. Borja Vega modera la conversación de Startup Grind Madrid, con preguntas del público y tiempo para conocer a otros asistentes.',
   },
   {
+    title: 'Grok Bot x Tuyo Workshop - Madrid #1',
+    date: '2026-11-19',
+    time: '19:00',
+    endTime: '21:30',
+    location: 'Tuyo HQ, Chamartín',
+    url: 'https://luma.com/grokbotmadrid2',
+    image: '/events/grok-bot-tuyo-workshop.png',
+    description:
+      'Taller para construir con Grok Bot en las oficinas de Tuyo, con un reto opcional: probar un agente que haga pagos o transferencias con dinero real. Trae el portátil y una cuenta de Grok Bot; al final habrá demos voluntarias.',
+  },
+  {
     title: '2 founders, 2 problemas - No Lazy People Madrid #002',
     date: '2026-11-20',
     time: '17:00',
