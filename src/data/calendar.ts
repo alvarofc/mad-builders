@@ -765,4 +765,15 @@ export const calendarEvents: CalendarEvent[] = [
     description:
       'Encuentro de GDG Madrid para aprender sobre desarrollo y conocer a otros profesionales de la comunidad en las oficinas de Celonis. La agenda y los ponentes se anunciarán próximamente.',
   },
+  {
+    title: 'Claude Community × HappyRobot Hackathon: Agents coaching agents',
+    date: '2026-11-28',
+    time: '09:00',
+    endTime: '18:00',
+    location: 'HappyRobot Madrid Office, Colón',
+    url: 'https://luma.com/claude-82uv',
+    image: '/events/claude-happyrobot-hackathon.png',
+    description:
+      'Teams use Claude Code to build an agent that reviews lost sales calls and tests changes to a HappyRobot sales agent. Judges score the results on simulated buyers and look at how safely each team tests and rolls back changes.',
+  },
 ];
