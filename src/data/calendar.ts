@@ -733,6 +733,18 @@ export const calendarEvents: CalendarEvent[] = [
       'Dos fundadores comparten sus proyectos y un problema real con un grupo de 20 personas, que podrán hacer preguntas y aportar ideas tras cada intervención. El encuentro termina tomando algo; la ubicación exacta se comunica a los asistentes antes del evento.',
   },
   {
+    title: "Founder's Day",
+    date: '2026-11-21',
+    time: '16:00',
+    endTime: '20:00',
+    location: 'Madrid',
+    url: 'https://luma.com/44bn0693',
+    image: '/events/founders-day-madrid.jpg',
+    private: true,
+    description:
+      'Baby VC, Acurio Ventures and Mission bring startup founders and people looking to join their teams together for talks and networking. Maex Ament of Causa Prima and Guli Moreno of Capchase and Exponential Fellowship share their experiences building companies.',
+  },
+  {
     title: 'Tertulia + Networking en Madrid | Itnig',
     date: '2026-11-26',
     time: '18:00',
