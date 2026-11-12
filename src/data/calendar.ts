@@ -788,4 +788,15 @@ export const calendarEvents: CalendarEvent[] = [
     description:
       'Teams use Claude Code to build an agent that reviews lost sales calls and tests changes to a HappyRobot sales agent. Judges score the results on simulated buyers and look at how safely each team tests and rolls back changes.',
   },
+  {
+    title: 'Ahead x BBVA',
+    date: '2026-12-02',
+    time: '18:30',
+    endTime: '21:00',
+    location: 'Casa del Lector, Paseo de la Chopera 14, Matadero',
+    url: 'https://luma.com/x2sypn9e',
+    image: '/events/ahead-bbva.png',
+    description:
+      'José Méndez, Ricardo Barrera, Alejandro Sotillet y Alejandro Díaz cuentan cómo la IA está cambiando los equipos de producto y el sistema de diseño de BBVA. Después, José y Ricardo conversan con Salvador Serrano, de Modulor Studios, y el público; el encuentro termina tomando algo juntos.',
+  },
 ];
