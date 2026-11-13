@@ -745,6 +745,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Baby VC, Acurio Ventures and Mission bring startup founders and people looking to join their teams together for talks and networking. Maex Ament of Causa Prima and Guli Moreno of Capchase and Exponential Fellowship share their experiences building companies.',
   },
   {
+    title: 'Exponential Beers: Miki Palet - Zernio',
+    date: '2026-11-25',
+    time: '19:30',
+    endTime: '22:30',
+    location: 'Mad Tech Campus, Matadero',
+    url: 'https://luma.com/nhbe2auv',
+    image: '/events/exponential-beers-miki-palet-zernio.png',
+    description:
+      'Miki Palet, fundador y CEO de Zernio, cuenta cómo arrancó la compañía sin financiación externa y comparte su experiencia construyendo infraestructura para agentes. El encuentro de Exponential incluye preguntas del público, pizzas y bebidas.',
+  },
+  {
     title: 'Tertulia + Networking en Madrid | Itnig',
     date: '2026-11-26',
     time: '18:00',
