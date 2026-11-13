@@ -789,6 +789,18 @@ export const calendarEvents: CalendarEvent[] = [
       'Encuentro de GDG Madrid para aprender sobre desarrollo y conocer a otros profesionales de la comunidad en las oficinas de Celonis. La agenda y los ponentes se anunciarán próximamente.',
   },
   {
+    title: 'AI Builders Dinner · Madrid',
+    date: '2026-11-27',
+    time: '20:00',
+    endTime: '22:30',
+    location: 'Madrid, restaurante por confirmar',
+    url: 'https://luma.com/gi02lxa4',
+    image: '/events/ai-builders-dinner-madrid.jpg',
+    private: true,
+    description:
+      'An informal dinner for people building with AI in and around Madrid to talk about their projects and where AI is heading. Each person pays for their own food and drinks.',
+  },
+  {
     title: 'Claude Community × HappyRobot Hackathon: Agents coaching agents',
     date: '2026-11-28',
     time: '09:00',
