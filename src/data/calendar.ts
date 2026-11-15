@@ -745,6 +745,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Baby VC, Acurio Ventures and Mission bring startup founders and people looking to join their teams together for talks and networking. Maex Ament of Causa Prima and Guli Moreno of Capchase and Exponential Fellowship share their experiences building companies.',
   },
   {
+    title: 'AI Socratic Madrid - November',
+    date: '2026-11-25',
+    time: '17:30',
+    endTime: '20:00',
+    location: 'Experience Design Lab, Distrito Telefónica, Ronda de la Comunicación 22',
+    url: 'https://luma.com/cbj31ib5',
+    image: '/events/ai-socratic-madrid-november.png',
+    description:
+      'Jorge Ordovás and Alfonso de la Rocha moderate a discussion on recent AI developments, followed by demos and short presentations from attendees. The event runs in English unless everyone speaks Spanish; registration requires host approval.',
+  },
+  {
     title: 'Exponential Beers: Miki Palet - Zernio',
     date: '2026-11-25',
     time: '19:30',
