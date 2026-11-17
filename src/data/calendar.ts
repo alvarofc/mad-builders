@@ -778,6 +778,17 @@ export const calendarEvents: CalendarEvent[] = [
       'Jordi Romero, Bernat Farrero y Marcel Queralt comentan la actualidad tecnológica en una tertulia de Itnig grabada en directo. Después hay preguntas del público, un pitch de una startup que busca inversión y tiempo para conversar.',
   },
   {
+    title: 'BRASAS',
+    date: '2026-11-26',
+    time: '18:30',
+    endTime: '22:30',
+    location: 'Madrid',
+    url: 'https://luma.com/yuyr29dn',
+    image: '/events/brasas-founders-cloudflare.png',
+    description:
+      'Cena alrededor de una barbacoa para 24 founders, con Cloudflare, para compartir experiencias y decisiones sobre sus proyectos. Cada participante trae un problema o algo que haya aprendido; las plazas se solicitan y requieren selección.',
+  },
+  {
     title: 'Dar cuerpo a la IA: integrando LLMs en la robótica del mundo real',
     date: '2026-11-26',
     time: '19:00',
