@@ -844,4 +844,14 @@ export const calendarEvents: CalendarEvent[] = [
     description:
       'José Méndez, Ricardo Barrera, Alejandro Sotillet y Alejandro Díaz cuentan cómo la IA está cambiando los equipos de producto y el sistema de diseño de BBVA. Después, José y Ricardo conversan con Salvador Serrano, de Modulor Studios, y el público; el encuentro termina tomando algo juntos.',
   },
+  {
+    title: 'Claude Community × Nova Hackathon: Reinventing Networking',
+    date: '2026-12-11',
+    time: '18:00',
+    location: 'Nova Talent Madrid Office',
+    url: 'https://luma.com/claude-xmxw',
+    image: '/events/claude-nova-hackathon.png',
+    description:
+      'A Claude Code hackathon from December 11 to 13 to build working prototypes that rethink how professionals meet and connect, using a dataset and talent search API from Nova. Doors open Friday at 18:00, with demos on Sunday at 15:00; bring your laptop, and food and drinks are provided.',
+  },
 ];
